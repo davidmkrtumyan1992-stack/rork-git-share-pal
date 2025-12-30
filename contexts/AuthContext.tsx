@@ -34,7 +34,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       .from('profiles')
       .select('*')
       .eq('user_id', userId)
-      .single();
+      .maybeSingle();
 
     if (profileError) {
       console.log('Profile fetch error:', profileError.message);

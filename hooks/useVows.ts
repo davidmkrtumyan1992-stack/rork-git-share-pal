@@ -45,9 +45,9 @@ export const useTodayEntry = (vowType: string | null) => {
         .eq('user_id', user.id)
         .eq('vow_type', vowType)
         .eq('entry_date', today)
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') {
+      if (error) {
         console.log('Today entry fetch error:', error.message);
         throw error;
       }
@@ -79,13 +79,17 @@ export const useCreateVowEntry = () => {
       const today = new Date().toISOString().split('T')[0];
       console.log('Creating vow entry:', vowType, status, today);
 
-      const { data: existing } = await supabase
+      const { data: existing, error: existingError } = await supabase
         .from('vow_entries')
         .select('id')
         .eq('user_id', user.id)
         .eq('vow_type', vowType)
         .eq('entry_date', today)
-        .single();
+        .maybeSingle();
+
+      if (existingError) {
+        console.log('Error checking existing entry:', existingError.message);
+      }
 
       if (existing) {
         const { data, error } = await supabase
@@ -180,9 +184,9 @@ export const useCyclePosition = (vowType: string | null) => {
         .select('*')
         .eq('user_id', user.id)
         .eq('vow_type', vowType)
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') throw error;
+      if (error) throw error;
       return data as VowCyclePosition | null;
     },
     enabled: !!user && !!vowType,
