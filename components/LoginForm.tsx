@@ -31,6 +31,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
   const [fullName, setFullName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const signInMutation = useMutation({
     mutationFn: () => signIn(email, password),
@@ -46,9 +47,14 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
 
   const signUpMutation = useMutation({
     mutationFn: () => signUp(email, password, username, fullName),
-    onSuccess: () => {
+    onSuccess: (data) => {
       console.log('Registration successful');
-      onSuccess?.();
+      if (!data.session) {
+        setSuccessMessage('Регистрация успешна! Проверьте email для подтверждения.');
+        setIsRegister(false);
+      } else {
+        onSuccess?.();
+      }
     },
     onError: (err: Error) => {
       console.log('Registration error:', err.message);
@@ -58,6 +64,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
 
   const handleSubmit = () => {
     setError(null);
+    setSuccessMessage(null);
     if (isRegister) {
       signUpMutation.mutate();
     } else {
@@ -90,6 +97,12 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
           {error && (
             <View style={styles.errorContainer}>
               <Text style={styles.errorText}>{error}</Text>
+            </View>
+          )}
+
+          {successMessage && (
+            <View style={styles.successContainer}>
+              <Text style={styles.successText}>{successMessage}</Text>
             </View>
           )}
 
@@ -180,6 +193,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
             onPress={() => {
               setIsRegister(!isRegister);
               setError(null);
+              setSuccessMessage(null);
             }}
           >
             <Text style={styles.switchText}>
@@ -244,6 +258,19 @@ const styles = StyleSheet.create({
   },
   errorText: {
     color: darkTheme.colors.errorLight,
+    fontSize: darkTheme.fontSize.sm,
+    textAlign: 'center',
+  },
+  successContainer: {
+    backgroundColor: darkTheme.colors.success + '30',
+    borderRadius: darkTheme.borderRadius.sm,
+    padding: darkTheme.spacing.md,
+    marginBottom: darkTheme.spacing.md,
+    borderWidth: 1,
+    borderColor: darkTheme.colors.success,
+  },
+  successText: {
+    color: darkTheme.colors.success,
     fontSize: darkTheme.fontSize.sm,
     textAlign: 'center',
   },

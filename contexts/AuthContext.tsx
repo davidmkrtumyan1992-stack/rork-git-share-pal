@@ -136,7 +136,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     username: string,
     fullName?: string
   ) => {
-    console.log('Signing up:', email);
+    console.log('Signing up:', email, 'username:', username);
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -146,6 +146,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
           full_name: fullName,
           language: 'ru',
         },
+        emailRedirectTo: undefined,
       },
     });
     
@@ -154,9 +155,26 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       throw error;
     }
     
-    console.log('Sign up successful');
+    console.log('Sign up successful, session:', data.session ? 'exists' : 'null');
+    console.log('User created:', data.user?.email);
+    console.log('Email confirmation required:', !data.session);
+    
+    if (data.session && data.user) {
+      console.log('Auto-login successful, fetching profile...');
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      const profileData = await fetchProfile(data.user.id);
+      console.log('Profile data:', profileData);
+      
+      setState({
+        session: data.session,
+        user: data.user,
+        ...profileData,
+        isLoading: false,
+      });
+    }
+    
     return data;
-  }, []);
+  }, [fetchProfile]);
 
   const signOut = useCallback(async () => {
     console.log('Signing out...');
