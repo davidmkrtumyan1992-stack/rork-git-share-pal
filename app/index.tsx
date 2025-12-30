@@ -1,11 +1,10 @@
-// template
 import { StyleSheet, Text, View } from "react-native";
 
-export default function TabOneScreen() {
+export default function HomeScreen() {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Your Rork app will be here</Text>
-      <Text style={styles.text}>Please wait until we finish building it</Text>
+      <Text style={styles.title}>Welcome to Your App</Text>
+      <Text style={styles.text}>Your mobile app is ready to be built</Text>
     </View>
   );
 }
@@ -16,14 +15,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
+    backgroundColor: "#fff",
   },
   title: {
-    fontSize: 20,
-    fontWeight: "bold",
+    fontSize: 24,
+    fontWeight: "bold" as const,
   },
   text: {
     fontSize: 16,
     textAlign: "center",
     paddingHorizontal: 20,
+    color: "#666",
   },
 });
