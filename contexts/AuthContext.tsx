@@ -146,7 +146,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
           full_name: fullName,
           language: 'ru',
         },
-        emailRedirectTo: undefined,
+        emailRedirectTo: 'rork-app://auth/callback',
       },
     });
     
