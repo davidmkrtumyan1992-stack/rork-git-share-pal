@@ -1,0 +1,194 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+
+    --radius: 0.5rem;
+
+    /* Vow-specific colors */
+    --vow-primary: 160 20% 48%; /* #6B8E7F */
+    --vow-primary-dark: 160 20% 42%; /* #5A7A6D */
+    --vow-primary-darker: 160 23% 36%; /* #4A6B5E */
+    
+    --vow-kept: 160 25% 60%; /* #7FA88F */
+    --vow-kept-dark: 160 23% 53%; /* #6B9680 */
+    --vow-kept-darker: 160 22% 45%; /* #5A8570 */
+    
+    --vow-broken: 7 42% 52%; /* #B85C4F */
+    --vow-broken-dark: 7 44% 44%; /* #A04D41 */
+    --vow-broken-darker: 7 48% 38%; /* #903D32 */
+    
+    --vow-antidote: 38 42% 60%; /* #C5A572 */
+    --vow-antidote-dark: 38 40% 55%; /* #B39563 */
+    
+    --vow-text-primary: 160 24% 18%; /* #2C3E3A */
+    --vow-text-secondary: 160 10% 38%; /* #5A6A66 */
+    
+    --vow-bg-surface: 33 25% 95%; /* #F5F2ED */
+    --vow-bg-accent: 33 32% 90%; /* #E8E1D5 */
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  /* Card variants */
+  .card-base {
+    @apply border-0 shadow-xl bg-white/80 backdrop-blur-sm rounded-3xl overflow-hidden;
+  }
+  
+  .card-surface {
+    @apply bg-gradient-to-r from-vow-primary/10 to-transparent p-5 rounded-2xl;
+  }
+
+  /* Button variants */
+  .btn-primary {
+    @apply h-12 bg-gradient-to-r from-vow-primary to-vow-primary-dark hover:from-vow-primary-dark hover:to-vow-primary-darker shadow-md hover:shadow-lg transition-all duration-300 rounded-2xl;
+  }
+  
+  .btn-kept {
+    @apply h-12 bg-gradient-to-r from-vow-kept to-vow-kept-dark hover:from-vow-kept-dark hover:to-vow-kept-darker shadow-md hover:shadow-lg transition-all duration-300 rounded-2xl;
+  }
+  
+  .btn-broken {
+    @apply h-12 bg-gradient-to-r from-vow-broken to-vow-broken-dark hover:from-vow-broken-dark hover:to-vow-broken-darker shadow-md hover:shadow-lg transition-all duration-300 rounded-2xl;
+  }
+
+  /* Input variants */
+  .input-base {
+    @apply h-12 px-4 bg-vow-bg-surface/50 border-vow-primary-darker/20 focus:border-vow-primary focus:ring-vow-primary rounded-2xl;
+  }
+  
+  .input-with-icon {
+    @apply h-12 px-4 pr-12 bg-vow-bg-surface/50 border-vow-primary-darker/20 focus:border-vow-primary focus:ring-vow-primary rounded-2xl;
+  }
+
+  /* Select variants */
+  .select-trigger {
+    @apply h-12 bg-vow-bg-surface/50 border-vow-primary-darker/20 focus:border-vow-primary focus:ring-vow-primary rounded-2xl;
+  }
+  
+  .select-content {
+    @apply rounded-2xl border-vow-primary-darker/20;
+  }
+
+  /* Info boxes */
+  .info-box-kept {
+    @apply flex items-start gap-3 bg-gradient-to-r from-vow-kept/20 to-vow-kept/10 p-4 rounded-2xl border border-vow-kept/30;
+  }
+  
+  .info-box-broken {
+    @apply flex items-start gap-3 bg-gradient-to-r from-vow-broken/20 to-vow-broken/10 p-4 rounded-2xl border border-vow-broken/30;
+  }
+  
+  .info-box-antidote {
+    @apply flex items-start gap-3 bg-gradient-to-r from-vow-antidote/20 to-vow-antidote/10 p-4 rounded-2xl border border-vow-antidote/30;
+  }
+
+  /* Icon containers */
+  .icon-container {
+    @apply w-12 h-12 rounded-2xl flex items-center justify-center shadow-md;
+  }
+  
+  .icon-container-lg {
+    @apply w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg;
+  }
+
+  /* Hide scrollbar for horizontal scroll */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
