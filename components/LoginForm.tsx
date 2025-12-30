@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Image,
 } from 'react-native';
 import { useMutation } from '@tanstack/react-query';
 import { Mail, Lock, User, Eye, EyeOff } from 'lucide-react-native';
@@ -85,6 +86,13 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.header}>
+          <View style={styles.logoContainer}>
+            <Image
+              source={{ uri: 'https://rork.app/pa/ywfta2lsth7893gaf5mzw/logo.png' }}
+              style={styles.logo}
+              resizeMode="contain"
+            />
+          </View>
           <Text style={styles.title}>{t.app.title}</Text>
           <Text style={styles.subtitle}>{t.app.subtitle}</Text>
         </View>
@@ -223,11 +231,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: darkTheme.spacing.xxl,
   },
+  logoContainer: {
+    width: 120,
+    height: 120,
+    marginBottom: darkTheme.spacing.lg,
+    backgroundColor: darkTheme.colors.surface,
+    borderRadius: darkTheme.borderRadius.xl,
+    padding: darkTheme.spacing.md,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  logo: {
+    width: '100%',
+    height: '100%',
+  },
   title: {
     fontSize: darkTheme.fontSize.xxxl,
     fontWeight: darkTheme.fontWeight.bold,
-    color: darkTheme.colors.primary,
+    color: darkTheme.colors.terracotta,
     marginBottom: darkTheme.spacing.sm,
+    letterSpacing: 0.5,
   },
   subtitle: {
     fontSize: darkTheme.fontSize.md,
@@ -236,59 +262,71 @@ const styles = StyleSheet.create({
   },
   form: {
     backgroundColor: darkTheme.colors.surface,
-    borderRadius: darkTheme.borderRadius.lg,
-    padding: darkTheme.spacing.lg,
-    borderWidth: 1,
+    borderRadius: darkTheme.borderRadius.xl,
+    padding: darkTheme.spacing.xl,
+    borderWidth: 2,
     borderColor: darkTheme.colors.border,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    elevation: 8,
   },
   formTitle: {
-    fontSize: darkTheme.fontSize.xl,
-    fontWeight: darkTheme.fontWeight.semibold,
-    color: darkTheme.colors.text,
-    marginBottom: darkTheme.spacing.lg,
+    fontSize: darkTheme.fontSize.xxl,
+    fontWeight: darkTheme.fontWeight.bold,
+    color: darkTheme.colors.terracotta,
+    marginBottom: darkTheme.spacing.xl,
     textAlign: 'center',
   },
   errorContainer: {
-    backgroundColor: darkTheme.colors.errorDark + '30',
-    borderRadius: darkTheme.borderRadius.sm,
+    backgroundColor: darkTheme.colors.error + '15',
+    borderRadius: darkTheme.borderRadius.md,
     padding: darkTheme.spacing.md,
     marginBottom: darkTheme.spacing.md,
     borderWidth: 1,
-    borderColor: darkTheme.colors.error,
+    borderColor: darkTheme.colors.error + '40',
   },
   errorText: {
-    color: darkTheme.colors.errorLight,
+    color: darkTheme.colors.errorDark,
     fontSize: darkTheme.fontSize.sm,
     textAlign: 'center',
+    fontWeight: darkTheme.fontWeight.medium,
   },
   successContainer: {
-    backgroundColor: darkTheme.colors.success + '30',
-    borderRadius: darkTheme.borderRadius.sm,
+    backgroundColor: darkTheme.colors.success + '15',
+    borderRadius: darkTheme.borderRadius.md,
     padding: darkTheme.spacing.md,
     marginBottom: darkTheme.spacing.md,
     borderWidth: 1,
-    borderColor: darkTheme.colors.success,
+    borderColor: darkTheme.colors.success + '40',
   },
   successText: {
-    color: darkTheme.colors.success,
+    color: darkTheme.colors.successDark,
     fontSize: darkTheme.fontSize.sm,
     textAlign: 'center',
+    fontWeight: darkTheme.fontWeight.medium,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: darkTheme.colors.backgroundSecondary,
-    borderRadius: darkTheme.borderRadius.md,
+    borderRadius: darkTheme.borderRadius.lg,
     marginBottom: darkTheme.spacing.md,
-    borderWidth: 1,
+    borderWidth: 2,
     borderColor: darkTheme.colors.border,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   inputIcon: {
     marginLeft: darkTheme.spacing.md,
   },
   input: {
     flex: 1,
-    paddingVertical: darkTheme.spacing.md,
+    paddingVertical: darkTheme.spacing.md + 2,
     paddingHorizontal: darkTheme.spacing.md,
     color: darkTheme.colors.text,
     fontSize: darkTheme.fontSize.md,
@@ -297,33 +335,39 @@ const styles = StyleSheet.create({
     padding: darkTheme.spacing.md,
   },
   submitButton: {
-    backgroundColor: darkTheme.colors.primary,
-    borderRadius: darkTheme.borderRadius.md,
-    paddingVertical: darkTheme.spacing.md,
+    backgroundColor: darkTheme.colors.terracotta,
+    borderRadius: darkTheme.borderRadius.lg,
+    paddingVertical: darkTheme.spacing.md + 4,
     alignItems: 'center',
-    marginTop: darkTheme.spacing.sm,
+    marginTop: darkTheme.spacing.md,
+    shadowColor: darkTheme.colors.terracotta,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
   submitButtonDisabled: {
     opacity: 0.5,
   },
   submitButtonText: {
-    color: darkTheme.colors.text,
-    fontSize: darkTheme.fontSize.md,
-    fontWeight: darkTheme.fontWeight.semibold,
+    color: darkTheme.colors.surface,
+    fontSize: darkTheme.fontSize.lg,
+    fontWeight: darkTheme.fontWeight.bold,
+    letterSpacing: 0.5,
   },
   switchButton: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: darkTheme.spacing.lg,
+    marginTop: darkTheme.spacing.xl,
     gap: darkTheme.spacing.xs,
   },
   switchText: {
     color: darkTheme.colors.textSecondary,
-    fontSize: darkTheme.fontSize.sm,
+    fontSize: darkTheme.fontSize.md,
   },
   switchTextBold: {
-    color: darkTheme.colors.primary,
-    fontSize: darkTheme.fontSize.sm,
-    fontWeight: darkTheme.fontWeight.semibold,
+    color: darkTheme.colors.terracotta,
+    fontSize: darkTheme.fontSize.md,
+    fontWeight: darkTheme.fontWeight.bold,
   },
 });

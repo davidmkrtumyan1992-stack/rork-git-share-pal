@@ -1,40 +1,45 @@
-export const darkTheme = {
+export const balinese = {
   colors: {
-    background: '#0A0A0F',
-    backgroundSecondary: '#12121A',
-    backgroundTertiary: '#1A1A25',
-    surface: '#1E1E2A',
-    surfaceHover: '#252535',
-    border: '#2A2A3A',
-    borderLight: '#3A3A4A',
+    background: '#F5EFE7',
+    backgroundSecondary: '#FDFAF6',
+    backgroundTertiary: '#F8F3EB',
+    surface: '#FFFFFF',
+    surfaceHover: '#FFF9F4',
+    border: '#E8DCC8',
+    borderLight: '#F0E6D6',
     
-    text: '#FFFFFF',
-    textSecondary: '#A0A0B0',
-    textMuted: '#6A6A7A',
+    text: '#3E2723',
+    textSecondary: '#6D4C41',
+    textMuted: '#8D6E63',
     
-    primary: '#7C3AED',
-    primaryLight: '#8B5CF6',
-    primaryDark: '#6D28D9',
+    primary: '#D4834C',
+    primaryLight: '#E09A68',
+    primaryDark: '#B86F3E',
     
-    success: '#10B981',
-    successLight: '#34D399',
-    successDark: '#059669',
+    success: '#7CB342',
+    successLight: '#9CCC65',
+    successDark: '#689F38',
     
-    warning: '#F59E0B',
-    warningLight: '#FBBF24',
-    warningDark: '#D97706',
+    warning: '#FFA726',
+    warningLight: '#FFB74D',
+    warningDark: '#FB8C00',
     
-    error: '#EF4444',
-    errorLight: '#F87171',
-    errorDark: '#DC2626',
+    error: '#E53935',
+    errorLight: '#EF5350',
+    errorDark: '#C62828',
     
-    info: '#3B82F6',
-    infoLight: '#60A5FA',
-    infoDark: '#2563EB',
+    info: '#5C6BC0',
+    infoLight: '#7E57C2',
+    infoDark: '#3F51B5',
     
-    accent: '#06B6D4',
-    accentLight: '#22D3EE',
-    accentDark: '#0891B2',
+    accent: '#C9A96E',
+    accentLight: '#D9B57A',
+    accentDark: '#B8935C',
+    
+    gold: '#C9A96E',
+    terracotta: '#D4834C',
+    cream: '#F5EFE7',
+    brown: '#3E2723',
   },
   
   spacing: {
@@ -72,4 +77,6 @@ export const darkTheme = {
   },
 };
 
-export type Theme = typeof darkTheme;
+export const darkTheme = balinese;
+
+export type Theme = typeof balinese;
