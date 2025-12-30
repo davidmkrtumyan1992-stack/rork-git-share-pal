@@ -189,20 +189,54 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
   }, []);
 
   const updateProfile = useCallback(async (updates: Partial<Profile>) => {
-    if (!state.user) return;
+    if (!state.user) {
+      console.log('updateProfile: No user, returning');
+      return;
+    }
     
-    console.log('Updating profile:', updates);
-    const { data, error } = await supabase
+    console.log('Updating profile for user:', state.user.id, updates);
+    
+    const { data: existingProfile } = await supabase
       .from('profiles')
-      .update(updates)
+      .select('id')
       .eq('user_id', state.user.id)
-      .select()
-      .single();
+      .maybeSingle();
+    
+    let data;
+    let error;
+    
+    if (existingProfile) {
+      console.log('Profile exists, updating...');
+      const result = await supabase
+        .from('profiles')
+        .update(updates)
+        .eq('user_id', state.user.id)
+        .select()
+        .single();
+      data = result.data;
+      error = result.error;
+    } else {
+      console.log('Profile does not exist, creating...');
+      const result = await supabase
+        .from('profiles')
+        .insert({
+          user_id: state.user.id,
+          username: state.user.email?.split('@')[0] || 'user',
+          language: 'ru',
+          ...updates,
+        })
+        .select()
+        .single();
+      data = result.data;
+      error = result.error;
+    }
     
     if (error) {
-      console.log('Profile update error:', error.message);
+      console.log('Profile update/create error:', error.message);
       throw error;
     }
+    
+    console.log('Profile saved successfully:', data);
     
     setState((prev) => ({
       ...prev,
