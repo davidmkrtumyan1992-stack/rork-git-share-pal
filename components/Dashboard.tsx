@@ -36,42 +36,51 @@ const vowColors: Record<string, string> = {
 };
 
 interface DashboardProps {
-  selectedVow: string | null;
+  selectedVows: string[];
+  activeVow: string | null;
+  onSetActiveVow: (vow: string) => void;
   onSelectVow: () => void;
   onOpenSettings: () => void;
   onOpenAdmin?: () => void;
 }
 
-export function Dashboard({ selectedVow, onSelectVow, onOpenSettings, onOpenAdmin }: DashboardProps) {
+export function Dashboard({ 
+  selectedVows, 
+  activeVow, 
+  onSetActiveVow, 
+  onSelectVow, 
+  onOpenSettings, 
+  onOpenAdmin 
+}: DashboardProps) {
   const { profile, language, isAdmin } = useAuth();
   const t = getTranslation(language);
   
-  const { data: todayEntry, isLoading: entryLoading } = useTodayEntry(selectedVow);
-  const { data: stats, isLoading: statsLoading } = useVowStats(selectedVow);
+  const { data: todayEntry, isLoading: entryLoading } = useTodayEntry(activeVow);
+  const { data: stats, isLoading: statsLoading } = useVowStats(activeVow);
   const createEntry = useCreateVowEntry();
   
   const [noteModalVisible, setNoteModalVisible] = useState(false);
   const [noteText, setNoteText] = useState('');
   const [pendingStatus, setPendingStatus] = useState<VowStatus | null>(null);
 
-  const vowColor = selectedVow ? vowColors[selectedVow] || darkTheme.colors.primary : darkTheme.colors.primary;
+  const vowColor = activeVow ? vowColors[activeVow] || darkTheme.colors.primary : darkTheme.colors.primary;
 
   const handleMarkStatus = (status: VowStatus) => {
-    if (!selectedVow) return;
+    if (!activeVow) return;
     
     if (status === 'broken') {
       setPendingStatus(status);
       setNoteModalVisible(true);
     } else {
-      createEntry.mutate({ vowType: selectedVow, status });
+      createEntry.mutate({ vowType: activeVow, status });
     }
   };
 
   const handleSubmitWithNote = () => {
-    if (!selectedVow || !pendingStatus) return;
+    if (!activeVow || !pendingStatus) return;
     
     createEntry.mutate({
-      vowType: selectedVow,
+      vowType: activeVow,
       status: pendingStatus,
       noteText: noteText || undefined,
     });
@@ -96,6 +105,10 @@ export function Dashboard({ selectedVow, onSelectVow, onOpenSettings, onOpenAdmi
     }
   };
 
+  const getVowTitle = (vowKey: string) => {
+    return t.vows[vowKey as keyof typeof t.vows] || vowKey;
+  };
+
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
@@ -115,20 +128,57 @@ export function Dashboard({ selectedVow, onSelectVow, onOpenSettings, onOpenAdmi
         </TouchableOpacity>
       )}
 
+      {selectedVows.length > 1 && activeVow && (
+        <View style={styles.vowTabs}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {selectedVows.map((vow) => {
+              const isActive = vow === activeVow;
+              const color = vowColors[vow] || darkTheme.colors.primary;
+              return (
+                <TouchableOpacity
+                  key={vow}
+                  style={[
+                    styles.vowTab,
+                    isActive && { backgroundColor: color + '30', borderColor: color },
+                  ]}
+                  onPress={() => onSetActiveVow(vow)}
+                >
+                  <View style={[styles.vowTabDot, { backgroundColor: color }]} />
+                  <Text style={[
+                    styles.vowTabText,
+                    isActive && { color: color },
+                  ]}>
+                    {getVowTitle(vow)}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </View>
+      )}
+
       <TouchableOpacity style={styles.vowSelector} onPress={onSelectVow}>
         <View style={styles.vowSelectorContent}>
           <View style={[styles.vowIndicator, { backgroundColor: vowColor }]} />
           <View style={styles.vowTextContainer}>
-            <Text style={styles.vowLabel}>{t.dashboard.selectVow}</Text>
+            <Text style={styles.vowLabel}>
+              {selectedVows.length > 0 
+                ? (language === 'ru' ? 'Обязательства' : 'Commitments')
+                : t.dashboard.selectVow}
+            </Text>
             <Text style={styles.vowValue}>
-              {selectedVow ? t.vows[selectedVow as keyof typeof t.vows] || selectedVow : t.dashboard.noVowSelected}
+              {selectedVows.length > 0 
+                ? (language === 'ru' 
+                    ? `${selectedVows.length} выбрано` 
+                    : `${selectedVows.length} selected`)
+                : t.dashboard.noVowSelected}
             </Text>
           </View>
         </View>
         <ChevronRight size={24} color={darkTheme.colors.textMuted} />
       </TouchableOpacity>
 
-      {selectedVow && (
+      {activeVow && (
         <>
           <View style={styles.statsContainer}>
             <View style={[styles.statCard, styles.streakCard]}>
@@ -288,6 +338,31 @@ const styles = StyleSheet.create({
     color: darkTheme.colors.primary,
     fontWeight: darkTheme.fontWeight.semibold,
     fontSize: darkTheme.fontSize.md,
+  },
+  vowTabs: {
+    marginBottom: darkTheme.spacing.md,
+  },
+  vowTab: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: darkTheme.spacing.md,
+    paddingVertical: darkTheme.spacing.sm,
+    borderRadius: darkTheme.borderRadius.md,
+    borderWidth: 1,
+    borderColor: darkTheme.colors.border,
+    marginRight: darkTheme.spacing.sm,
+    backgroundColor: darkTheme.colors.surface,
+  },
+  vowTabDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: darkTheme.spacing.sm,
+  },
+  vowTabText: {
+    fontSize: darkTheme.fontSize.sm,
+    color: darkTheme.colors.textSecondary,
+    fontWeight: darkTheme.fontWeight.medium,
   },
   vowSelector: {
     flexDirection: 'row',

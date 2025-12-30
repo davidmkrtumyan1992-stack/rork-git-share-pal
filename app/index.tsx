@@ -22,18 +22,50 @@ export default function HomeScreen() {
   const { user, profile, isLoading, updateProfile } = useAuth();
   
   const [currentScreen, setCurrentScreen] = useState<Screen>('dashboard');
-  const [selectedVow, setSelectedVow] = useState<string | null>(null);
+  const [selectedVows, setSelectedVows] = useState<string[]>([]);
+  const [activeVow, setActiveVow] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (profile?.selected_vow) {
-      setSelectedVow(profile.selected_vow);
+      const vows = profile.selected_vow.split(',').filter(Boolean);
+      setSelectedVows(vows);
+      if (vows.length > 0 && !activeVow) {
+        setActiveVow(vows[0]);
+      }
     }
-  }, [profile?.selected_vow]);
+  }, [profile?.selected_vow, activeVow]);
 
-  const handleVowSelect = async (vowType: string) => {
-    console.log('Vow selected:', vowType);
-    setSelectedVow(vowType);
-    await updateProfile({ selected_vow: vowType });
+  const handleToggleVow = (vowType: string) => {
+    setSelectedVows(prev => {
+      if (prev.includes(vowType)) {
+        return prev.filter(v => v !== vowType);
+      }
+      return [...prev, vowType];
+    });
+  };
+
+  const handleConfirmVows = async () => {
+    console.log('Confirming vows:', selectedVows);
+    setIsSaving(true);
+    try {
+      await updateProfile({ selected_vow: selectedVows.join(',') });
+      if (selectedVows.length > 0 && !selectedVows.includes(activeVow || '')) {
+        setActiveVow(selectedVows[0]);
+      }
+      setCurrentScreen('dashboard');
+    } catch (error) {
+      console.log('Error saving vows:', error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleCloseVowSelection = () => {
+    if (profile?.selected_vow) {
+      const vows = profile.selected_vow.split(',').filter(Boolean);
+      setSelectedVows(vows);
+    }
     setCurrentScreen('dashboard');
   };
 
@@ -62,7 +94,9 @@ export default function HomeScreen() {
       {currentScreen === 'dashboard' && (
         <View style={styles.screenContainer}>
           <Dashboard
-            selectedVow={selectedVow}
+            selectedVows={selectedVows}
+            activeVow={activeVow}
+            onSetActiveVow={setActiveVow}
             onSelectVow={() => setCurrentScreen('vowSelection')}
             onOpenSettings={() => setCurrentScreen('settings')}
             onOpenAdmin={() => setCurrentScreen('admin')}
@@ -73,12 +107,15 @@ export default function HomeScreen() {
       <Modal
         visible={currentScreen === 'vowSelection'}
         animationType="slide"
-        onRequestClose={() => setCurrentScreen('dashboard')}
+        onRequestClose={handleCloseVowSelection}
       >
         <View style={[styles.modalContainer, { paddingTop: insets.top }]}>
           <VowSelection
-            selectedVow={selectedVow}
-            onSelect={handleVowSelect}
+            selectedVows={selectedVows}
+            onToggleVow={handleToggleVow}
+            onConfirm={handleConfirmVows}
+            onClose={handleCloseVowSelection}
+            isLoading={isSaving}
           />
         </View>
       </Modal>

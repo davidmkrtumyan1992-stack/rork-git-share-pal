@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
+  ActivityIndicator,
 } from 'react-native';
 import {
   Ban,
@@ -16,6 +17,8 @@ import {
   Brain,
   BookOpen,
   Star,
+  X,
+  Check,
 } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { getTranslation } from '@/data/translations';
@@ -46,11 +49,20 @@ const vowColors: Record<string, string> = {
 };
 
 interface VowSelectionProps {
-  selectedVow: string | null;
-  onSelect: (vowType: string) => void;
+  selectedVows: string[];
+  onToggleVow: (vowType: string) => void;
+  onConfirm: () => void;
+  onClose: () => void;
+  isLoading?: boolean;
 }
 
-export function VowSelection({ selectedVow, onSelect }: VowSelectionProps) {
+export function VowSelection({ 
+  selectedVows, 
+  onToggleVow, 
+  onConfirm, 
+  onClose,
+  isLoading 
+}: VowSelectionProps) {
   const { language } = useAuth();
   const t = getTranslation(language);
 
@@ -65,43 +77,81 @@ export function VowSelection({ selectedVow, onSelect }: VowSelectionProps) {
     { key: 'reading', title: t.vows.reading, desc: t.vows.readingDesc },
   ];
 
+  const handleToggle = (vowKey: string) => {
+    console.log('Toggling vow:', vowKey);
+    onToggleVow(vowKey);
+  };
+
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <Text style={styles.title}>{t.vows.title}</Text>
-      
-      <View style={styles.grid}>
-        {vowTypes.map((vow) => {
-          const IconComponent = vowIcons[vow.key];
-          const color = vowColors[vow.key];
-          const isSelected = selectedVow === vow.key;
-          
-          return (
-            <TouchableOpacity
-              key={vow.key}
-              style={[
-                styles.vowCard,
-                isSelected && { borderColor: color, borderWidth: 2 },
-              ]}
-              onPress={() => onSelect(vow.key)}
-              testID={`vow-${vow.key}`}
-            >
-              <View style={[styles.iconContainer, { backgroundColor: color + '20' }]}>
-                <IconComponent size={28} color={color} />
-              </View>
-              <Text style={styles.vowTitle}>{vow.title}</Text>
-              <Text style={styles.vowDesc} numberOfLines={2}>
-                {vow.desc}
-              </Text>
-              {isSelected && (
-                <View style={[styles.selectedBadge, { backgroundColor: color }]}>
-                  <Text style={styles.selectedText}>✓</Text>
-                </View>
-              )}
-            </TouchableOpacity>
-          );
-        })}
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+          <X size={24} color={darkTheme.colors.textSecondary} />
+        </TouchableOpacity>
+        <Text style={styles.title}>{t.vows.title}</Text>
+        <View style={styles.placeholder} />
       </View>
-    </ScrollView>
+
+      <Text style={styles.subtitle}>
+        {language === 'ru' 
+          ? `Выбрано: ${selectedVows.length}` 
+          : `Selected: ${selectedVows.length}`}
+      </Text>
+      
+      <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+        <View style={styles.grid}>
+          {vowTypes.map((vow) => {
+            const IconComponent = vowIcons[vow.key];
+            const color = vowColors[vow.key];
+            const isSelected = selectedVows.includes(vow.key);
+            
+            return (
+              <TouchableOpacity
+                key={vow.key}
+                style={[
+                  styles.vowCard,
+                  isSelected && { borderColor: color, borderWidth: 2 },
+                ]}
+                onPress={() => handleToggle(vow.key)}
+                testID={`vow-${vow.key}`}
+              >
+                <View style={[styles.iconContainer, { backgroundColor: color + '20' }]}>
+                  <IconComponent size={28} color={color} />
+                </View>
+                <Text style={styles.vowTitle}>{vow.title}</Text>
+                <Text style={styles.vowDesc} numberOfLines={2}>
+                  {vow.desc}
+                </Text>
+                {isSelected && (
+                  <View style={[styles.selectedBadge, { backgroundColor: color }]}>
+                    <Check size={14} color={darkTheme.colors.text} />
+                  </View>
+                )}
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </ScrollView>
+
+      <View style={styles.footer}>
+        <TouchableOpacity
+          style={[
+            styles.confirmButton,
+            selectedVows.length === 0 && styles.confirmButtonDisabled,
+          ]}
+          onPress={onConfirm}
+          disabled={selectedVows.length === 0 || isLoading}
+        >
+          {isLoading ? (
+            <ActivityIndicator color={darkTheme.colors.text} />
+          ) : (
+            <Text style={styles.confirmButtonText}>
+              {language === 'ru' ? 'Продолжить' : 'Continue'}
+            </Text>
+          )}
+        </TouchableOpacity>
+      </View>
+    </View>
   );
 }
 
@@ -109,18 +159,46 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: darkTheme.spacing.sm,
+    paddingTop: darkTheme.spacing.sm,
+  },
+  closeButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: darkTheme.colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   title: {
-    fontSize: darkTheme.fontSize.xxl,
+    fontSize: darkTheme.fontSize.xl,
     fontWeight: darkTheme.fontWeight.bold,
     color: darkTheme.colors.text,
-    marginBottom: darkTheme.spacing.lg,
     textAlign: 'center',
+    flex: 1,
+  },
+  placeholder: {
+    width: 44,
+  },
+  subtitle: {
+    fontSize: darkTheme.fontSize.md,
+    color: darkTheme.colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: darkTheme.spacing.md,
+  },
+  scrollContainer: {
+    flex: 1,
   },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     gap: darkTheme.spacing.md,
+    paddingBottom: darkTheme.spacing.lg,
   },
   vowCard: {
     width: '47%',
@@ -154,15 +232,31 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -8,
     right: -8,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  selectedText: {
+  footer: {
+    paddingVertical: darkTheme.spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: darkTheme.colors.border,
+  },
+  confirmButton: {
+    backgroundColor: darkTheme.colors.primary,
+    paddingVertical: darkTheme.spacing.md,
+    borderRadius: darkTheme.borderRadius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  confirmButtonDisabled: {
+    backgroundColor: darkTheme.colors.backgroundTertiary,
+    opacity: 0.6,
+  },
+  confirmButtonText: {
     color: darkTheme.colors.text,
-    fontWeight: darkTheme.fontWeight.bold,
-    fontSize: darkTheme.fontSize.sm,
+    fontSize: darkTheme.fontSize.md,
+    fontWeight: darkTheme.fontWeight.semibold,
   },
 });
