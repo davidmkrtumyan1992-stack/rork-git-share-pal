@@ -23,9 +23,11 @@ import {
   AlertCircle,
   ChevronRight,
   Clock,
+  Calendar,
+  AlertTriangle,
 } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
-import { useCreateVowEntry, useTodayEntries } from '@/hooks/useVows';
+import { useCreateVowEntry, useTodayEntries, useHistoryEntries, useMarkAntidoteCompleted, usePostponeAntidote } from '@/hooks/useVows';
 import { VowEntry } from '@/types/database';
 import { getTranslation } from '@/data/translations';
 import { darkTheme } from '@/constants/theme';
@@ -154,6 +156,9 @@ export function Dashboard({
   
   const createEntry = useCreateVowEntry();
   const { data: todayEntries = [] } = useTodayEntries();
+  const { data: historyEntries = [] } = useHistoryEntries();
+  const markAntidoteCompleted = useMarkAntidoteCompleted();
+  const postponeAntidote = usePostponeAntidote();
   
   const [activeTab, setActiveTab] = useState<TabType>('diary');
   const [cardStates, setCardStates] = useState<Record<string, VowCardState>>({});
@@ -283,6 +288,67 @@ export function Dashboard({
     const minutes = date.getMinutes().toString().padStart(2, '0');
     return `${hours}:${minutes}`;
   }, []);
+
+  const formatDate = useCallback((dateString: string): string => {
+    const date = new Date(dateString);
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    if (date.toDateString() === yesterday.toDateString()) {
+      return language === 'ru' ? 'Вчера' : 'Yesterday';
+    }
+
+    const options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short' };
+    return date.toLocaleDateString(language === 'ru' ? 'ru-RU' : 'en-US', options);
+  }, [language]);
+
+  const isOverdue = useCallback((entry: VowEntry): boolean => {
+    const entryDate = new Date(entry.entry_date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return entry.status === 'broken' && !entry.antidote_completed && entryDate < today;
+  }, []);
+
+  const handleMarkCompleted = useCallback((entryId: string) => {
+    markAntidoteCompleted.mutate(entryId, {
+      onError: () => {
+        Alert.alert(
+          language === 'ru' ? 'Ошибка' : 'Error',
+          language === 'ru'
+            ? '«Не удалось отметить антидот выполненным»'
+            : '"Failed to mark antidote as completed"'
+        );
+      },
+    });
+  }, [markAntidoteCompleted, language]);
+
+  const handlePostpone = useCallback((entryId: string) => {
+    postponeAntidote.mutate(entryId, {
+      onError: () => {
+        Alert.alert(
+          language === 'ru' ? 'Ошибка' : 'Error',
+          language === 'ru'
+            ? '«Не удалось перенести антидот»'
+            : '"Failed to postpone antidote"'
+        );
+      },
+    });
+  }, [postponeAntidote, language]);
+
+  const getVowNameFromType = useCallback((vowType: string): string => {
+    const [category, indexStr] = vowType.split('_');
+    const index = parseInt(indexStr, 10);
+    const items = vowItems[category];
+    if (items && items[index]) {
+      return items[index][language];
+    }
+    return vowType;
+  }, [language]);
+
+  const getVowCategoryFromType = useCallback((vowType: string): string => {
+    const [category] = vowType.split('_');
+    return vowCategoryNames[category]?.[language] || category;
+  }, [language]);
 
   const renderTabs = () => (
     <ScrollView 
@@ -719,6 +785,185 @@ export function Dashboard({
     });
   };
 
+  const renderHistoryCard = (entry: VowEntry, isOverdueEntry: boolean) => {
+    const vowName = getVowNameFromType(entry.vow_type);
+    const categoryName = getVowCategoryFromType(entry.vow_type);
+    const isKept = entry.status === 'kept';
+    const isBroken = entry.status === 'broken';
+    const showActions = isBroken && !entry.antidote_completed;
+
+    return (
+      <View
+        key={entry.id}
+        style={[
+          styles.historyCard,
+          isOverdueEntry && styles.historyCardOverdue,
+        ]}
+      >
+        {isOverdueEntry && (
+          <View style={styles.overdueLabel}>
+            <AlertTriangle size={14} color="#C5A572" />
+            <Text style={styles.overdueLabelText}>
+              {language === 'ru' ? 'Просроченный долг' : 'Overdue debt'}
+            </Text>
+          </View>
+        )}
+
+        <View style={styles.historyCardHeader}>
+          <View style={styles.vowNumberContainer}>
+            {isBroken ? (
+              <LinearGradient
+                colors={['#B85C4F', '#A04A3E']}
+                style={styles.vowNumber}
+              >
+                <Text style={styles.vowNumberText}>!</Text>
+              </LinearGradient>
+            ) : (
+              <LinearGradient
+                colors={['#6B8E7F', '#5A7A6D']}
+                style={styles.vowNumber}
+              >
+                <Check size={16} color="#FFFFFF" />
+              </LinearGradient>
+            )}
+          </View>
+          <View style={styles.vowCategoryBadge}>
+            <Text style={styles.vowCategoryText}>{categoryName}</Text>
+          </View>
+          <View style={styles.historyDateBadge}>
+            <Clock size={12} color={darkTheme.colors.textMuted} />
+            <Text style={styles.historyDateText}>{formatDate(entry.entry_date)}</Text>
+          </View>
+        </View>
+
+        <Text style={styles.historyVowText}>{vowName}</Text>
+
+        {isKept && (
+          <View style={styles.historyInfoBoxKept}>
+            <Check size={18} color="#7FA88F" />
+            <Text style={styles.historyInfoBoxKeptText}>
+              {language === 'ru' ? 'Обет соблюдён' : 'Vow kept'}
+            </Text>
+          </View>
+        )}
+
+        {isBroken && (
+          <>
+            <View style={styles.historyInfoBoxBroken}>
+              <X size={18} color="#B85C4F" />
+              <Text style={styles.historyInfoBoxBrokenText}>
+                {language === 'ru' ? 'Обет нарушен' : 'Vow broken'}
+              </Text>
+            </View>
+            {entry.antidote_text && (
+              <View style={styles.historyInfoBoxAntidote}>
+                <Text style={styles.antidoteLabelSmall}>
+                  {language === 'ru' ? 'Антидот:' : 'Antidote:'}
+                </Text>
+                <Text style={styles.antidoteValueText}>{entry.antidote_text}</Text>
+              </View>
+            )}
+            {entry.antidote_completed && (
+              <View style={styles.antidoteCompletedBadge}>
+                <Check size={14} color="#6B8E7F" />
+                <Text style={styles.antidoteCompletedText}>
+                  {language === 'ru' ? 'Антидот выполнен' : 'Antidote completed'}
+                </Text>
+              </View>
+            )}
+          </>
+        )}
+
+        {entry.note_text && isKept && (
+          <View style={styles.noteDisplay}>
+            <Text style={styles.noteDisplayText}>«{entry.note_text}»</Text>
+          </View>
+        )}
+
+        {showActions && (
+          <View style={styles.historyActions}>
+            <TouchableOpacity
+              style={styles.historyActionButton}
+              onPress={() => handleMarkCompleted(entry.id)}
+              disabled={markAntidoteCompleted.isPending}
+            >
+              <LinearGradient
+                colors={['#7FA88F', '#6B9E7D']}
+                style={styles.historyActionGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+              >
+                <Check size={16} color="#FFFFFF" />
+                <Text style={styles.historyActionText}>
+                  {language === 'ru' ? 'Выполнил' : 'Completed'}
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.historyPostponeButton}
+              onPress={() => handlePostpone(entry.id)}
+              disabled={postponeAntidote.isPending}
+            >
+              <Calendar size={16} color={darkTheme.colors.textSecondary} />
+              <Text style={styles.historyPostponeText}>
+                {language === 'ru' ? 'Перенести' : 'Postpone'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </View>
+    );
+  };
+
+  const renderHistoryContent = () => {
+    const overdueEntries = historyEntries.filter(e => isOverdue(e));
+    const regularEntries = historyEntries.filter(e => !isOverdue(e));
+
+    if (historyEntries.length === 0) {
+      return (
+        <View style={styles.emptyHistory}>
+          <History size={48} color={darkTheme.colors.textMuted} />
+          <Text style={styles.emptyHistoryText}>
+            {language === 'ru' ? 'История пуста' : 'History is empty'}
+          </Text>
+          <Text style={styles.emptyHistorySubtext}>
+            {language === 'ru'
+              ? 'Записи появятся после отметки обетов'
+              : 'Entries will appear after marking vows'}
+          </Text>
+        </View>
+      );
+    }
+
+    return (
+      <View style={styles.historyContainer}>
+        {overdueEntries.length > 0 && (
+          <View style={styles.overdueSection}>
+            <View style={styles.overdueSectionHeader}>
+              <AlertTriangle size={18} color="#C5A572" />
+              <Text style={styles.overdueSectionTitle}>
+                {language === 'ru' ? 'Незавершённые антидоты' : 'Uncompleted antidotes'}
+              </Text>
+            </View>
+            {overdueEntries.map(entry => renderHistoryCard(entry, true))}
+          </View>
+        )}
+
+        {regularEntries.length > 0 && (
+          <View style={styles.regularHistorySection}>
+            {overdueEntries.length > 0 && (
+              <Text style={styles.regularHistorySectionTitle}>
+                {language === 'ru' ? 'Недавние записи' : 'Recent entries'}
+              </Text>
+            )}
+            {regularEntries.map(entry => renderHistoryCard(entry, false))}
+          </View>
+        )}
+      </View>
+    );
+  };
+
   const responsiveStyles = {
     scrollContent: {
       padding: isSmallScreen ? 16 : isLargeScreen ? 32 : 20,
@@ -767,25 +1012,31 @@ export function Dashboard({
           </TouchableOpacity>
         )}
 
-        {selectedVows.length > 0 && renderSelectedVowsChips()}
+        {activeTab === 'diary' && selectedVows.length > 0 && renderSelectedVowsChips()}
 
-        {selectedVows.length === 0 ? (
-          <TouchableOpacity style={[styles.emptyState, isLargeScreen && styles.emptyStateLarge]} onPress={onSelectVow}>
-            <Plus size={isSmallScreen ? 40 : 48} color={darkTheme.colors.textMuted} />
-            <Text style={[styles.emptyStateText, isSmallScreen && styles.emptyStateTextSmall]}>
-              {language === 'ru' 
-                ? 'Нажмите, чтобы выбрать обеты'
-                : 'Tap to select vows'}
-            </Text>
-          </TouchableOpacity>
-        ) : (
-          <View style={[
-            styles.vowCardsContainer,
-            isLargeScreen && styles.vowCardsContainerLarge
-          ]}>
-            {renderVowCards()}
-          </View>
+        {activeTab === 'diary' && (
+          <>
+            {selectedVows.length === 0 ? (
+              <TouchableOpacity style={[styles.emptyState, isLargeScreen && styles.emptyStateLarge]} onPress={onSelectVow}>
+                <Plus size={isSmallScreen ? 40 : 48} color={darkTheme.colors.textMuted} />
+                <Text style={[styles.emptyStateText, isSmallScreen && styles.emptyStateTextSmall]}>
+                  {language === 'ru' 
+                    ? 'Нажмите, чтобы выбрать обеты'
+                    : 'Tap to select vows'}
+                </Text>
+              </TouchableOpacity>
+            ) : (
+              <View style={[
+                styles.vowCardsContainer,
+                isLargeScreen && styles.vowCardsContainerLarge
+              ]}>
+                {renderVowCards()}
+              </View>
+            )}
+          </>
         )}
+
+        {activeTab === 'history' && renderHistoryContent()}
       </ScrollView>
     </View>
   );
@@ -1279,5 +1530,196 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     color: darkTheme.colors.textSecondary,
     lineHeight: 20,
+  },
+  historyContainer: {
+    gap: 20,
+  },
+  historyCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.6)',
+    borderRadius: 20,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 3,
+    marginBottom: 12,
+  },
+  historyCardOverdue: {
+    borderWidth: 1,
+    borderColor: '#C5A572',
+    backgroundColor: 'rgba(197, 165, 114, 0.08)',
+  },
+  historyCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 12,
+  },
+  historyDateBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+    borderRadius: 8,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    marginLeft: 'auto',
+  },
+  historyDateText: {
+    fontSize: 11,
+    fontWeight: '500' as const,
+    color: darkTheme.colors.textMuted,
+  },
+  historyVowText: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: darkTheme.colors.text,
+    marginBottom: 12,
+    lineHeight: 22,
+  },
+  historyInfoBoxKept: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(127, 168, 143, 0.12)',
+    borderRadius: 12,
+    padding: 12,
+    gap: 10,
+  },
+  historyInfoBoxKeptText: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '500' as const,
+    color: '#5A7A6D',
+  },
+  historyInfoBoxBroken: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(184, 92, 79, 0.1)',
+    borderRadius: 12,
+    padding: 12,
+    gap: 10,
+  },
+  historyInfoBoxBrokenText: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '500' as const,
+    color: '#A04A3E',
+  },
+  historyInfoBoxAntidote: {
+    backgroundColor: 'rgba(197, 165, 114, 0.12)',
+    borderRadius: 12,
+    padding: 12,
+    gap: 4,
+    marginTop: 8,
+  },
+  historyActions: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 12,
+  },
+  historyActionButton: {
+    flex: 1,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  historyActionGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    gap: 6,
+  },
+  historyActionText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: '#FFFFFF',
+  },
+  historyPostponeButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    paddingVertical: 12,
+    gap: 6,
+    borderWidth: 1,
+    borderColor: '#E8E1D5',
+  },
+  historyPostponeText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: darkTheme.colors.textSecondary,
+  },
+  overdueLabel: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 10,
+  },
+  overdueLabelText: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    color: '#C5A572',
+  },
+  overdueSection: {
+    marginBottom: 24,
+  },
+  overdueSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
+  },
+  overdueSectionTitle: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: '#8B6A4E',
+  },
+  regularHistorySection: {
+    gap: 0,
+  },
+  regularHistorySectionTitle: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: darkTheme.colors.text,
+    marginBottom: 12,
+  },
+  antidoteCompletedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(107, 142, 127, 0.12)',
+    borderRadius: 10,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    marginTop: 8,
+    alignSelf: 'flex-start',
+  },
+  antidoteCompletedText: {
+    fontSize: 12,
+    fontWeight: '500' as const,
+    color: '#6B8E7F',
+  },
+  emptyHistory: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.6)',
+    borderRadius: 24,
+    padding: 48,
+    marginTop: 20,
+  },
+  emptyHistoryText: {
+    fontSize: 18,
+    fontWeight: '600' as const,
+    color: darkTheme.colors.text,
+    marginTop: 16,
+  },
+  emptyHistorySubtext: {
+    fontSize: 14,
+    color: darkTheme.colors.textMuted,
+    marginTop: 8,
+    textAlign: 'center',
   },
 });

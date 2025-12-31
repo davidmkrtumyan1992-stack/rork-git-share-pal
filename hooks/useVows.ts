@@ -165,6 +165,7 @@ export const useCreateVowEntry = () => {
         status: newEntry.status,
         note_text: newEntry.noteText || null,
         antidote_text: newEntry.antidoteText || null,
+        antidote_completed: false,
         postponed_count: 0,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -264,5 +265,169 @@ export const useCyclePosition = (vowType: string | null) => {
       return data as VowCyclePosition | null;
     },
     enabled: !!user && !!vowType,
+  });
+};
+
+export const useHistoryEntries = () => {
+  const { user } = useAuth();
+  const today = new Date().toISOString().split('T')[0];
+
+  return useQuery({
+    queryKey: ['history-entries', user?.id, today, user] as const,
+    queryFn: async () => {
+      if (!user) return [];
+
+      console.log('Fetching history entries for user:', user.id);
+      
+      const twoDaysAgo = new Date();
+      twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+      const twoDaysAgoStr = twoDaysAgo.toISOString().split('T')[0];
+
+      const { data, error } = await supabase
+        .from('vow_entries')
+        .select('*')
+        .eq('user_id', user.id)
+        .neq('entry_date', today)
+        .or(`entry_date.gte.${twoDaysAgoStr},and(status.eq.broken,antidote_completed.eq.false)`)
+        .order('entry_date', { ascending: false });
+
+      if (error) {
+        console.log('History entries fetch error:', error.message);
+        throw error;
+      }
+
+      return data as VowEntry[];
+    },
+    enabled: !!user,
+  });
+};
+
+export const useUncompletedAntidotes = () => {
+  const { user } = useAuth();
+
+  return useQuery({
+    queryKey: ['uncompleted-antidotes', user?.id, user] as const,
+    queryFn: async () => {
+      if (!user) return [];
+
+      console.log('Fetching uncompleted antidotes for user:', user.id);
+
+      const { data, error } = await supabase
+        .from('vow_entries')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('status', 'broken')
+        .eq('antidote_completed', false)
+        .order('entry_date', { ascending: false });
+
+      if (error) {
+        console.log('Uncompleted antidotes fetch error:', error.message);
+        throw error;
+      }
+
+      return data as VowEntry[];
+    },
+    enabled: !!user,
+  });
+};
+
+export const useMarkAntidoteCompleted = () => {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (entryId: string) => {
+      if (!user) throw new Error('Not authenticated');
+
+      console.log('Marking antidote as completed:', entryId);
+
+      const { data, error } = await supabase
+        .from('vow_entries')
+        .update({ antidote_completed: true })
+        .eq('id', entryId)
+        .eq('user_id', user.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onMutate: async (entryId: string) => {
+      await queryClient.cancelQueries({ queryKey: ['history-entries'] });
+      await queryClient.cancelQueries({ queryKey: ['uncompleted-antidotes'] });
+
+      const previousHistory = queryClient.getQueryData<VowEntry[]>(['history-entries', user?.id, user]);
+      const previousUncompleted = queryClient.getQueryData<VowEntry[]>(['uncompleted-antidotes', user?.id, user]);
+
+      queryClient.setQueryData<VowEntry[]>(
+        ['history-entries', user?.id, user],
+        (old = []) => old.map(e => e.id === entryId ? { ...e, antidote_completed: true } : e)
+      );
+
+      queryClient.setQueryData<VowEntry[]>(
+        ['uncompleted-antidotes', user?.id, user],
+        (old = []) => old.filter(e => e.id !== entryId)
+      );
+
+      return { previousHistory, previousUncompleted };
+    },
+    onError: (err, entryId, context) => {
+      console.log('Mark antidote completed error:', err.message);
+      if (context?.previousHistory) {
+        queryClient.setQueryData(['history-entries', user?.id, user], context.previousHistory);
+      }
+      if (context?.previousUncompleted) {
+        queryClient.setQueryData(['uncompleted-antidotes', user?.id, user], context.previousUncompleted);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['history-entries'] });
+      queryClient.invalidateQueries({ queryKey: ['uncompleted-antidotes'] });
+      queryClient.invalidateQueries({ queryKey: ['vow-entries'] });
+    },
+  });
+};
+
+export const usePostponeAntidote = () => {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowStr = tomorrow.toISOString().split('T')[0];
+
+  return useMutation({
+    mutationFn: async (entryId: string) => {
+      if (!user) throw new Error('Not authenticated');
+
+      console.log('Postponing antidote to:', tomorrowStr);
+
+      const { data: entry, error: fetchError } = await supabase
+        .from('vow_entries')
+        .select('*')
+        .eq('id', entryId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      const { data, error } = await supabase
+        .from('vow_entries')
+        .update({
+          entry_date: tomorrowStr,
+          postponed_count: (entry.postponed_count || 0) + 1,
+        })
+        .eq('id', entryId)
+        .eq('user_id', user.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['history-entries'] });
+      queryClient.invalidateQueries({ queryKey: ['uncompleted-antidotes'] });
+      queryClient.invalidateQueries({ queryKey: ['vow-entries'] });
+      queryClient.invalidateQueries({ queryKey: ['today-entries'] });
+    },
   });
 };

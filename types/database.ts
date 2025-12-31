@@ -24,6 +24,7 @@ export interface VowEntry {
   entry_date: string;
   status: VowStatus;
   antidote_text: string | null;
+  antidote_completed: boolean;
   note_text: string | null;
   postponed_count: number;
   created_at: string;
