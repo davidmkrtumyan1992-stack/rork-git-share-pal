@@ -63,8 +63,8 @@ const vowItems: Record<string, { ru: string; en: string }[]> = {
 };
 
 const antidoteTags = {
-  ru: ['Практиковать щедрость', 'Попросить прощения', 'Медитировать на сострадание'],
-  en: ['Practice generosity', 'Ask for forgiveness', 'Meditate on compassion'],
+  ru: ['Практиковать щедрость', 'Попросить прощения', 'Медитировать на сострадание', 'Сделать подношение', 'Прочитать мантру'],
+  en: ['Practice generosity', 'Ask for forgiveness', 'Meditate on compassion', 'Make an offering', 'Recite a mantra'],
 };
 
 const BREAKPOINTS = {
@@ -159,30 +159,24 @@ export function Dashboard({
 
   const handleSaveBreak = (vowType: string, cardKey: string) => {
     const state = cardStates[cardKey];
-    const antidoteText = [
-      ...(state?.selectedAntidotes || []),
-      state?.antidoteText,
-    ].filter(Boolean).join('; ');
     
     createEntry.mutate({
       vowType,
       status: 'broken',
-      antidoteText: antidoteText || undefined,
+      antidoteText: state?.antidoteText || undefined,
     });
     handleCollapseCard(cardKey);
   };
 
-  const toggleAntidoteTag = (cardKey: string, tag: string) => {
+  const selectAntidoteTag = (cardKey: string, tag: string) => {
     setCardStates(prev => {
-      const current = prev[cardKey]?.selectedAntidotes || [];
-      const newTags = current.includes(tag)
-        ? current.filter(t => t !== tag)
-        : [...current, tag];
+      const currentText = prev[cardKey]?.antidoteText || '';
+      const newText = currentText ? `${currentText}; ${tag}` : tag;
       return {
         ...prev,
         [cardKey]: {
           ...prev[cardKey],
-          selectedAntidotes: newTags,
+          antidoteText: newText,
         }
       };
     });
@@ -473,28 +467,25 @@ export function Dashboard({
               {language === 'ru' ? 'Антидот' : 'Antidote'}
             </Text>
 
-            <View style={styles.antidoteTags}>
-              {antidoteTags[language].map((tag) => {
-                const isSelected = state?.selectedAntidotes?.includes(tag);
-                return (
-                  <TouchableOpacity
-                    key={tag}
-                    style={[
-                      styles.antidoteTag,
-                      isSelected && styles.antidoteTagSelected,
-                    ]}
-                    onPress={() => toggleAntidoteTag(cardKey, tag)}
-                  >
-                    <Text style={[
-                      styles.antidoteTagText,
-                      isSelected && styles.antidoteTagTextSelected,
-                    ]}>
-                      {tag}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false}
+              style={styles.antidoteTagsScroll}
+              contentContainerStyle={styles.antidoteTagsContent}
+            >
+              {antidoteTags[language].map((tag) => (
+                <TouchableOpacity
+                  key={tag}
+                  style={styles.antidoteTag}
+                  onPress={() => selectAntidoteTag(cardKey, tag)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.antidoteTagText}>
+                    {tag}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
 
             <TextInput
               style={styles.noteInput}
@@ -918,31 +909,27 @@ const styles = StyleSheet.create({
     color: darkTheme.colors.text,
     marginBottom: 12,
   },
-  antidoteTags: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
+  antidoteTagsScroll: {
     marginBottom: 16,
+    marginHorizontal: -20,
+  },
+  antidoteTagsContent: {
+    paddingHorizontal: 20,
+    gap: 10,
   },
   antidoteTag: {
-    backgroundColor: '#F0EBE3',
+    backgroundColor: 'rgba(197, 165, 114, 0.15)',
     borderRadius: 20,
-    paddingVertical: 8,
+    paddingVertical: 10,
     paddingHorizontal: 16,
     borderWidth: 1,
-    borderColor: 'transparent',
-  },
-  antidoteTagSelected: {
-    backgroundColor: 'rgba(197, 165, 114, 0.2)',
     borderColor: '#C5A572',
   },
   antidoteTagText: {
     fontSize: 13,
     fontWeight: '500' as const,
-    color: darkTheme.colors.textSecondary,
-  },
-  antidoteTagTextSelected: {
     color: '#8B6A4E',
+    whiteSpace: 'nowrap' as const,
   },
   noteInput: {
     backgroundColor: '#F8F5F0',
