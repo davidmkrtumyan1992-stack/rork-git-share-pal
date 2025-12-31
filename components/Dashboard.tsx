@@ -7,6 +7,7 @@ import {
   ScrollView,
   TextInput,
   ActivityIndicator,
+  useWindowDimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
@@ -66,6 +67,12 @@ const antidoteTags = {
   en: ['Practice generosity', 'Ask for forgiveness', 'Meditate on compassion'],
 };
 
+const BREAKPOINTS = {
+  sm: 320,
+  md: 768,
+  lg: 1024,
+};
+
 interface DashboardProps {
   selectedVows: string[];
   activeVow: string | null;
@@ -96,6 +103,10 @@ export function Dashboard({
 }: DashboardProps) {
   const { profile, language, isAdmin } = useAuth();
   const t = getTranslation(language);
+  const { width: screenWidth } = useWindowDimensions();
+  
+  const isSmallScreen = screenWidth < BREAKPOINTS.md;
+  const isLargeScreen = screenWidth >= BREAKPOINTS.lg;
   
   const createEntry = useCreateVowEntry();
   
@@ -198,118 +209,130 @@ export function Dashboard({
   };
 
   const renderTabs = () => (
-    <View style={styles.tabsContainer}>
-      <TouchableOpacity
-        style={[styles.tab, activeTab === 'diary' && styles.tabActive]}
-        onPress={() => setActiveTab('diary')}
-      >
-        {activeTab === 'diary' ? (
-          <LinearGradient
-            colors={['#6B8E7F', '#5A7A6D']}
-            style={styles.tabGradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-          >
-            <Bell size={18} color="#FFFFFF" />
-            <Text style={styles.tabTextActive}>
-              {language === 'ru' ? 'Дневник' : 'Diary'}
-            </Text>
-          </LinearGradient>
-        ) : (
-          <View style={styles.tabInner}>
-            <Bell size={18} color={darkTheme.colors.textMuted} />
-            <Text style={styles.tabText}>
-              {language === 'ru' ? 'Дневник' : 'Diary'}
-            </Text>
-          </View>
-        )}
-      </TouchableOpacity>
+    <ScrollView 
+      horizontal 
+      showsHorizontalScrollIndicator={false}
+      style={styles.tabsScrollContainer}
+      contentContainerStyle={styles.tabsScrollContent}
+    >
+      <View style={[styles.tabsContainer, isLargeScreen && styles.tabsContainerLarge]}>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'diary' && styles.tabActive]}
+          onPress={() => setActiveTab('diary')}
+        >
+          {activeTab === 'diary' ? (
+            <LinearGradient
+              colors={['#6B8E7F', '#5A7A6D']}
+              style={styles.tabGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+            >
+              <Bell size={isSmallScreen ? 16 : 18} color="#FFFFFF" />
+              {!isSmallScreen && (
+                <Text style={styles.tabTextActive}>
+                  {language === 'ru' ? 'Дневник' : 'Diary'}
+                </Text>
+              )}
+            </LinearGradient>
+          ) : (
+            <View style={styles.tabInner}>
+              <Bell size={isSmallScreen ? 16 : 18} color={darkTheme.colors.textMuted} />
+              {!isSmallScreen && (
+                <Text style={styles.tabText}>
+                  {language === 'ru' ? 'Дневник' : 'Diary'}
+                </Text>
+              )}
+            </View>
+          )}
+        </TouchableOpacity>
 
-      <TouchableOpacity
-        style={[styles.tab, activeTab === 'history' && styles.tabActive]}
-        onPress={() => setActiveTab('history')}
-      >
-        {activeTab === 'history' ? (
-          <LinearGradient
-            colors={['#6B8E7F', '#5A7A6D']}
-            style={styles.tabGradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-          >
-            <History size={18} color="#FFFFFF" />
-            <Text style={styles.tabTextActive}>
-              {language === 'ru' ? 'История' : 'History'}
-            </Text>
-          </LinearGradient>
-        ) : (
-          <View style={styles.tabInner}>
-            <History size={18} color={darkTheme.colors.textMuted} />
-            <Text style={styles.tabText}>
-              {language === 'ru' ? 'История' : 'History'}
-            </Text>
-          </View>
-        )}
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'history' && styles.tabActive]}
+          onPress={() => setActiveTab('history')}
+        >
+          {activeTab === 'history' ? (
+            <LinearGradient
+              colors={['#6B8E7F', '#5A7A6D']}
+              style={styles.tabGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+            >
+              <History size={isSmallScreen ? 16 : 18} color="#FFFFFF" />
+              {!isSmallScreen && (
+                <Text style={styles.tabTextActive}>
+                  {language === 'ru' ? 'История' : 'History'}
+                </Text>
+              )}
+            </LinearGradient>
+          ) : (
+            <View style={styles.tabInner}>
+              <History size={isSmallScreen ? 16 : 18} color={darkTheme.colors.textMuted} />
+              {!isSmallScreen && (
+                <Text style={styles.tabText}>
+                  {language === 'ru' ? 'История' : 'History'}
+                </Text>
+              )}
+            </View>
+          )}
+        </TouchableOpacity>
 
-      <TouchableOpacity
-        style={[styles.tab, activeTab === 'settings' && styles.tabActive]}
-        onPress={() => {
-          setActiveTab('settings');
-          onOpenSettings();
-        }}
-      >
-        {activeTab === 'settings' ? (
-          <LinearGradient
-            colors={['#6B8E7F', '#5A7A6D']}
-            style={styles.tabGradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-          >
-            <Text style={styles.tabTextActive}>
-              {language === 'ru' ? 'Настройки' : 'Settings'}
-            </Text>
-          </LinearGradient>
-        ) : (
-          <View style={styles.tabInner}>
-            <Text style={styles.tabText}>
-              {language === 'ru' ? 'Настройки' : 'Settings'}
-            </Text>
-          </View>
-        )}
-      </TouchableOpacity>
-    </View>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'settings' && styles.tabActive]}
+          onPress={() => {
+            setActiveTab('settings');
+            onOpenSettings();
+          }}
+        >
+          {activeTab === 'settings' ? (
+            <LinearGradient
+              colors={['#6B8E7F', '#5A7A6D']}
+              style={styles.tabGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+            >
+              <Text style={styles.tabTextActive}>
+                {language === 'ru' ? 'Настройки' : 'Settings'}
+              </Text>
+            </LinearGradient>
+          ) : (
+            <View style={styles.tabInner}>
+              <Text style={styles.tabText}>
+                {language === 'ru' ? 'Настройки' : 'Settings'}
+              </Text>
+            </View>
+          )}
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
   );
 
   const renderSelectedVowsChips = () => (
-    <View style={styles.chipsSection}>
+    <View style={[styles.chipsSection, isLargeScreen && styles.chipsSectionLarge]}>
       <View style={styles.chipsSectionHeader}>
-        <Text style={styles.chipsSectionTitle}>
+        <Text style={[styles.chipsSectionTitle, isLargeScreen && styles.chipsSectionTitleLarge]}>
           {language === 'ru' ? 'Выбранные обеты' : 'Selected Vows'}
         </Text>
         <TouchableOpacity style={styles.addButton} onPress={onSelectVow}>
-          <Plus size={20} color={darkTheme.colors.primary} />
+          <Plus size={isSmallScreen ? 18 : 20} color={darkTheme.colors.primary} />
         </TouchableOpacity>
       </View>
-      <ScrollView 
-        horizontal 
-        showsHorizontalScrollIndicator={false}
-        style={styles.chipsScroll}
-        contentContainerStyle={styles.chipsContent}
-      >
+      <View style={styles.chipsWrapContainer}>
         {selectedVows.map((vow) => (
-          <View key={vow} style={styles.chip}>
-            <Text style={styles.chipText}>{getVowCategoryName(vow)}</Text>
+          <View key={vow} style={[styles.chip, isSmallScreen && styles.chipSmall]}>
+            <Text style={[styles.chipText, isSmallScreen && styles.chipTextSmall]}>
+              {getVowCategoryName(vow)}
+            </Text>
             {onRemoveVow && (
               <TouchableOpacity 
                 style={styles.chipRemove}
                 onPress={() => onRemoveVow(vow)}
               >
-                <X size={14} color="#FFFFFF" />
+                <X size={isSmallScreen ? 12 : 14} color="#FFFFFF" />
               </TouchableOpacity>
             )}
           </View>
         ))}
-      </ScrollView>
+      </View>
     </View>
   );
 
@@ -539,6 +562,22 @@ export function Dashboard({
     });
   };
 
+  const responsiveStyles = {
+    scrollContent: {
+      padding: isSmallScreen ? 16 : isLargeScreen ? 32 : 20,
+      paddingBottom: 40,
+      maxWidth: isLargeScreen ? 1200 : undefined,
+      alignSelf: isLargeScreen ? 'center' as const : undefined,
+      width: isLargeScreen ? '100%' : undefined,
+    },
+    greeting: {
+      fontSize: isSmallScreen ? 24 : isLargeScreen ? 36 : 28,
+    },
+    vowCard: {
+      maxWidth: isLargeScreen ? 600 : undefined,
+    },
+  };
+
   return (
     <View style={styles.container}>
       <LinearGradient
@@ -551,10 +590,10 @@ export function Dashboard({
       <ScrollView 
         style={styles.scrollView} 
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, responsiveStyles.scrollContent]}
       >
         <View style={styles.header}>
-          <Text style={styles.greeting}>
+          <Text style={[styles.greeting, { fontSize: responsiveStyles.greeting.fontSize }]}>
             {language === 'ru' ? 'Привет,' : 'Hello,'}{' '}
             <Text style={styles.username}>
               {profile?.username || profile?.full_name || 'User'}
@@ -574,16 +613,19 @@ export function Dashboard({
         {selectedVows.length > 0 && renderSelectedVowsChips()}
 
         {selectedVows.length === 0 ? (
-          <TouchableOpacity style={styles.emptyState} onPress={onSelectVow}>
-            <Plus size={48} color={darkTheme.colors.textMuted} />
-            <Text style={styles.emptyStateText}>
+          <TouchableOpacity style={[styles.emptyState, isLargeScreen && styles.emptyStateLarge]} onPress={onSelectVow}>
+            <Plus size={isSmallScreen ? 40 : 48} color={darkTheme.colors.textMuted} />
+            <Text style={[styles.emptyStateText, isSmallScreen && styles.emptyStateTextSmall]}>
               {language === 'ru' 
                 ? 'Нажмите, чтобы выбрать обеты'
                 : 'Tap to select vows'}
             </Text>
           </TouchableOpacity>
         ) : (
-          <View style={styles.vowCardsContainer}>
+          <View style={[
+            styles.vowCardsContainer,
+            isLargeScreen && styles.vowCardsContainerLarge
+          ]}>
             {renderVowCards()}
           </View>
         )}
@@ -618,17 +660,29 @@ const styles = StyleSheet.create({
   username: {
     fontWeight: '700' as const,
   },
+  tabsScrollContainer: {
+    marginBottom: 20,
+    marginHorizontal: -20,
+  },
+  tabsScrollContent: {
+    paddingHorizontal: 20,
+    flexGrow: 1,
+  },
   tabsContainer: {
     flexDirection: 'row',
     backgroundColor: 'rgba(255, 255, 255, 0.8)',
     borderRadius: 16,
     padding: 4,
-    marginBottom: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 8,
     elevation: 3,
+    minWidth: '100%',
+  },
+  tabsContainerLarge: {
+    maxWidth: 500,
+    alignSelf: 'flex-start',
   },
   tab: {
     flex: 1,
@@ -682,6 +736,9 @@ const styles = StyleSheet.create({
   chipsSection: {
     marginBottom: 24,
   },
+  chipsSectionLarge: {
+    maxWidth: 800,
+  },
   chipsSectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -693,6 +750,9 @@ const styles = StyleSheet.create({
     fontWeight: '600' as const,
     color: darkTheme.colors.text,
   },
+  chipsSectionTitleLarge: {
+    fontSize: 22,
+  },
   addButton: {
     width: 32,
     height: 32,
@@ -701,13 +761,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  chipsScroll: {
-    marginHorizontal: -20,
-  },
-  chipsContent: {
-    paddingHorizontal: 20,
-    gap: 8,
+  chipsWrapContainer: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
   },
   chip: {
     flexDirection: 'row',
@@ -719,10 +776,19 @@ const styles = StyleSheet.create({
     paddingRight: 12,
     gap: 8,
   },
+  chipSmall: {
+    paddingVertical: 6,
+    paddingLeft: 12,
+    paddingRight: 10,
+    gap: 6,
+  },
   chipText: {
     fontSize: 14,
     fontWeight: '500' as const,
     color: '#FFFFFF',
+  },
+  chipTextSmall: {
+    fontSize: 12,
   },
   chipRemove: {
     width: 20,
@@ -734,6 +800,11 @@ const styles = StyleSheet.create({
   },
   vowCardsContainer: {
     gap: 16,
+  },
+  vowCardsContainerLarge: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 20,
   },
   vowCard: {
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
@@ -931,9 +1002,17 @@ const styles = StyleSheet.create({
     borderColor: '#E8E1D5',
     borderStyle: 'dashed',
   },
+  emptyStateLarge: {
+    maxWidth: 500,
+    alignSelf: 'center',
+  },
   emptyStateText: {
     fontSize: 16,
     color: darkTheme.colors.textMuted,
     marginTop: 16,
+    textAlign: 'center',
+  },
+  emptyStateTextSmall: {
+    fontSize: 14,
   },
 });

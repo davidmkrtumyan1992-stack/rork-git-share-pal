@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Modal,
   Pressable,
+  useWindowDimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -31,6 +32,12 @@ type VowType = {
   icon: React.ComponentType<{ size: number; color: string }>;
   gradientColors: [string, string];
   isLocked: boolean;
+};
+
+const BREAKPOINTS = {
+  sm: 320,
+  md: 768,
+  lg: 1024,
 };
 
 const vowTypes: VowType[] = [
@@ -102,7 +109,12 @@ export function VowSelection({
   const { language, setLanguage } = useAuth();
   const t = getTranslation(language);
   const insets = useSafeAreaInsets();
+  const { width: screenWidth } = useWindowDimensions();
   const [showLockedDialog, setShowLockedDialog] = useState(false);
+  
+  const isSmallScreen = screenWidth < BREAKPOINTS.md;
+  const isLargeScreen = screenWidth >= BREAKPOINTS.lg;
+  const isMediumScreen = screenWidth >= BREAKPOINTS.md && screenWidth < BREAKPOINTS.lg;
 
   const handleVowPress = (vow: VowType) => {
     console.log('Vow pressed:', vow.key, 'isLocked:', vow.isLocked);
@@ -113,65 +125,19 @@ export function VowSelection({
     }
   };
 
-  const renderVowCard = (vow: VowType) => {
-    const IconComponent = vow.icon;
-    const isSelected = selectedVows.includes(vow.key);
-    const title = t.vows[vow.titleKey] as string;
-    const desc = t.vows[vow.descKey] as string;
-
-    return (
-      <TouchableOpacity
-        key={vow.key}
-        style={[
-          styles.vowCard,
-          isSelected && styles.vowCardSelected,
-          vow.isLocked && styles.vowCardLocked,
-        ]}
-        onPress={() => handleVowPress(vow)}
-        activeOpacity={0.7}
-        testID={`vow-${vow.key}`}
-      >
-        <View style={styles.cardContent}>
-          <View style={styles.iconWrapper}>
-            <LinearGradient
-              colors={vow.gradientColors}
-              style={styles.iconGradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-            >
-              <IconComponent size={32} color="#FFFFFF" />
-            </LinearGradient>
-            {vow.isLocked && (
-              <View style={styles.lockOverlay}>
-                <Lock size={16} color="#FFFFFF" />
-              </View>
-            )}
-          </View>
-          
-          <View style={styles.textContainer}>
-            <Text style={[styles.vowTitle, vow.isLocked && styles.textLocked]}>
-              {title}
-            </Text>
-            <Text style={[styles.vowDesc, vow.isLocked && styles.textLocked]}>
-              {desc}
-            </Text>
-            {isSelected && !vow.isLocked && (
-              <View style={styles.selectedBadge}>
-                <Check size={12} color="#6B8E7F" />
-                <Text style={styles.selectedText}>• {t.vows.selected}</Text>
-              </View>
-            )}
-          </View>
-        </View>
-        
-        <LinearGradient
-          colors={vow.gradientColors}
-          style={styles.cardAccent}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-        />
-      </TouchableOpacity>
-    );
+  const responsiveStyles = {
+    content: {
+      paddingHorizontal: isSmallScreen ? 16 : isLargeScreen ? 40 : 24,
+      maxWidth: isLargeScreen ? 1200 : undefined,
+    },
+    title: {
+      fontSize: isSmallScreen ? 26 : isLargeScreen ? 40 : 32,
+    },
+    subtitle: {
+      fontSize: isSmallScreen ? 14 : 16,
+    },
+    cardPadding: isSmallScreen ? 16 : 24,
+    iconSize: isSmallScreen ? 56 : 64,
   };
 
   return (
@@ -183,7 +149,16 @@ export function VowSelection({
         end={{ x: 1, y: 1 }}
       />
       
-      <View style={[styles.content, { paddingTop: insets.top + 16 }]}>
+      <View style={[
+        styles.content, 
+        { 
+          paddingTop: insets.top + 16,
+          paddingHorizontal: responsiveStyles.content.paddingHorizontal,
+          maxWidth: responsiveStyles.content.maxWidth,
+          alignSelf: isLargeScreen ? 'center' : undefined,
+          width: isLargeScreen ? '100%' : undefined,
+        }
+      ]}>
         <View style={styles.header}>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
             <X size={24} color="#2C3E3A" />
@@ -221,23 +196,95 @@ export function VowSelection({
           </View>
         </View>
 
-        <View style={styles.titleContainer}>
-          <Text style={styles.title}>{t.vows.title}</Text>
-          <Text style={styles.subtitle}>{t.vows.subtitle}</Text>
+        <View style={[styles.titleContainer, isLargeScreen && styles.titleContainerLarge]}>
+          <Text style={[styles.title, { fontSize: responsiveStyles.title.fontSize }]}>
+            {t.vows.title}
+          </Text>
+          <Text style={[styles.subtitle, { fontSize: responsiveStyles.subtitle.fontSize }]}>
+            {t.vows.subtitle}
+          </Text>
         </View>
 
         <ScrollView 
           style={styles.scrollContainer} 
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[
+            styles.scrollContent,
+            (isMediumScreen || isLargeScreen) && styles.scrollContentGrid
+          ]}
         >
-          {vowTypes.map(renderVowCard)}
+          {vowTypes.map((vow) => {
+            const IconComponent = vow.icon;
+            const isSelected = selectedVows.includes(vow.key);
+            const title = t.vows[vow.titleKey] as string;
+            const desc = t.vows[vow.descKey] as string;
+
+            return (
+              <TouchableOpacity
+                key={vow.key}
+                style={[
+                  styles.vowCard,
+                  { padding: responsiveStyles.cardPadding },
+                  isSelected && styles.vowCardSelected,
+                  vow.isLocked && styles.vowCardLocked,
+                  (isMediumScreen || isLargeScreen) && styles.vowCardGrid,
+                ]}
+                onPress={() => handleVowPress(vow)}
+                activeOpacity={0.7}
+                testID={`vow-${vow.key}`}
+              >
+                <View style={styles.cardContent}>
+                  <View style={styles.iconWrapper}>
+                    <LinearGradient
+                      colors={vow.gradientColors}
+                      style={[styles.iconGradient, { width: responsiveStyles.iconSize, height: responsiveStyles.iconSize }]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                    >
+                      <IconComponent size={isSmallScreen ? 28 : 32} color="#FFFFFF" />
+                    </LinearGradient>
+                    {vow.isLocked && (
+                      <View style={styles.lockOverlay}>
+                        <Lock size={isSmallScreen ? 14 : 16} color="#FFFFFF" />
+                      </View>
+                    )}
+                  </View>
+                  
+                  <View style={styles.textContainer}>
+                    <Text style={[styles.vowTitle, vow.isLocked && styles.textLocked, isSmallScreen && styles.vowTitleSmall]}>
+                      {title}
+                    </Text>
+                    <Text style={[styles.vowDesc, vow.isLocked && styles.textLocked, isSmallScreen && styles.vowDescSmall]}>
+                      {desc}
+                    </Text>
+                    {isSelected && !vow.isLocked && (
+                      <View style={styles.selectedBadge}>
+                        <Check size={12} color="#6B8E7F" />
+                        <Text style={styles.selectedText}>• {t.vows.selected}</Text>
+                      </View>
+                    )}
+                  </View>
+                </View>
+                
+                <LinearGradient
+                  colors={vow.gradientColors}
+                  style={styles.cardAccent}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                />
+              </TouchableOpacity>
+            );
+          })}
         </ScrollView>
 
         {selectedVows.length > 0 && (
-          <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
+          <View style={[
+            styles.footer, 
+            { paddingBottom: insets.bottom + 16 },
+            isLargeScreen && styles.footerLarge
+          ]}>
             <TouchableOpacity
-              style={styles.confirmButton}
+              style={[styles.confirmButton, isLargeScreen && styles.confirmButtonLarge]}
               onPress={onConfirm}
               disabled={isLoading}
               activeOpacity={0.8}
@@ -251,7 +298,7 @@ export function VowSelection({
                 {isLoading ? (
                   <ActivityIndicator color="#FFFFFF" />
                 ) : (
-                  <Text style={styles.confirmText}>
+                  <Text style={[styles.confirmText, isSmallScreen && styles.confirmTextSmall]}>
                     {t.vows.continue} ({selectedVows.length})
                   </Text>
                 )}
@@ -271,7 +318,11 @@ export function VowSelection({
           style={styles.modalOverlay}
           onPress={() => setShowLockedDialog(false)}
         >
-          <Pressable style={styles.modalContent} onPress={(e) => e.stopPropagation()}>
+          <Pressable style={[
+            styles.modalContent,
+            isSmallScreen && styles.modalContentSmall,
+            isLargeScreen && styles.modalContentLarge
+          ]} onPress={(e) => e.stopPropagation()}>
             <View style={styles.modalHeader}>
               <View style={styles.modalIconContainer}>
                 <Lock size={32} color="#B85C4F" />
@@ -370,6 +421,9 @@ const styles = StyleSheet.create({
   titleContainer: {
     marginBottom: 24,
   },
+  titleContainerLarge: {
+    marginBottom: 32,
+  },
   title: {
     fontSize: 32,
     fontWeight: '700' as const,
@@ -388,6 +442,11 @@ const styles = StyleSheet.create({
     gap: 16,
     paddingBottom: 24,
   },
+  scrollContentGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 20,
+  },
   vowCard: {
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderRadius: 24,
@@ -400,6 +459,11 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: 'transparent',
     overflow: 'hidden',
+  },
+  vowCardGrid: {
+    width: '48%',
+    minWidth: 280,
+    flexGrow: 1,
   },
   vowCardSelected: {
     borderColor: '#6B8E7F',
@@ -448,10 +512,17 @@ const styles = StyleSheet.create({
     color: '#2C3E3A',
     marginBottom: 6,
   },
+  vowTitleSmall: {
+    fontSize: 18,
+  },
   vowDesc: {
     fontSize: 14,
     color: '#5A6B66',
     lineHeight: 20,
+  },
+  vowDescSmall: {
+    fontSize: 13,
+    lineHeight: 18,
   },
   textLocked: {
     color: '#8A9A95',
@@ -477,6 +548,9 @@ const styles = StyleSheet.create({
   footer: {
     paddingTop: 16,
   },
+  footerLarge: {
+    alignItems: 'center',
+  },
   confirmButton: {
     borderRadius: 16,
     overflow: 'hidden',
@@ -485,6 +559,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 12,
     elevation: 8,
+  },
+  confirmButtonLarge: {
+    maxWidth: 400,
+    width: '100%',
   },
   confirmGradient: {
     paddingVertical: 18,
@@ -495,6 +573,9 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700' as const,
     color: '#FFFFFF',
+  },
+  confirmTextSmall: {
+    fontSize: 16,
   },
   modalOverlay: {
     flex: 1,
@@ -510,6 +591,13 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 400,
     alignItems: 'center',
+  },
+  modalContentSmall: {
+    padding: 24,
+    marginHorizontal: 16,
+  },
+  modalContentLarge: {
+    maxWidth: 480,
   },
   modalHeader: {
     alignItems: 'center',

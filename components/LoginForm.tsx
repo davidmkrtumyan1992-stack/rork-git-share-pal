@@ -10,7 +10,7 @@ import {
   Platform,
   ScrollView,
   Image,
-  Dimensions,
+  useWindowDimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useMutation } from '@tanstack/react-query';
@@ -21,7 +21,11 @@ import { darkTheme } from '@/constants/theme';
 import { supabase } from '@/lib/supabase';
 import { Language } from '@/types/database';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const BREAKPOINTS = {
+  sm: 320,
+  md: 768,
+  lg: 1024,
+};
 
 interface LoginFormProps {
   onSuccess?: () => void;
@@ -41,6 +45,10 @@ const sanitizeEmail = (email: string): string => {
 export function LoginForm({ onSuccess }: LoginFormProps) {
   const { signIn, signUp, language, setLanguage } = useAuth();
   const t = getTranslation(language);
+  const { width: screenWidth } = useWindowDimensions();
+  
+  const isSmallScreen = screenWidth < BREAKPOINTS.md;
+  const isLargeScreen = screenWidth >= BREAKPOINTS.lg;
   
   const [mode, setMode] = useState<AuthMode>('login');
   const [email, setEmail] = useState('');
@@ -158,6 +166,20 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
     ? email.length > 0 
     : email.length > 0 && password.length >= 6;
 
+  const responsiveStyles = {
+    scrollContent: {
+      padding: isSmallScreen ? 16 : isLargeScreen ? 40 : 24,
+    },
+    card: {
+      maxWidth: isLargeScreen ? 480 : isSmallScreen ? '100%' : 420,
+      padding: isSmallScreen ? 20 : 32,
+    },
+    title: {
+      fontSize: isSmallScreen ? 26 : isLargeScreen ? 36 : 32,
+    },
+    logoSize: isSmallScreen ? 70 : 80,
+  };
+
   return (
     <View style={styles.container}>
       <LinearGradient
@@ -167,19 +189,19 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
         end={{ x: 1, y: 1 }}
       />
       
-      <View style={styles.decorativeCircle1} />
-      <View style={styles.decorativeCircle2} />
+      <View style={[styles.decorativeCircle1, isSmallScreen && styles.decorativeCircle1Small]} />
+      <View style={[styles.decorativeCircle2, isSmallScreen && styles.decorativeCircle2Small]} />
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
       >
         <ScrollView
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[styles.scrollContent, { padding: responsiveStyles.scrollContent.padding }]}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.languageSwitcher}>
+          <View style={[styles.languageSwitcher, isLargeScreen && styles.languageSwitcherLarge]}>
             <TouchableOpacity
               style={[
                 styles.languageButton,
@@ -210,19 +232,27 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
             </TouchableOpacity>
           </View>
 
-          <View style={styles.card}>
+          <View style={[
+            styles.card, 
+            { 
+              maxWidth: typeof responsiveStyles.card.maxWidth === 'number' ? responsiveStyles.card.maxWidth : undefined,
+              width: typeof responsiveStyles.card.maxWidth === 'string' ? '100%' : undefined,
+              padding: responsiveStyles.card.padding,
+            },
+            isLargeScreen && styles.cardLarge
+          ]}>
             <View style={styles.header}>
-              <View style={styles.logoContainer}>
+              <View style={[styles.logoContainer, { width: responsiveStyles.logoSize, height: responsiveStyles.logoSize }]}>
                 <Image
                   source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/uqmnsi22xt6lebmzz3lbk' }}
                   style={styles.logo}
                   resizeMode="contain"
                 />
               </View>
-              <Text style={styles.title}>
+              <Text style={[styles.title, { fontSize: responsiveStyles.title.fontSize }]}>
                 {mode === 'reset' ? t.auth.resetPasswordTitle : t.app.title}
               </Text>
-              <Text style={styles.subtitle}>
+              <Text style={[styles.subtitle, isSmallScreen && styles.subtitleSmall]}>
                 {mode === 'reset' ? t.auth.resetPasswordDesc : t.app.subtitle}
               </Text>
             </View>
@@ -362,6 +392,13 @@ const styles = StyleSheet.create({
     backgroundColor: darkTheme.colors.antidote,
     opacity: 0.2,
   },
+  decorativeCircle1Small: {
+    width: 280,
+    height: 280,
+    borderRadius: 140,
+    top: -100,
+    right: -100,
+  },
   decorativeCircle2: {
     position: 'absolute',
     bottom: -150,
@@ -371,6 +408,13 @@ const styles = StyleSheet.create({
     borderRadius: 192,
     backgroundColor: darkTheme.colors.background,
     opacity: 0.2,
+  },
+  decorativeCircle2Small: {
+    width: 280,
+    height: 280,
+    borderRadius: 140,
+    bottom: -100,
+    left: -100,
   },
   keyboardView: {
     flex: 1,
@@ -385,6 +429,11 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     marginBottom: darkTheme.spacing.md,
     gap: darkTheme.spacing.sm,
+  },
+  languageSwitcherLarge: {
+    maxWidth: 480,
+    alignSelf: 'center',
+    width: '100%',
   },
   languageButton: {
     paddingHorizontal: darkTheme.spacing.md,
@@ -417,6 +466,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 32,
     elevation: 12,
+    width: '100%',
+  },
+  cardLarge: {
+    alignSelf: 'center',
   },
   header: {
     alignItems: 'center',
@@ -432,7 +485,7 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   title: {
-    fontSize: SCREEN_WIDTH > 380 ? 32 : 28,
+    fontSize: 32,
     fontWeight: darkTheme.fontWeight.bold,
     color: darkTheme.colors.text,
     marginBottom: darkTheme.spacing.xs,
@@ -442,6 +495,10 @@ const styles = StyleSheet.create({
     fontSize: darkTheme.fontSize.md,
     color: darkTheme.colors.textSecondary,
     textAlign: 'center',
+    lineHeight: 22,
+  },
+  subtitleSmall: {
+    fontSize: 14,
   },
   form: {
     gap: darkTheme.spacing.md,

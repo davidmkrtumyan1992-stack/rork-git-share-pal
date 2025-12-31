@@ -7,6 +7,7 @@ import {
   ScrollView,
   Switch,
   Alert,
+  useWindowDimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useMutation } from '@tanstack/react-query';
@@ -26,9 +27,19 @@ interface SettingsPanelProps {
   onClose: () => void;
 }
 
+const BREAKPOINTS = {
+  sm: 320,
+  md: 768,
+  lg: 1024,
+};
+
 export function SettingsPanel({ onClose }: SettingsPanelProps) {
   const { profile, language, signOut, setLanguage, updateProfile } = useAuth();
   const t = getTranslation(language);
+  const { width: screenWidth } = useWindowDimensions();
+  
+  const isSmallScreen = screenWidth < BREAKPOINTS.md;
+  const isLargeScreen = screenWidth >= BREAKPOINTS.lg;
 
   const signOutMutation = useMutation({
     mutationFn: signOut,
@@ -61,6 +72,17 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
     );
   };
 
+  const responsiveStyles = {
+    content: {
+      padding: isSmallScreen ? 16 : isLargeScreen ? 32 : 24,
+      maxWidth: isLargeScreen ? 600 : undefined,
+    },
+    title: {
+      fontSize: isSmallScreen ? 18 : 20,
+    },
+    avatarSize: isSmallScreen ? 56 : 64,
+  };
+
   return (
     <View style={styles.container}>
       <LinearGradient
@@ -69,7 +91,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
       />
-      <View style={styles.header}>
+      <View style={[styles.header, isLargeScreen && styles.headerLarge]}>
         <TouchableOpacity onPress={onClose} style={styles.backButton}>
           <ArrowLeft size={24} color={darkTheme.colors.text} />
         </TouchableOpacity>
@@ -77,9 +99,20 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
         <View style={styles.placeholder} />
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.profileSection}>
-          <View style={styles.avatar}>
+      <ScrollView 
+        style={styles.content} 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={[
+          { padding: responsiveStyles.content.padding },
+          isLargeScreen && styles.contentLarge
+        ]}
+      >
+        <View style={[
+          styles.profileSection,
+          { maxWidth: responsiveStyles.content.maxWidth },
+          isLargeScreen && styles.profileSectionLarge
+        ]}>
+          <View style={[styles.avatar, { width: responsiveStyles.avatarSize, height: responsiveStyles.avatarSize, borderRadius: responsiveStyles.avatarSize / 2 }]}>
             <Text style={styles.avatarText}>
               {profile?.username?.charAt(0).toUpperCase() || '?'}
             </Text>
@@ -94,7 +127,11 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
           </View>
         </View>
 
-        <View style={styles.section}>
+        <View style={[
+          styles.section,
+          { maxWidth: responsiveStyles.content.maxWidth },
+          isLargeScreen && styles.sectionLarge
+        ]}>
           <Text style={styles.sectionTitle}>{t.common.profile}</Text>
           
           <TouchableOpacity style={styles.settingItem} onPress={handleLanguageChange}>
@@ -131,7 +168,11 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
           </View>
         </View>
 
-        <View style={styles.section}>
+        <View style={[
+          styles.section,
+          { maxWidth: responsiveStyles.content.maxWidth },
+          isLargeScreen && styles.sectionLarge
+        ]}>
           <TouchableOpacity
             style={[styles.settingItem, styles.logoutItem]}
             onPress={handleSignOut}
@@ -164,6 +205,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: darkTheme.spacing.lg,
     paddingVertical: darkTheme.spacing.lg,
   },
+  headerLarge: {
+    maxWidth: 600,
+    alignSelf: 'center',
+    width: '100%',
+    paddingHorizontal: 32,
+  },
   backButton: {
     width: 40,
     height: 40,
@@ -180,7 +227,9 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    padding: darkTheme.spacing.lg,
+  },
+  contentLarge: {
+    alignItems: 'center',
   },
   profileSection: {
     flexDirection: 'row',
@@ -196,6 +245,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 8,
     elevation: 3,
+    width: '100%',
+  },
+  profileSectionLarge: {
+    alignSelf: 'center',
   },
   avatar: {
     width: 64,
@@ -241,6 +294,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 8,
     elevation: 3,
+    width: '100%',
+  },
+  sectionLarge: {
+    alignSelf: 'center',
   },
   sectionTitle: {
     fontSize: darkTheme.fontSize.sm,
