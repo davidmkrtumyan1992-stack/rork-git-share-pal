@@ -1,22 +1,23 @@
 export const balinese = {
   colors: {
-    background: '#F5EFE7',
-    backgroundSecondary: '#FDFAF6',
+    background: '#F5F2ED',
+    backgroundSecondary: '#E8E1D5',
     backgroundTertiary: '#F8F3EB',
     surface: '#FFFFFF',
     surfaceHover: '#FFF9F4',
     border: '#E8DCC8',
     borderLight: '#F0E6D6',
     
-    text: '#3E2723',
-    textSecondary: '#6D4C41',
-    textMuted: '#8D6E63',
+    text: '#2C3E3A',
+    textSecondary: '#6B8E7F',
+    textMuted: '#8D9B95',
     
-    primary: '#D4834C',
-    primaryLight: '#E09A68',
-    primaryDark: '#B86F3E',
+    primary: '#6B8E7F',
+    primaryLight: '#7FA88F',
+    primaryDark: '#5A7A6D',
+    primaryDarker: '#4A6B5E',
     
-    success: '#7CB342',
+    success: '#7FA88F',
     successLight: '#9CCC65',
     successDark: '#689F38',
     
@@ -24,22 +25,25 @@ export const balinese = {
     warningLight: '#FFB74D',
     warningDark: '#FB8C00',
     
-    error: '#E53935',
-    errorLight: '#EF5350',
-    errorDark: '#C62828',
+    error: '#B85C4F',
+    errorLight: '#C77568',
+    errorDark: '#A04A3E',
     
     info: '#5C6BC0',
     infoLight: '#7E57C2',
     infoDark: '#3F51B5',
     
-    accent: '#C9A96E',
+    accent: '#C5A572',
     accentLight: '#D9B57A',
     accentDark: '#B8935C',
     
-    gold: '#C9A96E',
-    terracotta: '#D4834C',
-    cream: '#F5EFE7',
-    brown: '#3E2723',
+    gold: '#C5A572',
+    antidote: '#C5A572',
+    kept: '#7FA88F',
+    broken: '#B85C4F',
+    terracotta: '#B85C4F',
+    cream: '#F5F2ED',
+    brown: '#2C3E3A',
   },
   
   spacing: {

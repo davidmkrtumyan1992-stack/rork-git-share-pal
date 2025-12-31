@@ -7,6 +7,7 @@ import {
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import {
   Ban,
   Cigarette,
@@ -37,15 +38,15 @@ const vowIcons: Record<string, React.ComponentType<{ size: number; color: string
 };
 
 const vowColors: Record<string, string> = {
-  noFap: '#EF4444',
-  noSmoke: '#F59E0B',
+  noFap: darkTheme.colors.error,
+  noSmoke: darkTheme.colors.warning,
   noAlcohol: '#8B5CF6',
   noSugar: '#EC4899',
   noSocialMedia: '#3B82F6',
-  exercise: '#10B981',
+  exercise: darkTheme.colors.success,
   meditation: '#06B6D4',
   reading: '#F97316',
-  custom: '#6366F1',
+  custom: darkTheme.colors.primary,
 };
 
 interface VowSelectionProps {
@@ -84,6 +85,13 @@ export function VowSelection({
 
   return (
     <View style={styles.container}>
+      <LinearGradient
+        colors={[darkTheme.colors.background, darkTheme.colors.backgroundSecondary]}
+        style={styles.gradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+      />
+      <View style={styles.content}>
       <View style={styles.header}>
         <TouchableOpacity onPress={onClose} style={styles.closeButton}>
           <X size={24} color={darkTheme.colors.textSecondary} />
@@ -151,6 +159,7 @@ export function VowSelection({
           )}
         </TouchableOpacity>
       </View>
+      </View>
     </View>
   );
 }
@@ -158,6 +167,14 @@ export function VowSelection({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: darkTheme.colors.background,
+  },
+  gradient: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  content: {
+    flex: 1,
+    padding: darkTheme.spacing.lg,
   },
   header: {
     flexDirection: 'row',
@@ -170,9 +187,14 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: darkTheme.colors.surface,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   title: {
     fontSize: darkTheme.fontSize.xl,
@@ -202,12 +224,17 @@ const styles = StyleSheet.create({
   },
   vowCard: {
     width: '47%',
-    backgroundColor: darkTheme.colors.surface,
-    borderRadius: darkTheme.borderRadius.lg,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    borderRadius: darkTheme.borderRadius.xl,
     padding: darkTheme.spacing.md,
     borderWidth: 1,
     borderColor: darkTheme.colors.border,
     position: 'relative',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
   },
   iconContainer: {
     width: 56,
@@ -237,26 +264,35 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
   },
   footer: {
     paddingVertical: darkTheme.spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: darkTheme.colors.border,
   },
   confirmButton: {
     backgroundColor: darkTheme.colors.primary,
     paddingVertical: darkTheme.spacing.md,
-    borderRadius: darkTheme.borderRadius.md,
+    borderRadius: darkTheme.borderRadius.lg,
     alignItems: 'center',
     justifyContent: 'center',
+    height: 48,
+    shadowColor: darkTheme.colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
   confirmButtonDisabled: {
     backgroundColor: darkTheme.colors.backgroundTertiary,
     opacity: 0.6,
   },
   confirmButtonText: {
-    color: darkTheme.colors.text,
-    fontSize: darkTheme.fontSize.md,
-    fontWeight: darkTheme.fontWeight.semibold,
+    color: '#FFFFFF',
+    fontSize: darkTheme.fontSize.lg,
+    fontWeight: darkTheme.fontWeight.bold,
   },
 });

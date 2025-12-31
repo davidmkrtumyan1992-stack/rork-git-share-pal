@@ -9,6 +9,7 @@ import {
   Modal,
   ActivityIndicator,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import {
   Flame,
   CheckCircle,
@@ -24,15 +25,15 @@ import { darkTheme } from '@/constants/theme';
 import { VowStatus } from '@/types/database';
 
 const vowColors: Record<string, string> = {
-  noFap: '#EF4444',
-  noSmoke: '#F59E0B',
+  noFap: darkTheme.colors.error,
+  noSmoke: darkTheme.colors.warning,
   noAlcohol: '#8B5CF6',
   noSugar: '#EC4899',
   noSocialMedia: '#3B82F6',
-  exercise: '#10B981',
+  exercise: darkTheme.colors.success,
   meditation: '#06B6D4',
   reading: '#F97316',
-  custom: '#6366F1',
+  custom: darkTheme.colors.primary,
 };
 
 interface DashboardProps {
@@ -111,6 +112,13 @@ export function Dashboard({
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      <LinearGradient
+        colors={[darkTheme.colors.background, darkTheme.colors.backgroundSecondary]}
+        style={styles.gradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+      />
+      <View style={styles.content}>
       <View style={styles.header}>
         <View>
           <Text style={styles.welcomeText}>{t.dashboard.welcome},</Text>
@@ -261,6 +269,11 @@ export function Dashboard({
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>{t.dashboard.addNote}</Text>
+            <Text style={styles.modalSubtitle}>
+              {language === 'ru' 
+                ? 'Добавьте заметку об антидоте — что поможет соблюсти обет в будущем' 
+                : 'Add a note about the antidote — what will help keep the vow in the future'}
+            </Text>
             <TextInput
               style={styles.noteInput}
               placeholder={t.dashboard.addNote}
@@ -291,6 +304,7 @@ export function Dashboard({
           </View>
         </View>
       </Modal>
+      </View>
     </ScrollView>
   );
 }
@@ -300,11 +314,17 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: darkTheme.colors.background,
   },
+  gradient: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  content: {
+    padding: darkTheme.spacing.lg,
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: darkTheme.spacing.lg,
+    marginBottom: darkTheme.spacing.xl,
   },
   welcomeText: {
     fontSize: darkTheme.fontSize.md,
@@ -319,18 +339,23 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: darkTheme.colors.surface,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   adminBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: darkTheme.colors.primaryDark + '30',
-    borderRadius: darkTheme.borderRadius.md,
+    backgroundColor: 'rgba(107, 142, 127, 0.15)',
+    borderRadius: darkTheme.borderRadius.lg,
     padding: darkTheme.spacing.md,
-    marginBottom: darkTheme.spacing.md,
+    marginBottom: darkTheme.spacing.lg,
     borderWidth: 1,
     borderColor: darkTheme.colors.primary,
   },
@@ -347,11 +372,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: darkTheme.spacing.md,
     paddingVertical: darkTheme.spacing.sm,
-    borderRadius: darkTheme.borderRadius.md,
+    borderRadius: darkTheme.borderRadius.lg,
     borderWidth: 1,
     borderColor: darkTheme.colors.border,
     marginRight: darkTheme.spacing.sm,
-    backgroundColor: darkTheme.colors.surface,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
   },
   vowTabDot: {
     width: 8,
@@ -368,12 +393,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: darkTheme.colors.surface,
-    borderRadius: darkTheme.borderRadius.lg,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    borderRadius: darkTheme.borderRadius.xl,
     padding: darkTheme.spacing.md,
-    marginBottom: darkTheme.spacing.lg,
+    marginBottom: darkTheme.spacing.xl,
     borderWidth: 1,
     borderColor: darkTheme.colors.border,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
   },
   vowSelectorContent: {
     flexDirection: 'row',
@@ -407,11 +437,16 @@ const styles = StyleSheet.create({
     marginBottom: darkTheme.spacing.md,
   },
   statCard: {
-    backgroundColor: darkTheme.colors.surface,
-    borderRadius: darkTheme.borderRadius.lg,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    borderRadius: darkTheme.borderRadius.xl,
     padding: darkTheme.spacing.md,
     borderWidth: 1,
     borderColor: darkTheme.colors.border,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
   },
   statValue: {
     fontSize: 48,
@@ -448,12 +483,17 @@ const styles = StyleSheet.create({
     marginTop: darkTheme.spacing.xs,
   },
   todaySection: {
-    backgroundColor: darkTheme.colors.surface,
-    borderRadius: darkTheme.borderRadius.lg,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    borderRadius: darkTheme.borderRadius.xl,
     padding: darkTheme.spacing.md,
     marginBottom: darkTheme.spacing.lg,
     borderWidth: 1,
     borderColor: darkTheme.colors.border,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
   },
   todaySectionHeader: {
     flexDirection: 'row',
@@ -486,16 +526,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: darkTheme.spacing.sm,
     paddingVertical: darkTheme.spacing.md,
-    borderRadius: darkTheme.borderRadius.md,
+    borderRadius: darkTheme.borderRadius.lg,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 4,
   },
   keptButton: {
-    backgroundColor: darkTheme.colors.success,
+    backgroundColor: darkTheme.colors.kept,
   },
   brokenButton: {
-    backgroundColor: darkTheme.colors.error,
+    backgroundColor: darkTheme.colors.broken,
   },
   actionButtonText: {
-    color: darkTheme.colors.text,
+    color: '#FFFFFF',
     fontSize: darkTheme.fontSize.md,
     fontWeight: darkTheme.fontWeight.semibold,
   },
@@ -509,25 +554,30 @@ const styles = StyleSheet.create({
   modalContent: {
     width: '100%',
     backgroundColor: darkTheme.colors.surface,
-    borderRadius: darkTheme.borderRadius.lg,
-    padding: darkTheme.spacing.lg,
+    borderRadius: darkTheme.borderRadius.xl,
+    padding: darkTheme.spacing.xl,
   },
   modalTitle: {
-    fontSize: darkTheme.fontSize.lg,
-    fontWeight: darkTheme.fontWeight.semibold,
+    fontSize: darkTheme.fontSize.xl,
+    fontWeight: darkTheme.fontWeight.bold,
     color: darkTheme.colors.text,
+    marginBottom: darkTheme.spacing.xs,
+  },
+  modalSubtitle: {
+    fontSize: darkTheme.fontSize.sm,
+    color: darkTheme.colors.textSecondary,
     marginBottom: darkTheme.spacing.md,
   },
   noteInput: {
     backgroundColor: darkTheme.colors.backgroundSecondary,
-    borderRadius: darkTheme.borderRadius.md,
+    borderRadius: darkTheme.borderRadius.lg,
     padding: darkTheme.spacing.md,
     color: darkTheme.colors.text,
     fontSize: darkTheme.fontSize.md,
     minHeight: 100,
     textAlignVertical: 'top',
     borderWidth: 1,
-    borderColor: darkTheme.colors.border,
+    borderColor: darkTheme.colors.antidote,
   },
   modalActions: {
     flexDirection: 'row',
@@ -544,14 +594,14 @@ const styles = StyleSheet.create({
     backgroundColor: darkTheme.colors.backgroundTertiary,
   },
   confirmButton: {
-    backgroundColor: darkTheme.colors.primary,
+    backgroundColor: darkTheme.colors.antidote,
   },
   cancelButtonText: {
     color: darkTheme.colors.textSecondary,
     fontWeight: darkTheme.fontWeight.semibold,
   },
   confirmButtonText: {
-    color: darkTheme.colors.text,
+    color: '#FFFFFF',
     fontWeight: darkTheme.fontWeight.semibold,
   },
 });

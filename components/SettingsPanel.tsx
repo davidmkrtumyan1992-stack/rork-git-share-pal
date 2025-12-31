@@ -8,6 +8,7 @@ import {
   Switch,
   Alert,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useMutation } from '@tanstack/react-query';
 import {
   ArrowLeft,
@@ -62,6 +63,12 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
 
   return (
     <View style={styles.container}>
+      <LinearGradient
+        colors={[darkTheme.colors.background, darkTheme.colors.backgroundSecondary]}
+        style={styles.gradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+      />
       <View style={styles.header}>
         <TouchableOpacity onPress={onClose} style={styles.backButton}>
           <ArrowLeft size={24} color={darkTheme.colors.text} />
@@ -147,14 +154,15 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: darkTheme.colors.background,
   },
+  gradient: {
+    ...StyleSheet.absoluteFillObject,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: darkTheme.spacing.md,
-    paddingVertical: darkTheme.spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: darkTheme.colors.border,
+    paddingHorizontal: darkTheme.spacing.lg,
+    paddingVertical: darkTheme.spacing.lg,
   },
   backButton: {
     width: 40,
@@ -172,17 +180,22 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    padding: darkTheme.spacing.md,
+    padding: darkTheme.spacing.lg,
   },
   profileSection: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: darkTheme.colors.surface,
-    borderRadius: darkTheme.borderRadius.lg,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    borderRadius: darkTheme.borderRadius.xl,
     padding: darkTheme.spacing.lg,
     marginBottom: darkTheme.spacing.lg,
     borderWidth: 1,
     borderColor: darkTheme.colors.border,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
   },
   avatar: {
     width: 64,
@@ -192,11 +205,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: darkTheme.spacing.md,
+    shadowColor: darkTheme.colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 4,
   },
   avatarText: {
     fontSize: darkTheme.fontSize.xxl,
     fontWeight: darkTheme.fontWeight.bold,
-    color: darkTheme.colors.text,
+    color: '#FFFFFF',
   },
   profileInfo: {
     flex: 1,
@@ -212,12 +230,17 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   section: {
-    backgroundColor: darkTheme.colors.surface,
-    borderRadius: darkTheme.borderRadius.lg,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    borderRadius: darkTheme.borderRadius.xl,
     marginBottom: darkTheme.spacing.lg,
     borderWidth: 1,
     borderColor: darkTheme.colors.border,
     overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
   },
   sectionTitle: {
     fontSize: darkTheme.fontSize.sm,

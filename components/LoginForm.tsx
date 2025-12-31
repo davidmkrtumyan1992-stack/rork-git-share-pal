@@ -161,7 +161,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={[darkTheme.colors.terracotta, darkTheme.colors.primaryDark, '#8B4513']}
+        colors={[darkTheme.colors.primary, darkTheme.colors.primaryDark, darkTheme.colors.primaryDarker]}
         style={styles.gradient}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
@@ -347,30 +347,30 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: darkTheme.colors.terracotta,
+    backgroundColor: darkTheme.colors.primary,
   },
   gradient: {
     ...StyleSheet.absoluteFillObject,
   },
   decorativeCircle1: {
     position: 'absolute',
-    top: -100,
-    right: -100,
-    width: 300,
-    height: 300,
-    borderRadius: 150,
-    backgroundColor: darkTheme.colors.gold,
+    top: -150,
+    right: -150,
+    width: 384,
+    height: 384,
+    borderRadius: 192,
+    backgroundColor: darkTheme.colors.antidote,
     opacity: 0.2,
   },
   decorativeCircle2: {
     position: 'absolute',
-    bottom: -100,
-    left: -100,
-    width: 300,
-    height: 300,
-    borderRadius: 150,
-    backgroundColor: darkTheme.colors.cream,
-    opacity: 0.15,
+    bottom: -150,
+    left: -150,
+    width: 384,
+    height: 384,
+    borderRadius: 192,
+    backgroundColor: darkTheme.colors.background,
+    opacity: 0.2,
   },
   keyboardView: {
     flex: 1,
@@ -509,14 +509,14 @@ const styles = StyleSheet.create({
     padding: darkTheme.spacing.md,
   },
   submitButton: {
-    backgroundColor: darkTheme.colors.terracotta,
+    backgroundColor: darkTheme.colors.primary,
     borderRadius: darkTheme.borderRadius.lg,
     paddingVertical: darkTheme.spacing.md,
     alignItems: 'center',
     justifyContent: 'center',
     height: 48,
     marginTop: darkTheme.spacing.sm,
-    shadowColor: darkTheme.colors.terracotta,
+    shadowColor: darkTheme.colors.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -550,7 +550,7 @@ const styles = StyleSheet.create({
     fontSize: darkTheme.fontSize.sm,
   },
   switchTextBold: {
-    color: darkTheme.colors.terracotta,
+    color: darkTheme.colors.primary,
     fontSize: darkTheme.fontSize.sm,
     fontWeight: darkTheme.fontWeight.bold,
   },
@@ -558,7 +558,7 @@ const styles = StyleSheet.create({
     marginTop: darkTheme.spacing.xs,
   },
   forgotButtonText: {
-    color: darkTheme.colors.terracotta,
+    color: darkTheme.colors.primary,
     fontSize: darkTheme.fontSize.sm,
   },
   backButton: {
