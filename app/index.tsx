@@ -45,6 +45,19 @@ export default function HomeScreen() {
     });
   };
 
+  const handleRemoveVow = async (vowType: string) => {
+    const newVows = selectedVows.filter(v => v !== vowType);
+    setSelectedVows(newVows);
+    if (activeVow === vowType) {
+      setActiveVow(newVows.length > 0 ? newVows[0] : null);
+    }
+    try {
+      await updateProfile({ selected_vow: newVows.join(',') });
+    } catch (error) {
+      console.log('Error removing vow:', error);
+    }
+  };
+
   const handleConfirmVows = async () => {
     console.log('Confirming vows:', selectedVows);
     setIsSaving(true);
@@ -100,6 +113,7 @@ export default function HomeScreen() {
             onSelectVow={() => setCurrentScreen('vowSelection')}
             onOpenSettings={() => setCurrentScreen('settings')}
             onOpenAdmin={() => setCurrentScreen('admin')}
+            onRemoveVow={handleRemoveVow}
           />
         </View>
       )}
@@ -156,7 +170,6 @@ const styles = StyleSheet.create({
   },
   screenContainer: {
     flex: 1,
-    paddingHorizontal: darkTheme.spacing.md,
   },
   modalContainer: {
     flex: 1,

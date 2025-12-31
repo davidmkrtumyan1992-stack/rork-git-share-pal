@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -6,34 +6,64 @@ import {
   StyleSheet,
   ScrollView,
   TextInput,
-  Modal,
   ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
-  Flame,
-  CheckCircle,
-  XCircle,
-  Calendar,
-  Settings,
+  Bell,
+  History,
+  Plus,
+  X,
+  Check,
+  Sparkles,
+  AlertCircle,
   ChevronRight,
 } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
-import { useTodayEntry, useVowStats, useCreateVowEntry } from '@/hooks/useVows';
-import { getTranslation, formatNumber } from '@/data/translations';
+import { useCreateVowEntry } from '@/hooks/useVows';
+import { getTranslation } from '@/data/translations';
 import { darkTheme } from '@/constants/theme';
-import { VowStatus } from '@/types/database';
 
-const vowColors: Record<string, string> = {
-  noFap: darkTheme.colors.error,
-  noSmoke: darkTheme.colors.warning,
-  noAlcohol: '#8B5CF6',
-  noSugar: '#EC4899',
-  noSocialMedia: '#3B82F6',
-  exercise: darkTheme.colors.success,
-  meditation: '#06B6D4',
-  reading: '#F97316',
-  custom: darkTheme.colors.primary,
+
+type TabType = 'diary' | 'history' | 'settings';
+
+const vowCategoryNames: Record<string, { ru: string; en: string }> = {
+  tenPrinciples: { ru: '10 этических принципов', en: '10 Ethical Principles' },
+  freedom: { ru: 'Обеты свободы', en: 'Freedom Vows' },
+  bodhisattva: { ru: 'Обеты Бодхисаттвы', en: 'Bodhisattva Vows' },
+  tantric: { ru: 'Тантрические обеты', en: 'Tantric Vows' },
+  nuns: { ru: 'Обеты монахинь', en: 'Nun Vows' },
+  monks: { ru: 'Обеты монахов', en: 'Monk Vows' },
+};
+
+const vowItems: Record<string, { ru: string; en: string }[]> = {
+  tenPrinciples: [
+    { ru: 'Не убивать', en: 'Not to kill' },
+    { ru: 'Не воровать', en: 'Not to steal' },
+    { ru: 'Не лгать', en: 'Not to lie' },
+    { ru: 'Говорить о важном', en: 'Speak meaningfully' },
+    { ru: 'Не злословить', en: 'Not to slander' },
+    { ru: 'Не грубить', en: 'Not to speak harshly' },
+    { ru: 'Не завидовать', en: 'Not to covet' },
+    { ru: 'Не злиться', en: 'Not to harbor ill will' },
+    { ru: 'Не иметь ложных взглядов', en: 'Not to hold wrong views' },
+    { ru: 'Хранить целомудрие', en: 'To maintain purity' },
+  ],
+  freedom: [
+    { ru: 'Освобождение от привязанностей', en: 'Freedom from attachments' },
+    { ru: 'Практика осознанности', en: 'Mindfulness practice' },
+    { ru: 'Культивирование сострадания', en: 'Cultivating compassion' },
+  ],
+  bodhisattva: [
+    { ru: 'Помогать всем существам', en: 'Help all beings' },
+    { ru: 'Развивать мудрость', en: 'Develop wisdom' },
+    { ru: 'Практиковать щедрость', en: 'Practice generosity' },
+  ],
+};
+
+const antidoteTags = {
+  ru: ['Практиковать щедрость', 'Попросить прощения', 'Медитировать на сострадание'],
+  en: ['Practice generosity', 'Ask for forgiveness', 'Meditate on compassion'],
 };
 
 interface DashboardProps {
@@ -43,6 +73,16 @@ interface DashboardProps {
   onSelectVow: () => void;
   onOpenSettings: () => void;
   onOpenAdmin?: () => void;
+  onRemoveVow?: (vow: string) => void;
+}
+
+interface VowCardState {
+  vowKey: string;
+  vowIndex: number;
+  expanded: 'keep' | 'break' | null;
+  noteText: string;
+  antidoteText: string;
+  selectedAntidotes: string[];
 }
 
 export function Dashboard({ 
@@ -51,557 +91,849 @@ export function Dashboard({
   onSetActiveVow, 
   onSelectVow, 
   onOpenSettings, 
-  onOpenAdmin 
+  onOpenAdmin,
+  onRemoveVow,
 }: DashboardProps) {
   const { profile, language, isAdmin } = useAuth();
   const t = getTranslation(language);
   
-  const { data: todayEntry, isLoading: entryLoading } = useTodayEntry(activeVow);
-  const { data: stats, isLoading: statsLoading } = useVowStats(activeVow);
   const createEntry = useCreateVowEntry();
   
-  const [noteModalVisible, setNoteModalVisible] = useState(false);
-  const [noteText, setNoteText] = useState('');
-  const [pendingStatus, setPendingStatus] = useState<VowStatus | null>(null);
+  const [activeTab, setActiveTab] = useState<TabType>('diary');
+  const [cardStates, setCardStates] = useState<Record<string, VowCardState>>({});
 
-  const vowColor = activeVow ? vowColors[activeVow] || darkTheme.colors.primary : darkTheme.colors.primary;
+  const getVowCategoryName = useCallback((vowKey: string) => {
+    return vowCategoryNames[vowKey]?.[language] || vowKey;
+  }, [language]);
 
-  const handleMarkStatus = (status: VowStatus) => {
-    if (!activeVow) return;
-    
-    if (status === 'broken') {
-      setPendingStatus(status);
-      setNoteModalVisible(true);
-    } else {
-      createEntry.mutate({ vowType: activeVow, status });
-    }
+  const getVowItems = useCallback((vowKey: string) => {
+    return vowItems[vowKey] || [];
+  }, []);
+
+  const handleExpandCard = (cardKey: string, type: 'keep' | 'break') => {
+    setCardStates(prev => ({
+      ...prev,
+      [cardKey]: {
+        ...prev[cardKey],
+        expanded: prev[cardKey]?.expanded === type ? null : type,
+        noteText: prev[cardKey]?.noteText || '',
+        antidoteText: prev[cardKey]?.antidoteText || '',
+        selectedAntidotes: prev[cardKey]?.selectedAntidotes || [],
+      }
+    }));
   };
 
-  const handleSubmitWithNote = () => {
-    if (!activeVow || !pendingStatus) return;
+  const handleCollapseCard = (cardKey: string) => {
+    setCardStates(prev => ({
+      ...prev,
+      [cardKey]: {
+        ...prev[cardKey],
+        expanded: null,
+        noteText: '',
+        antidoteText: '',
+        selectedAntidotes: [],
+      }
+    }));
+  };
+
+  const handleSaveKeep = (vowType: string, cardKey: string) => {
+    const state = cardStates[cardKey];
+    createEntry.mutate({
+      vowType,
+      status: 'kept',
+      noteText: state?.noteText || undefined,
+    });
+    handleCollapseCard(cardKey);
+  };
+
+  const handleSaveBreak = (vowType: string, cardKey: string) => {
+    const state = cardStates[cardKey];
+    const antidoteText = [
+      ...(state?.selectedAntidotes || []),
+      state?.antidoteText,
+    ].filter(Boolean).join('; ');
     
     createEntry.mutate({
-      vowType: activeVow,
-      status: pendingStatus,
-      noteText: noteText || undefined,
+      vowType,
+      status: 'broken',
+      antidoteText: antidoteText || undefined,
     });
-    
-    setNoteModalVisible(false);
-    setNoteText('');
-    setPendingStatus(null);
+    handleCollapseCard(cardKey);
   };
 
-  const getStatusText = () => {
-    if (!todayEntry) return t.status.pending;
-    return t.status[todayEntry.status];
+  const toggleAntidoteTag = (cardKey: string, tag: string) => {
+    setCardStates(prev => {
+      const current = prev[cardKey]?.selectedAntidotes || [];
+      const newTags = current.includes(tag)
+        ? current.filter(t => t !== tag)
+        : [...current, tag];
+      return {
+        ...prev,
+        [cardKey]: {
+          ...prev[cardKey],
+          selectedAntidotes: newTags,
+        }
+      };
+    });
   };
 
-  const getStatusColor = () => {
-    if (!todayEntry) return darkTheme.colors.textMuted;
-    switch (todayEntry.status) {
-      case 'kept': return darkTheme.colors.success;
-      case 'broken': return darkTheme.colors.error;
-      case 'postponed': return darkTheme.colors.warning;
-      default: return darkTheme.colors.textMuted;
-    }
+  const updateNoteText = (cardKey: string, text: string) => {
+    setCardStates(prev => ({
+      ...prev,
+      [cardKey]: {
+        ...prev[cardKey],
+        noteText: text,
+      }
+    }));
   };
 
-  const getVowTitle = (vowKey: string) => {
-    return t.vows[vowKey as keyof typeof t.vows] || vowKey;
+  const updateAntidoteText = (cardKey: string, text: string) => {
+    setCardStates(prev => ({
+      ...prev,
+      [cardKey]: {
+        ...prev[cardKey],
+        antidoteText: text,
+      }
+    }));
+  };
+
+  const renderTabs = () => (
+    <View style={styles.tabsContainer}>
+      <TouchableOpacity
+        style={[styles.tab, activeTab === 'diary' && styles.tabActive]}
+        onPress={() => setActiveTab('diary')}
+      >
+        {activeTab === 'diary' ? (
+          <LinearGradient
+            colors={['#6B8E7F', '#5A7A6D']}
+            style={styles.tabGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+          >
+            <Bell size={18} color="#FFFFFF" />
+            <Text style={styles.tabTextActive}>
+              {language === 'ru' ? 'Дневник' : 'Diary'}
+            </Text>
+          </LinearGradient>
+        ) : (
+          <View style={styles.tabInner}>
+            <Bell size={18} color={darkTheme.colors.textMuted} />
+            <Text style={styles.tabText}>
+              {language === 'ru' ? 'Дневник' : 'Diary'}
+            </Text>
+          </View>
+        )}
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[styles.tab, activeTab === 'history' && styles.tabActive]}
+        onPress={() => setActiveTab('history')}
+      >
+        {activeTab === 'history' ? (
+          <LinearGradient
+            colors={['#6B8E7F', '#5A7A6D']}
+            style={styles.tabGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+          >
+            <History size={18} color="#FFFFFF" />
+            <Text style={styles.tabTextActive}>
+              {language === 'ru' ? 'История' : 'History'}
+            </Text>
+          </LinearGradient>
+        ) : (
+          <View style={styles.tabInner}>
+            <History size={18} color={darkTheme.colors.textMuted} />
+            <Text style={styles.tabText}>
+              {language === 'ru' ? 'История' : 'History'}
+            </Text>
+          </View>
+        )}
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[styles.tab, activeTab === 'settings' && styles.tabActive]}
+        onPress={() => {
+          setActiveTab('settings');
+          onOpenSettings();
+        }}
+      >
+        {activeTab === 'settings' ? (
+          <LinearGradient
+            colors={['#6B8E7F', '#5A7A6D']}
+            style={styles.tabGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+          >
+            <Text style={styles.tabTextActive}>
+              {language === 'ru' ? 'Настройки' : 'Settings'}
+            </Text>
+          </LinearGradient>
+        ) : (
+          <View style={styles.tabInner}>
+            <Text style={styles.tabText}>
+              {language === 'ru' ? 'Настройки' : 'Settings'}
+            </Text>
+          </View>
+        )}
+      </TouchableOpacity>
+    </View>
+  );
+
+  const renderSelectedVowsChips = () => (
+    <View style={styles.chipsSection}>
+      <View style={styles.chipsSectionHeader}>
+        <Text style={styles.chipsSectionTitle}>
+          {language === 'ru' ? 'Выбранные обеты' : 'Selected Vows'}
+        </Text>
+        <TouchableOpacity style={styles.addButton} onPress={onSelectVow}>
+          <Plus size={20} color={darkTheme.colors.primary} />
+        </TouchableOpacity>
+      </View>
+      <ScrollView 
+        horizontal 
+        showsHorizontalScrollIndicator={false}
+        style={styles.chipsScroll}
+        contentContainerStyle={styles.chipsContent}
+      >
+        {selectedVows.map((vow) => (
+          <View key={vow} style={styles.chip}>
+            <Text style={styles.chipText}>{getVowCategoryName(vow)}</Text>
+            {onRemoveVow && (
+              <TouchableOpacity 
+                style={styles.chipRemove}
+                onPress={() => onRemoveVow(vow)}
+              >
+                <X size={14} color="#FFFFFF" />
+              </TouchableOpacity>
+            )}
+          </View>
+        ))}
+      </ScrollView>
+    </View>
+  );
+
+  const renderVowCard = (vowKey: string, vowItem: { ru: string; en: string }, index: number, categoryName: string) => {
+    const cardKey = `${vowKey}-${index}`;
+    const state = cardStates[cardKey];
+    const isKeepExpanded = state?.expanded === 'keep';
+    const isBrokenExpanded = state?.expanded === 'break';
+
+    return (
+      <View key={cardKey} style={styles.vowCard}>
+        <View style={styles.vowCardHeader}>
+          <View style={styles.vowNumberContainer}>
+            <LinearGradient
+              colors={['#6B8E7F', '#5A7A6D']}
+              style={styles.vowNumber}
+            >
+              <Text style={styles.vowNumberText}>{index + 1}</Text>
+            </LinearGradient>
+          </View>
+          <View style={styles.vowCategoryBadge}>
+            <Text style={styles.vowCategoryText}>{categoryName}</Text>
+          </View>
+        </View>
+
+        <Text style={styles.vowText}>{vowItem[language]}</Text>
+
+        {!isKeepExpanded && !isBrokenExpanded && (
+          <View style={styles.vowActions}>
+            <TouchableOpacity
+              style={styles.keepButton}
+              onPress={() => handleExpandCard(cardKey, 'keep')}
+            >
+              <LinearGradient
+                colors={['#7FA88F', '#6B9E7D']}
+                style={styles.actionButtonGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+              >
+                <Check size={18} color="#FFFFFF" />
+                <Text style={styles.actionButtonText}>
+                  {language === 'ru' ? 'Соблюдал' : 'Kept'}
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.brokenButton}
+              onPress={() => handleExpandCard(cardKey, 'break')}
+            >
+              <LinearGradient
+                colors={['#B85C4F', '#A04A3E']}
+                style={styles.actionButtonGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+              >
+                <X size={18} color="#FFFFFF" />
+                <Text style={styles.actionButtonText}>
+                  {language === 'ru' ? 'Нарушил' : 'Broken'}
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {isKeepExpanded && (
+          <View style={styles.expandedForm}>
+            <View style={styles.keepInfoBlock}>
+              <Check size={20} color="#7FA88F" />
+              <Text style={styles.keepInfoText}>
+                {language === 'ru' 
+                  ? 'Расскажите, что вы сделали, чтобы соблюсти этот обет'
+                  : 'Tell us what you did to keep this vow'}
+              </Text>
+            </View>
+
+            <TextInput
+              style={styles.noteInput}
+              placeholder={language === 'ru' 
+                ? 'Например: помолился, попросил прощения...'
+                : 'E.g.: prayed, asked for forgiveness...'}
+              placeholderTextColor={darkTheme.colors.textMuted}
+              value={state?.noteText || ''}
+              onChangeText={(text) => updateNoteText(cardKey, text)}
+              multiline
+              numberOfLines={3}
+            />
+
+            <View style={styles.formActions}>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => handleCollapseCard(cardKey)}
+              >
+                <Text style={styles.cancelButtonText}>
+                  {language === 'ru' ? 'Отмена' : 'Cancel'}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.saveButton}
+                onPress={() => handleSaveKeep(vowKey, cardKey)}
+                disabled={createEntry.isPending}
+              >
+                <LinearGradient
+                  colors={['#7FA88F', '#6B9E7D']}
+                  style={styles.saveButtonGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                >
+                  {createEntry.isPending ? (
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                  ) : (
+                    <>
+                      <Sparkles size={18} color="#FFFFFF" />
+                      <Text style={styles.saveButtonText}>
+                        {language === 'ru' ? 'Сохранить' : 'Save'}
+                      </Text>
+                    </>
+                  )}
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
+        {isBrokenExpanded && (
+          <View style={styles.expandedForm}>
+            <View style={styles.brokenInfoBlock}>
+              <AlertCircle size={20} color="#C5A572" />
+              <Text style={styles.brokenInfoText}>
+                {language === 'ru' 
+                  ? 'Что вы собираетесь сделать, чтобы исправить это?'
+                  : 'What will you do to make amends?'}
+              </Text>
+            </View>
+
+            <Text style={styles.antidoteLabel}>
+              {language === 'ru' ? 'Антидот' : 'Antidote'}
+            </Text>
+
+            <View style={styles.antidoteTags}>
+              {antidoteTags[language].map((tag) => {
+                const isSelected = state?.selectedAntidotes?.includes(tag);
+                return (
+                  <TouchableOpacity
+                    key={tag}
+                    style={[
+                      styles.antidoteTag,
+                      isSelected && styles.antidoteTagSelected,
+                    ]}
+                    onPress={() => toggleAntidoteTag(cardKey, tag)}
+                  >
+                    <Text style={[
+                      styles.antidoteTagText,
+                      isSelected && styles.antidoteTagTextSelected,
+                    ]}>
+                      {tag}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            <TextInput
+              style={styles.noteInput}
+              placeholder={language === 'ru' 
+                ? 'Или введите свой вариант...'
+                : 'Or enter your own...'}
+              placeholderTextColor={darkTheme.colors.textMuted}
+              value={state?.antidoteText || ''}
+              onChangeText={(text) => updateAntidoteText(cardKey, text)}
+              multiline
+              numberOfLines={3}
+            />
+
+            <View style={styles.formActions}>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => handleCollapseCard(cardKey)}
+              >
+                <Text style={styles.cancelButtonText}>
+                  {language === 'ru' ? 'Отмена' : 'Cancel'}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.saveButton}
+                onPress={() => handleSaveBreak(vowKey, cardKey)}
+                disabled={createEntry.isPending}
+              >
+                <LinearGradient
+                  colors={['#C5A572', '#B09562']}
+                  style={styles.saveButtonGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                >
+                  {createEntry.isPending ? (
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                  ) : (
+                    <>
+                      <Sparkles size={18} color="#FFFFFF" />
+                      <Text style={styles.saveButtonText}>
+                        {language === 'ru' ? 'Сохранить' : 'Save'}
+                      </Text>
+                    </>
+                  )}
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+      </View>
+    );
+  };
+
+  const renderVowCards = () => {
+    let globalIndex = 0;
+    return selectedVows.map((vowKey) => {
+      const items = getVowItems(vowKey);
+      const categoryName = getVowCategoryName(vowKey);
+      
+      return items.map((item, localIndex) => {
+        const card = renderVowCard(vowKey, item, globalIndex, categoryName);
+        globalIndex++;
+        return card;
+      });
+    });
   };
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <View style={styles.container}>
       <LinearGradient
-        colors={[darkTheme.colors.background, darkTheme.colors.backgroundSecondary]}
+        colors={['#F5F2ED', '#E8E1D5', '#D4C5B0']}
         style={styles.gradient}
         start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
+        end={{ x: 1, y: 1 }}
       />
-      <View style={styles.content}>
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.welcomeText}>{t.dashboard.welcome},</Text>
-          <Text style={styles.username}>{profile?.username || profile?.full_name || 'User'}</Text>
-        </View>
-        <TouchableOpacity onPress={onOpenSettings} style={styles.settingsButton}>
-          <Settings size={24} color={darkTheme.colors.textSecondary} />
-        </TouchableOpacity>
-      </View>
-
-      {isAdmin && onOpenAdmin && (
-        <TouchableOpacity style={styles.adminBanner} onPress={onOpenAdmin}>
-          <Text style={styles.adminText}>{t.admin.title}</Text>
-          <ChevronRight size={20} color={darkTheme.colors.primary} />
-        </TouchableOpacity>
-      )}
-
-      {selectedVows.length > 1 && activeVow && (
-        <View style={styles.vowTabs}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {selectedVows.map((vow) => {
-              const isActive = vow === activeVow;
-              const color = vowColors[vow] || darkTheme.colors.primary;
-              return (
-                <TouchableOpacity
-                  key={vow}
-                  style={[
-                    styles.vowTab,
-                    isActive && { backgroundColor: color + '30', borderColor: color },
-                  ]}
-                  onPress={() => onSetActiveVow(vow)}
-                >
-                  <View style={[styles.vowTabDot, { backgroundColor: color }]} />
-                  <Text style={[
-                    styles.vowTabText,
-                    isActive && { color: color },
-                  ]}>
-                    {getVowTitle(vow)}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-        </View>
-      )}
-
-      <TouchableOpacity style={styles.vowSelector} onPress={onSelectVow}>
-        <View style={styles.vowSelectorContent}>
-          <View style={[styles.vowIndicator, { backgroundColor: vowColor }]} />
-          <View style={styles.vowTextContainer}>
-            <Text style={styles.vowLabel}>
-              {selectedVows.length > 0 
-                ? (language === 'ru' ? 'Обязательства' : 'Commitments')
-                : t.dashboard.selectVow}
-            </Text>
-            <Text style={styles.vowValue}>
-              {selectedVows.length > 0 
-                ? (language === 'ru' 
-                    ? `${selectedVows.length} выбрано` 
-                    : `${selectedVows.length} selected`)
-                : t.dashboard.noVowSelected}
-            </Text>
-          </View>
-        </View>
-        <ChevronRight size={24} color={darkTheme.colors.textMuted} />
-      </TouchableOpacity>
-
-      {activeVow && (
-        <>
-          <View style={styles.statsContainer}>
-            <View style={[styles.statCard, styles.streakCard]}>
-              <Flame size={32} color={darkTheme.colors.warning} />
-              <Text style={styles.statValue}>
-                {statsLoading ? '...' : formatNumber(stats?.streak || 0)}
-              </Text>
-              <Text style={styles.statLabel}>{t.dashboard.streak}</Text>
-              <Text style={styles.statSubLabel}>{t.dashboard.days}</Text>
-            </View>
-
-            <View style={styles.statsRow}>
-              <View style={[styles.statCard, styles.smallStatCard]}>
-                <CheckCircle size={24} color={darkTheme.colors.success} />
-                <Text style={styles.smallStatValue}>
-                  {statsLoading ? '...' : formatNumber(stats?.totalKept || 0)}
-                </Text>
-                <Text style={styles.smallStatLabel}>{t.dashboard.totalKept}</Text>
-              </View>
-
-              <View style={[styles.statCard, styles.smallStatCard]}>
-                <XCircle size={24} color={darkTheme.colors.error} />
-                <Text style={styles.smallStatValue}>
-                  {statsLoading ? '...' : formatNumber(stats?.totalBroken || 0)}
-                </Text>
-                <Text style={styles.smallStatLabel}>{t.dashboard.totalBroken}</Text>
-              </View>
-            </View>
-          </View>
-
-          <View style={styles.todaySection}>
-            <View style={styles.todaySectionHeader}>
-              <Calendar size={20} color={darkTheme.colors.textSecondary} />
-              <Text style={styles.todayTitle}>{t.dashboard.todayStatus}</Text>
-            </View>
-            
-            <View style={[styles.statusBadge, { backgroundColor: getStatusColor() + '20' }]}>
-              <Text style={[styles.statusText, { color: getStatusColor() }]}>
-                {entryLoading ? t.common.loading : getStatusText()}
-              </Text>
-            </View>
-          </View>
-
-          {!todayEntry && (
-            <View style={styles.actionsContainer}>
-              <TouchableOpacity
-                style={[styles.actionButton, styles.keptButton]}
-                onPress={() => handleMarkStatus('kept')}
-                disabled={createEntry.isPending}
-              >
-                {createEntry.isPending ? (
-                  <ActivityIndicator color={darkTheme.colors.text} />
-                ) : (
-                  <>
-                    <CheckCircle size={24} color={darkTheme.colors.text} />
-                    <Text style={styles.actionButtonText}>{t.dashboard.markAsKept}</Text>
-                  </>
-                )}
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.actionButton, styles.brokenButton]}
-                onPress={() => handleMarkStatus('broken')}
-                disabled={createEntry.isPending}
-              >
-                <XCircle size={24} color={darkTheme.colors.text} />
-                <Text style={styles.actionButtonText}>{t.dashboard.markAsBroken}</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-        </>
-      )}
-
-      <Modal
-        visible={noteModalVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setNoteModalVisible(false)}
+      
+      <ScrollView 
+        style={styles.scrollView} 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>{t.dashboard.addNote}</Text>
-            <Text style={styles.modalSubtitle}>
-              {language === 'ru' 
-                ? 'Добавьте заметку об антидоте — что поможет соблюсти обет в будущем' 
-                : 'Add a note about the antidote — what will help keep the vow in the future'}
+        <View style={styles.header}>
+          <Text style={styles.greeting}>
+            {language === 'ru' ? 'Привет,' : 'Hello,'}{' '}
+            <Text style={styles.username}>
+              {profile?.username || profile?.full_name || 'User'}
             </Text>
-            <TextInput
-              style={styles.noteInput}
-              placeholder={t.dashboard.addNote}
-              placeholderTextColor={darkTheme.colors.textMuted}
-              value={noteText}
-              onChangeText={setNoteText}
-              multiline
-              numberOfLines={4}
-            />
-            <View style={styles.modalActions}>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.cancelButton]}
-                onPress={() => {
-                  setNoteModalVisible(false);
-                  setNoteText('');
-                  setPendingStatus(null);
-                }}
-              >
-                <Text style={styles.cancelButtonText}>{t.common.cancel}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.confirmButton]}
-                onPress={handleSubmitWithNote}
-              >
-                <Text style={styles.confirmButtonText}>{t.common.confirm}</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
+          </Text>
         </View>
-      </Modal>
-      </View>
-    </ScrollView>
+
+        {renderTabs()}
+
+        {isAdmin && onOpenAdmin && (
+          <TouchableOpacity style={styles.adminBanner} onPress={onOpenAdmin}>
+            <Text style={styles.adminText}>{t.admin.title}</Text>
+            <ChevronRight size={20} color={darkTheme.colors.primary} />
+          </TouchableOpacity>
+        )}
+
+        {selectedVows.length > 0 && renderSelectedVowsChips()}
+
+        {selectedVows.length === 0 ? (
+          <TouchableOpacity style={styles.emptyState} onPress={onSelectVow}>
+            <Plus size={48} color={darkTheme.colors.textMuted} />
+            <Text style={styles.emptyStateText}>
+              {language === 'ru' 
+                ? 'Нажмите, чтобы выбрать обеты'
+                : 'Tap to select vows'}
+            </Text>
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.vowCardsContainer}>
+            {renderVowCards()}
+          </View>
+        )}
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: darkTheme.colors.background,
+    backgroundColor: '#F5F2ED',
   },
   gradient: {
     ...StyleSheet.absoluteFillObject,
   },
-  content: {
-    padding: darkTheme.spacing.lg,
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: 20,
+    paddingBottom: 40,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: darkTheme.spacing.xl,
+    marginBottom: 20,
   },
-  welcomeText: {
-    fontSize: darkTheme.fontSize.md,
-    color: darkTheme.colors.textSecondary,
-  },
-  username: {
-    fontSize: darkTheme.fontSize.xxl,
-    fontWeight: darkTheme.fontWeight.bold,
+  greeting: {
+    fontSize: 28,
+    fontWeight: '600' as const,
     color: darkTheme.colors.text,
   },
-  settingsButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+  username: {
+    fontWeight: '700' as const,
+  },
+  tabsContainer: {
+    flexDirection: 'row',
     backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderRadius: 16,
+    padding: 4,
+    marginBottom: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
     elevation: 3,
+  },
+  tab: {
+    flex: 1,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  tabActive: {},
+  tabGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    gap: 6,
+    borderRadius: 12,
+  },
+  tabInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    gap: 6,
+  },
+  tabText: {
+    fontSize: 14,
+    fontWeight: '500' as const,
+    color: darkTheme.colors.textMuted,
+  },
+  tabTextActive: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: '#FFFFFF',
   },
   adminBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: 'rgba(107, 142, 127, 0.15)',
-    borderRadius: darkTheme.borderRadius.lg,
-    padding: darkTheme.spacing.md,
-    marginBottom: darkTheme.spacing.lg,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 20,
     borderWidth: 1,
     borderColor: darkTheme.colors.primary,
   },
   adminText: {
     color: darkTheme.colors.primary,
-    fontWeight: darkTheme.fontWeight.semibold,
-    fontSize: darkTheme.fontSize.md,
+    fontWeight: '600' as const,
+    fontSize: 16,
   },
-  vowTabs: {
-    marginBottom: darkTheme.spacing.md,
+  chipsSection: {
+    marginBottom: 24,
   },
-  vowTab: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: darkTheme.spacing.md,
-    paddingVertical: darkTheme.spacing.sm,
-    borderRadius: darkTheme.borderRadius.lg,
-    borderWidth: 1,
-    borderColor: darkTheme.colors.border,
-    marginRight: darkTheme.spacing.sm,
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-  },
-  vowTabDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginRight: darkTheme.spacing.sm,
-  },
-  vowTabText: {
-    fontSize: darkTheme.fontSize.sm,
-    color: darkTheme.colors.textSecondary,
-    fontWeight: darkTheme.fontWeight.medium,
-  },
-  vowSelector: {
+  chipsSectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    borderRadius: darkTheme.borderRadius.xl,
-    padding: darkTheme.spacing.md,
-    marginBottom: darkTheme.spacing.xl,
-    borderWidth: 1,
-    borderColor: darkTheme.colors.border,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+    marginBottom: 12,
   },
-  vowSelectorContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  vowIndicator: {
-    width: 8,
-    height: 48,
-    borderRadius: 4,
-    marginRight: darkTheme.spacing.md,
-  },
-  vowTextContainer: {
-    gap: 4,
-  },
-  vowLabel: {
-    fontSize: darkTheme.fontSize.sm,
-    color: darkTheme.colors.textMuted,
-  },
-  vowValue: {
-    fontSize: darkTheme.fontSize.lg,
-    fontWeight: darkTheme.fontWeight.semibold,
+  chipsSectionTitle: {
+    fontSize: 18,
+    fontWeight: '600' as const,
     color: darkTheme.colors.text,
   },
-  statsContainer: {
-    marginBottom: darkTheme.spacing.lg,
-  },
-  streakCard: {
+  addButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(107, 142, 127, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: darkTheme.spacing.xl,
-    marginBottom: darkTheme.spacing.md,
   },
-  statCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    borderRadius: darkTheme.borderRadius.xl,
-    padding: darkTheme.spacing.md,
-    borderWidth: 1,
-    borderColor: darkTheme.colors.border,
+  chipsScroll: {
+    marginHorizontal: -20,
+  },
+  chipsContent: {
+    paddingHorizontal: 20,
+    gap: 8,
+    flexDirection: 'row',
+  },
+  chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: darkTheme.colors.primary,
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingLeft: 16,
+    paddingRight: 12,
+    gap: 8,
+  },
+  chipText: {
+    fontSize: 14,
+    fontWeight: '500' as const,
+    color: '#FFFFFF',
+  },
+  chipRemove: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  vowCardsContainer: {
+    gap: 16,
+  },
+  vowCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderRadius: 24,
+    padding: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.1,
     shadowRadius: 12,
-    elevation: 4,
+    elevation: 5,
   },
-  statValue: {
-    fontSize: 48,
-    fontWeight: darkTheme.fontWeight.bold,
-    color: darkTheme.colors.text,
-    marginTop: darkTheme.spacing.sm,
-  },
-  statLabel: {
-    fontSize: darkTheme.fontSize.md,
-    color: darkTheme.colors.textSecondary,
-  },
-  statSubLabel: {
-    fontSize: darkTheme.fontSize.sm,
-    color: darkTheme.colors.textMuted,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    gap: darkTheme.spacing.md,
-  },
-  smallStatCard: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: darkTheme.spacing.md,
-  },
-  smallStatValue: {
-    fontSize: darkTheme.fontSize.xxl,
-    fontWeight: darkTheme.fontWeight.bold,
-    color: darkTheme.colors.text,
-    marginTop: darkTheme.spacing.xs,
-  },
-  smallStatLabel: {
-    fontSize: darkTheme.fontSize.xs,
-    color: darkTheme.colors.textSecondary,
-    marginTop: darkTheme.spacing.xs,
-  },
-  todaySection: {
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    borderRadius: darkTheme.borderRadius.xl,
-    padding: darkTheme.spacing.md,
-    marginBottom: darkTheme.spacing.lg,
-    borderWidth: 1,
-    borderColor: darkTheme.colors.border,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  todaySectionHeader: {
+  vowCardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: darkTheme.spacing.sm,
-    marginBottom: darkTheme.spacing.md,
+    gap: 12,
+    marginBottom: 16,
   },
-  todayTitle: {
-    fontSize: darkTheme.fontSize.md,
-    fontWeight: darkTheme.fontWeight.semibold,
-    color: darkTheme.colors.text,
-  },
-  statusBadge: {
-    paddingVertical: darkTheme.spacing.sm,
-    paddingHorizontal: darkTheme.spacing.md,
-    borderRadius: darkTheme.borderRadius.sm,
-    alignSelf: 'flex-start',
-  },
-  statusText: {
-    fontSize: darkTheme.fontSize.md,
-    fontWeight: darkTheme.fontWeight.semibold,
-  },
-  actionsContainer: {
-    gap: darkTheme.spacing.md,
-    marginBottom: darkTheme.spacing.xl,
-  },
-  actionButton: {
-    flexDirection: 'row',
+  vowNumberContainer: {},
+  vowNumber: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: darkTheme.spacing.sm,
-    paddingVertical: darkTheme.spacing.md,
-    borderRadius: darkTheme.borderRadius.lg,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 4,
   },
-  keptButton: {
-    backgroundColor: darkTheme.colors.kept,
+  vowNumberText: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: '#FFFFFF',
+  },
+  vowCategoryBadge: {
+    backgroundColor: '#F0EBE3',
+    borderRadius: 12,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+  },
+  vowCategoryText: {
+    fontSize: 12,
+    fontWeight: '500' as const,
+    color: darkTheme.colors.textSecondary,
+  },
+  vowText: {
+    fontSize: 18,
+    fontWeight: '600' as const,
+    color: darkTheme.colors.text,
+    marginBottom: 20,
+    lineHeight: 26,
+  },
+  vowActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  keepButton: {
+    flex: 1,
+    borderRadius: 16,
+    overflow: 'hidden',
   },
   brokenButton: {
-    backgroundColor: darkTheme.colors.broken,
+    flex: 1,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  actionButtonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    gap: 8,
   },
   actionButtonText: {
+    fontSize: 15,
+    fontWeight: '600' as const,
     color: '#FFFFFF',
-    fontSize: darkTheme.fontSize.md,
-    fontWeight: darkTheme.fontWeight.semibold,
   },
-  modalOverlay: {
+  expandedForm: {
+    marginTop: 8,
+  },
+  keepInfoBlock: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: 'rgba(127, 168, 143, 0.15)',
+    borderRadius: 16,
+    padding: 16,
+    gap: 12,
+    marginBottom: 16,
+  },
+  keepInfoText: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: darkTheme.spacing.lg,
+    fontSize: 14,
+    color: '#5A7A6D',
+    lineHeight: 20,
   },
-  modalContent: {
-    width: '100%',
-    backgroundColor: darkTheme.colors.surface,
-    borderRadius: darkTheme.borderRadius.xl,
-    padding: darkTheme.spacing.xl,
+  brokenInfoBlock: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: 'rgba(197, 165, 114, 0.15)',
+    borderRadius: 16,
+    padding: 16,
+    gap: 12,
+    marginBottom: 16,
   },
-  modalTitle: {
-    fontSize: darkTheme.fontSize.xl,
-    fontWeight: darkTheme.fontWeight.bold,
+  brokenInfoText: {
+    flex: 1,
+    fontSize: 14,
+    color: '#8B6A4E',
+    lineHeight: 20,
+  },
+  antidoteLabel: {
+    fontSize: 14,
+    fontWeight: '600' as const,
     color: darkTheme.colors.text,
-    marginBottom: darkTheme.spacing.xs,
+    marginBottom: 12,
   },
-  modalSubtitle: {
-    fontSize: darkTheme.fontSize.sm,
+  antidoteTags: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 16,
+  },
+  antidoteTag: {
+    backgroundColor: '#F0EBE3',
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  antidoteTagSelected: {
+    backgroundColor: 'rgba(197, 165, 114, 0.2)',
+    borderColor: '#C5A572',
+  },
+  antidoteTagText: {
+    fontSize: 13,
+    fontWeight: '500' as const,
     color: darkTheme.colors.textSecondary,
-    marginBottom: darkTheme.spacing.md,
+  },
+  antidoteTagTextSelected: {
+    color: '#8B6A4E',
   },
   noteInput: {
-    backgroundColor: darkTheme.colors.backgroundSecondary,
-    borderRadius: darkTheme.borderRadius.lg,
-    padding: darkTheme.spacing.md,
+    backgroundColor: '#F8F5F0',
+    borderRadius: 16,
+    padding: 16,
+    fontSize: 15,
     color: darkTheme.colors.text,
-    fontSize: darkTheme.fontSize.md,
-    minHeight: 100,
+    minHeight: 80,
     textAlignVertical: 'top',
     borderWidth: 1,
-    borderColor: darkTheme.colors.antidote,
+    borderColor: '#E8E1D5',
+    marginBottom: 16,
   },
-  modalActions: {
+  formActions: {
     flexDirection: 'row',
-    gap: darkTheme.spacing.md,
-    marginTop: darkTheme.spacing.lg,
-  },
-  modalButton: {
-    flex: 1,
-    paddingVertical: darkTheme.spacing.md,
-    borderRadius: darkTheme.borderRadius.md,
-    alignItems: 'center',
+    gap: 12,
   },
   cancelButton: {
-    backgroundColor: darkTheme.colors.backgroundTertiary,
-  },
-  confirmButton: {
-    backgroundColor: darkTheme.colors.antidote,
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#E8E1D5',
   },
   cancelButtonText: {
+    fontSize: 15,
+    fontWeight: '600' as const,
     color: darkTheme.colors.textSecondary,
-    fontWeight: darkTheme.fontWeight.semibold,
   },
-  confirmButtonText: {
+  saveButton: {
+    flex: 1,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  saveButtonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    gap: 8,
+  },
+  saveButtonText: {
+    fontSize: 15,
+    fontWeight: '600' as const,
     color: '#FFFFFF',
-    fontWeight: darkTheme.fontWeight.semibold,
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    borderRadius: 24,
+    padding: 48,
+    borderWidth: 2,
+    borderColor: '#E8E1D5',
+    borderStyle: 'dashed',
+  },
+  emptyStateText: {
+    fontSize: 16,
+    color: darkTheme.colors.textMuted,
+    marginTop: 16,
   },
 });
