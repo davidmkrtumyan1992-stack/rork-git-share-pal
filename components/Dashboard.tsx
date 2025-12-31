@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,8 @@ import {
   TextInput,
   ActivityIndicator,
   useWindowDimensions,
+  Animated,
+  Pressable,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
@@ -90,6 +92,45 @@ interface VowCardState {
   noteText: string;
   antidoteText: string;
   selectedAntidotes: string[];
+}
+
+function AntidoteTagButton({ tag, onPress }: { tag: string; onPress: () => void }) {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  const handlePressIn = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 0.95,
+      useNativeDriver: true,
+      speed: 50,
+      bounciness: 4,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+      speed: 50,
+      bounciness: 4,
+    }).start();
+  };
+
+  return (
+    <Pressable
+      onPress={onPress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+    >
+      <Animated.View
+        style={[
+          styles.antidoteTag,
+          { transform: [{ scale: scaleAnim }] },
+        ]}
+      >
+        <Text style={styles.antidoteTagText}>{tag}</Text>
+      </Animated.View>
+    </Pressable>
+  );
 }
 
 export function Dashboard({ 
@@ -467,25 +508,32 @@ export function Dashboard({
               {language === 'ru' ? 'Антидот' : 'Antidote'}
             </Text>
 
-            <ScrollView 
-              horizontal 
-              showsHorizontalScrollIndicator={false}
-              style={styles.antidoteTagsScroll}
-              contentContainerStyle={styles.antidoteTagsContent}
-            >
-              {antidoteTags[language].map((tag) => (
-                <TouchableOpacity
-                  key={tag}
-                  style={styles.antidoteTag}
-                  onPress={() => selectAntidoteTag(cardKey, tag)}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.antidoteTagText}>
-                    {tag}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
+            <View style={styles.antidoteTagsWrapper}>
+              <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false}
+                style={styles.antidoteTagsScroll}
+                contentContainerStyle={styles.antidoteTagsContent}
+                decelerationRate="fast"
+                snapToAlignment="start"
+              >
+                {antidoteTags[language].map((tag) => (
+                  <AntidoteTagButton
+                    key={tag}
+                    tag={tag}
+                    onPress={() => selectAntidoteTag(cardKey, tag)}
+                  />
+                ))}
+                <View style={styles.antidoteTagsSpacer} />
+              </ScrollView>
+              <LinearGradient
+                colors={['rgba(255, 255, 255, 0)', 'rgba(255, 255, 255, 0.95)']}
+                style={styles.antidoteFadeRight}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                pointerEvents="none"
+              />
+            </View>
 
             <TextInput
               style={styles.noteInput}
@@ -909,13 +957,30 @@ const styles = StyleSheet.create({
     color: darkTheme.colors.text,
     marginBottom: 12,
   },
-  antidoteTagsScroll: {
+  antidoteTagsWrapper: {
+    position: 'relative',
     marginBottom: 16,
     marginHorizontal: -20,
   },
+  antidoteTagsScroll: {
+    flexGrow: 0,
+  },
   antidoteTagsContent: {
-    paddingHorizontal: 20,
+    paddingLeft: 20,
+    paddingRight: 8,
     gap: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  antidoteTagsSpacer: {
+    width: 40,
+  },
+  antidoteFadeRight: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    bottom: 0,
+    width: 50,
   },
   antidoteTag: {
     backgroundColor: 'rgba(197, 165, 114, 0.15)',
@@ -929,7 +994,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '500' as const,
     color: '#8B6A4E',
-    whiteSpace: 'nowrap' as const,
   },
   noteInput: {
     backgroundColor: '#F8F5F0',
