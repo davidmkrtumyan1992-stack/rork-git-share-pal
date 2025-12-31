@@ -21,9 +21,11 @@ import {
   Sparkles,
   AlertCircle,
   ChevronRight,
+  Clock,
 } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
-import { useCreateVowEntry } from '@/hooks/useVows';
+import { useCreateVowEntry, useTodayEntries } from '@/hooks/useVows';
+import { VowEntry } from '@/types/database';
 import { getTranslation } from '@/data/translations';
 import { darkTheme } from '@/constants/theme';
 
@@ -150,6 +152,7 @@ export function Dashboard({
   const isLargeScreen = screenWidth >= BREAKPOINTS.lg;
   
   const createEntry = useCreateVowEntry();
+  const { data: todayEntries = [] } = useTodayEntries();
   
   const [activeTab, setActiveTab] = useState<TabType>('diary');
   const [cardStates, setCardStates] = useState<Record<string, VowCardState>>({});
@@ -188,21 +191,22 @@ export function Dashboard({
     }));
   };
 
-  const handleSaveKeep = (vowType: string, cardKey: string) => {
+  const handleSaveKeep = (vowType: string, cardKey: string, vowIndex: number) => {
     const state = cardStates[cardKey];
+    const entryKey = `${vowType}_${vowIndex}`;
     createEntry.mutate({
-      vowType,
+      vowType: entryKey,
       status: 'kept',
       noteText: state?.noteText || undefined,
     });
     handleCollapseCard(cardKey);
   };
 
-  const handleSaveBreak = (vowType: string, cardKey: string) => {
+  const handleSaveBreak = (vowType: string, cardKey: string, vowIndex: number) => {
     const state = cardStates[cardKey];
-    
+    const entryKey = `${vowType}_${vowIndex}`;
     createEntry.mutate({
-      vowType,
+      vowType: entryKey,
       status: 'broken',
       antidoteText: state?.antidoteText || undefined,
     });
@@ -242,6 +246,18 @@ export function Dashboard({
       }
     }));
   };
+
+  const findTodayEntry = useCallback((vowType: string, vowIndex: number): VowEntry | null => {
+    const entryKey = `${vowType}_${vowIndex}`;
+    return todayEntries.find(e => e.vow_type === entryKey) || null;
+  }, [todayEntries]);
+
+  const formatTime = useCallback((dateString: string): string => {
+    const date = new Date(dateString);
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes}`;
+  }, []);
 
   const renderTabs = () => (
     <ScrollView 
@@ -387,217 +403,277 @@ export function Dashboard({
     </View>
   );
 
-  const renderVowCard = (vowKey: string, vowItem: { ru: string; en: string }, index: number, categoryName: string) => {
+  const renderVowCard = (vowKey: string, vowItem: { ru: string; en: string }, index: number, categoryName: string, globalIdx: number) => {
     const cardKey = `${vowKey}-${index}`;
     const state = cardStates[cardKey];
     const isKeepExpanded = state?.expanded === 'keep';
     const isBrokenExpanded = state?.expanded === 'break';
+    
+    const todayEntry = findTodayEntry(vowKey, globalIdx);
+    const isSubmitted = !!todayEntry;
+    const isKept = todayEntry?.status === 'kept';
+    const isBroken = todayEntry?.status === 'broken';
 
     return (
-      <View key={cardKey} style={styles.vowCard}>
+      <View key={cardKey} style={[styles.vowCard, isSubmitted && styles.vowCardSubmitted]}>
         <View style={styles.vowCardHeader}>
           <View style={styles.vowNumberContainer}>
-            <LinearGradient
-              colors={['#6B8E7F', '#5A7A6D']}
-              style={styles.vowNumber}
-            >
-              <Text style={styles.vowNumberText}>{index + 1}</Text>
-            </LinearGradient>
+            {isBroken ? (
+              <LinearGradient
+                colors={['#B85C4F', '#A04A3E']}
+                style={styles.vowNumber}
+              >
+                <Text style={styles.vowNumberText}>{globalIdx + 1}</Text>
+              </LinearGradient>
+            ) : (
+              <LinearGradient
+                colors={['#6B8E7F', '#5A7A6D']}
+                style={styles.vowNumber}
+              >
+                <Text style={styles.vowNumberText}>{globalIdx + 1}</Text>
+              </LinearGradient>
+            )}
           </View>
           <View style={styles.vowCategoryBadge}>
             <Text style={styles.vowCategoryText}>{categoryName}</Text>
           </View>
+          {isSubmitted && todayEntry && (
+            <View style={styles.timeBadge}>
+              <Clock size={12} color={darkTheme.colors.textMuted} />
+              <Text style={styles.timeBadgeText}>{formatTime(todayEntry.updated_at)}</Text>
+            </View>
+          )}
         </View>
 
         <Text style={styles.vowText}>{vowItem[language]}</Text>
 
-        {!isKeepExpanded && !isBrokenExpanded && (
-          <View style={styles.vowActions}>
-            <TouchableOpacity
-              style={styles.keepButton}
-              onPress={() => handleExpandCard(cardKey, 'keep')}
-            >
-              <LinearGradient
-                colors={['#7FA88F', '#6B9E7D']}
-                style={styles.actionButtonGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-              >
-                <Check size={18} color="#FFFFFF" />
-                <Text style={styles.actionButtonText}>
-                  {language === 'ru' ? 'Соблюдал' : 'Kept'}
+        {isSubmitted ? (
+          <View style={styles.submittedView}>
+            {isKept && (
+              <View style={styles.infoBoxKept}>
+                <Check size={20} color="#7FA88F" />
+                <Text style={styles.infoBoxKeptText}>
+                  {language === 'ru' ? 'Вы соблюдали этот обет' : 'You kept this vow'}
                 </Text>
-              </LinearGradient>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.brokenButton}
-              onPress={() => handleExpandCard(cardKey, 'break')}
-            >
-              <LinearGradient
-                colors={['#B85C4F', '#A04A3E']}
-                style={styles.actionButtonGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-              >
-                <X size={18} color="#FFFFFF" />
-                <Text style={styles.actionButtonText}>
-                  {language === 'ru' ? 'Нарушил' : 'Broken'}
-                </Text>
-              </LinearGradient>
-            </TouchableOpacity>
+              </View>
+            )}
+            {isBroken && (
+              <>
+                <View style={styles.infoBoxBroken}>
+                  <X size={20} color="#B85C4F" />
+                  <Text style={styles.infoBoxBrokenText}>
+                    {language === 'ru' ? 'Обет был нарушен' : 'Vow was broken'}
+                  </Text>
+                </View>
+                {todayEntry.antidote_text && (
+                  <View style={styles.infoBoxAntidote}>
+                    <Text style={styles.antidoteLabelSmall}>
+                      {language === 'ru' ? 'Антидот:' : 'Antidote:'}
+                    </Text>
+                    <Text style={styles.antidoteValueText}>
+                      {todayEntry.antidote_text}
+                    </Text>
+                  </View>
+                )}
+              </>
+            )}
+            {todayEntry.note_text && isKept && (
+              <View style={styles.noteDisplay}>
+                <Text style={styles.noteDisplayText}>«{todayEntry.note_text}»</Text>
+              </View>
+            )}
           </View>
-        )}
-
-        {isKeepExpanded && (
-          <View style={styles.expandedForm}>
-            <View style={styles.keepInfoBlock}>
-              <Check size={20} color="#7FA88F" />
-              <Text style={styles.keepInfoText}>
-                {language === 'ru' 
-                  ? 'Расскажите, что вы сделали, чтобы соблюсти этот обет'
-                  : 'Tell us what you did to keep this vow'}
-              </Text>
-            </View>
-
-            <TextInput
-              style={styles.noteInput}
-              placeholder={language === 'ru' 
-                ? 'Например: помолился, попросил прощения...'
-                : 'E.g.: prayed, asked for forgiveness...'}
-              placeholderTextColor={darkTheme.colors.textMuted}
-              value={state?.noteText || ''}
-              onChangeText={(text) => updateNoteText(cardKey, text)}
-              multiline
-              numberOfLines={3}
-            />
-
-            <View style={styles.formActions}>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => handleCollapseCard(cardKey)}
-              >
-                <Text style={styles.cancelButtonText}>
-                  {language === 'ru' ? 'Отмена' : 'Cancel'}
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.saveButton}
-                onPress={() => handleSaveKeep(vowKey, cardKey)}
-                disabled={createEntry.isPending}
-              >
-                <LinearGradient
-                  colors={['#7FA88F', '#6B9E7D']}
-                  style={styles.saveButtonGradient}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
+        ) : (
+          <>
+            {!isKeepExpanded && !isBrokenExpanded && (
+              <View style={styles.vowActions}>
+                <TouchableOpacity
+                  style={styles.keepButton}
+                  onPress={() => handleExpandCard(cardKey, 'keep')}
                 >
-                  {createEntry.isPending ? (
-                    <ActivityIndicator size="small" color="#FFFFFF" />
-                  ) : (
-                    <>
-                      <Sparkles size={18} color="#FFFFFF" />
-                      <Text style={styles.saveButtonText}>
-                        {language === 'ru' ? 'Сохранить' : 'Save'}
-                      </Text>
-                    </>
-                  )}
-                </LinearGradient>
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
+                  <LinearGradient
+                    colors={['#7FA88F', '#6B9E7D']}
+                    style={styles.actionButtonGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                  >
+                    <Check size={18} color="#FFFFFF" />
+                    <Text style={styles.actionButtonText}>
+                      {language === 'ru' ? 'Соблюдал' : 'Kept'}
+                    </Text>
+                  </LinearGradient>
+                </TouchableOpacity>
 
-        {isBrokenExpanded && (
-          <View style={styles.expandedForm}>
-            <View style={styles.brokenInfoBlock}>
-              <AlertCircle size={20} color="#C5A572" />
-              <Text style={styles.brokenInfoText}>
-                {language === 'ru' 
-                  ? 'Что вы собираетесь сделать, чтобы исправить это?'
-                  : 'What will you do to make amends?'}
-              </Text>
-            </View>
+                <TouchableOpacity
+                  style={styles.brokenButton}
+                  onPress={() => handleExpandCard(cardKey, 'break')}
+                >
+                  <LinearGradient
+                    colors={['#B85C4F', '#A04A3E']}
+                    style={styles.actionButtonGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                  >
+                    <X size={18} color="#FFFFFF" />
+                    <Text style={styles.actionButtonText}>
+                      {language === 'ru' ? 'Нарушил' : 'Broken'}
+                    </Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+            )}
 
-            <Text style={styles.antidoteLabel}>
-              {language === 'ru' ? 'Антидот' : 'Antidote'}
-            </Text>
+            {isKeepExpanded && (
+              <View style={styles.expandedForm}>
+                <View style={styles.keepInfoBlock}>
+                  <Check size={20} color="#7FA88F" />
+                  <Text style={styles.keepInfoText}>
+                    {language === 'ru' 
+                      ? 'Расскажите, что вы сделали, чтобы соблюсти этот обет'
+                      : 'Tell us what you did to keep this vow'}
+                  </Text>
+                </View>
 
-            <View style={styles.antidoteTagsWrapper}>
-              <ScrollView 
-                horizontal 
-                showsHorizontalScrollIndicator={false}
-                style={styles.antidoteTagsScroll}
-                contentContainerStyle={styles.antidoteTagsContent}
-                decelerationRate="fast"
-                snapToAlignment="start"
-              >
-                {antidoteTags[language].map((tag) => (
-                  <AntidoteTagButton
-                    key={tag}
-                    tag={tag}
-                    onPress={() => selectAntidoteTag(cardKey, tag)}
+                <TextInput
+                  style={styles.noteInput}
+                  placeholder={language === 'ru' 
+                    ? 'Например: помолился, попросил прощения...'
+                    : 'E.g.: prayed, asked for forgiveness...'}
+                  placeholderTextColor={darkTheme.colors.textMuted}
+                  value={state?.noteText || ''}
+                  onChangeText={(text) => updateNoteText(cardKey, text)}
+                  multiline
+                  numberOfLines={3}
+                />
+
+                <View style={styles.formActions}>
+                  <TouchableOpacity
+                    style={styles.cancelButton}
+                    onPress={() => handleCollapseCard(cardKey)}
+                  >
+                    <Text style={styles.cancelButtonText}>
+                      {language === 'ru' ? 'Отмена' : 'Cancel'}
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.saveButton}
+                    onPress={() => handleSaveKeep(vowKey, cardKey, globalIdx)}
+                    disabled={createEntry.isPending}
+                  >
+                    <LinearGradient
+                      colors={['#7FA88F', '#6B9E7D']}
+                      style={styles.saveButtonGradient}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                    >
+                      {createEntry.isPending ? (
+                        <ActivityIndicator size="small" color="#FFFFFF" />
+                      ) : (
+                        <>
+                          <Sparkles size={18} color="#FFFFFF" />
+                          <Text style={styles.saveButtonText}>
+                            {language === 'ru' ? 'Сохранить' : 'Save'}
+                          </Text>
+                        </>
+                      )}
+                    </LinearGradient>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+
+            {isBrokenExpanded && (
+              <View style={styles.expandedForm}>
+                <View style={styles.brokenInfoBlock}>
+                  <AlertCircle size={20} color="#C5A572" />
+                  <Text style={styles.brokenInfoText}>
+                    {language === 'ru' 
+                      ? 'Что вы собираетесь сделать, чтобы исправить это?'
+                      : 'What will you do to make amends?'}
+                  </Text>
+                </View>
+
+                <Text style={styles.antidoteLabel}>
+                  {language === 'ru' ? 'Антидот' : 'Antidote'}
+                </Text>
+
+                <View style={styles.antidoteTagsWrapper}>
+                  <ScrollView 
+                    horizontal 
+                    showsHorizontalScrollIndicator={false}
+                    style={styles.antidoteTagsScroll}
+                    contentContainerStyle={styles.antidoteTagsContent}
+                    decelerationRate="fast"
+                    snapToAlignment="start"
+                  >
+                    {antidoteTags[language].map((tag) => (
+                      <AntidoteTagButton
+                        key={tag}
+                        tag={tag}
+                        onPress={() => selectAntidoteTag(cardKey, tag)}
+                      />
+                    ))}
+                    <View style={styles.antidoteTagsSpacer} />
+                  </ScrollView>
+                  <LinearGradient
+                    colors={['rgba(255, 255, 255, 0)', 'rgba(255, 255, 255, 0.95)']}
+                    style={styles.antidoteFadeRight}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    pointerEvents="none"
                   />
-                ))}
-                <View style={styles.antidoteTagsSpacer} />
-              </ScrollView>
-              <LinearGradient
-                colors={['rgba(255, 255, 255, 0)', 'rgba(255, 255, 255, 0.95)']}
-                style={styles.antidoteFadeRight}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                pointerEvents="none"
-              />
-            </View>
+                </View>
 
-            <TextInput
-              style={styles.noteInput}
-              placeholder={language === 'ru' 
-                ? 'Или введите свой вариант...'
-                : 'Or enter your own...'}
-              placeholderTextColor={darkTheme.colors.textMuted}
-              value={state?.antidoteText || ''}
-              onChangeText={(text) => updateAntidoteText(cardKey, text)}
-              multiline
-              numberOfLines={3}
-            />
+                <TextInput
+                  style={styles.noteInput}
+                  placeholder={language === 'ru' 
+                    ? 'Или введите свой вариант...'
+                    : 'Or enter your own...'}
+                  placeholderTextColor={darkTheme.colors.textMuted}
+                  value={state?.antidoteText || ''}
+                  onChangeText={(text) => updateAntidoteText(cardKey, text)}
+                  multiline
+                  numberOfLines={3}
+                />
 
-            <View style={styles.formActions}>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => handleCollapseCard(cardKey)}
-              >
-                <Text style={styles.cancelButtonText}>
-                  {language === 'ru' ? 'Отмена' : 'Cancel'}
-                </Text>
-              </TouchableOpacity>
+                <View style={styles.formActions}>
+                  <TouchableOpacity
+                    style={styles.cancelButton}
+                    onPress={() => handleCollapseCard(cardKey)}
+                  >
+                    <Text style={styles.cancelButtonText}>
+                      {language === 'ru' ? 'Отмена' : 'Cancel'}
+                    </Text>
+                  </TouchableOpacity>
 
-              <TouchableOpacity
-                style={styles.saveButton}
-                onPress={() => handleSaveBreak(vowKey, cardKey)}
-                disabled={createEntry.isPending}
-              >
-                <LinearGradient
-                  colors={['#C5A572', '#B09562']}
-                  style={styles.saveButtonGradient}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                >
-                  {createEntry.isPending ? (
-                    <ActivityIndicator size="small" color="#FFFFFF" />
-                  ) : (
-                    <>
-                      <Sparkles size={18} color="#FFFFFF" />
-                      <Text style={styles.saveButtonText}>
-                        {language === 'ru' ? 'Сохранить' : 'Save'}
-                      </Text>
-                    </>
-                  )}
-                </LinearGradient>
-              </TouchableOpacity>
-            </View>
-          </View>
+                  <TouchableOpacity
+                    style={styles.saveButton}
+                    onPress={() => handleSaveBreak(vowKey, cardKey, globalIdx)}
+                    disabled={createEntry.isPending}
+                  >
+                    <LinearGradient
+                      colors={['#C5A572', '#B09562']}
+                      style={styles.saveButtonGradient}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                    >
+                      {createEntry.isPending ? (
+                        <ActivityIndicator size="small" color="#FFFFFF" />
+                      ) : (
+                        <>
+                          <Sparkles size={18} color="#FFFFFF" />
+                          <Text style={styles.saveButtonText}>
+                            {language === 'ru' ? 'Сохранить' : 'Save'}
+                          </Text>
+                        </>
+                      )}
+                    </LinearGradient>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+          </>
         )}
       </View>
     );
@@ -610,7 +686,8 @@ export function Dashboard({
       const categoryName = getVowCategoryName(vowKey);
       
       return items.map((item, localIndex) => {
-        const card = renderVowCard(vowKey, item, globalIndex, categoryName);
+        const currentGlobalIdx = globalIndex;
+        const card = renderVowCard(vowKey, item, localIndex, categoryName, currentGlobalIdx);
         globalIndex++;
         return card;
       });
@@ -1101,5 +1178,81 @@ const styles = StyleSheet.create({
   },
   emptyStateTextSmall: {
     fontSize: 14,
+  },
+  vowCardSubmitted: {
+    opacity: 0.95,
+  },
+  timeBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+    borderRadius: 8,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    marginLeft: 'auto',
+  },
+  timeBadgeText: {
+    fontSize: 11,
+    fontWeight: '500' as const,
+    color: darkTheme.colors.textMuted,
+  },
+  submittedView: {
+    gap: 12,
+  },
+  infoBoxKept: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(127, 168, 143, 0.15)',
+    borderRadius: 16,
+    padding: 16,
+    gap: 12,
+  },
+  infoBoxKeptText: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '500' as const,
+    color: '#5A7A6D',
+  },
+  infoBoxBroken: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(184, 92, 79, 0.12)',
+    borderRadius: 16,
+    padding: 16,
+    gap: 12,
+  },
+  infoBoxBrokenText: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '500' as const,
+    color: '#A04A3E',
+  },
+  infoBoxAntidote: {
+    backgroundColor: 'rgba(197, 165, 114, 0.15)',
+    borderRadius: 16,
+    padding: 16,
+    gap: 6,
+  },
+  antidoteLabelSmall: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    color: '#8B6A4E',
+  },
+  antidoteValueText: {
+    fontSize: 14,
+    color: '#6B5A3E',
+    lineHeight: 20,
+  },
+  noteDisplay: {
+    backgroundColor: 'rgba(107, 142, 127, 0.08)',
+    borderRadius: 12,
+    padding: 12,
+  },
+  noteDisplayText: {
+    fontSize: 14,
+    fontStyle: 'italic',
+    color: darkTheme.colors.textSecondary,
+    lineHeight: 20,
   },
 });

@@ -58,6 +58,33 @@ export const useTodayEntry = (vowType: string | null) => {
   });
 };
 
+export const useTodayEntries = () => {
+  const { user } = useAuth();
+  const today = new Date().toISOString().split('T')[0];
+
+  return useQuery({
+    queryKey: ['today-entries', user?.id, today, user] as const,
+    queryFn: async () => {
+      if (!user) return [];
+      
+      console.log('Fetching all today entries for user:', user.id, today);
+      const { data, error } = await supabase
+        .from('vow_entries')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('entry_date', today);
+
+      if (error) {
+        console.log('Today entries fetch error:', error.message);
+        throw error;
+      }
+
+      return data as VowEntry[];
+    },
+    enabled: !!user,
+  });
+};
+
 export const useCreateVowEntry = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -126,6 +153,7 @@ export const useCreateVowEntry = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vow-entries'] });
       queryClient.invalidateQueries({ queryKey: ['today-entry'] });
+      queryClient.invalidateQueries({ queryKey: ['today-entries'] });
       queryClient.invalidateQueries({ queryKey: ['vow-stats'] });
     },
   });
