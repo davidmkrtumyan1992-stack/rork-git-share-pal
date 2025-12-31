@@ -351,22 +351,38 @@ export function Dashboard({
           <Plus size={isSmallScreen ? 18 : 20} color={darkTheme.colors.primary} />
         </TouchableOpacity>
       </View>
-      <View style={styles.chipsWrapContainer}>
-        {selectedVows.map((vow) => (
-          <View key={vow} style={[styles.chip, isSmallScreen && styles.chipSmall]}>
-            <Text style={[styles.chipText, isSmallScreen && styles.chipTextSmall]}>
-              {getVowCategoryName(vow)}
-            </Text>
-            {onRemoveVow && (
-              <TouchableOpacity 
-                style={styles.chipRemove}
-                onPress={() => onRemoveVow(vow)}
-              >
-                <X size={isSmallScreen ? 12 : 14} color="#FFFFFF" />
-              </TouchableOpacity>
-            )}
-          </View>
-        ))}
+      <View style={styles.chipsScrollWrapper}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.chipsScrollView}
+          contentContainerStyle={styles.chipsScrollContent}
+          decelerationRate="fast"
+        >
+          {selectedVows.map((vow) => (
+            <View key={vow} style={[styles.chip, isSmallScreen && styles.chipSmall]}>
+              <Text style={[styles.chipText, isSmallScreen && styles.chipTextSmall]}>
+                {getVowCategoryName(vow)}
+              </Text>
+              {onRemoveVow && (
+                <TouchableOpacity 
+                  style={styles.chipRemove}
+                  onPress={() => onRemoveVow(vow)}
+                >
+                  <X size={isSmallScreen ? 12 : 14} color="#FFFFFF" />
+                </TouchableOpacity>
+              )}
+            </View>
+          ))}
+          <View style={styles.chipsSpacer} />
+        </ScrollView>
+        <LinearGradient
+          colors={['rgba(245, 242, 237, 0)', 'rgba(245, 242, 237, 0.95)']}
+          style={styles.chipsFadeRight}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          pointerEvents="none"
+        />
       </View>
     </View>
   );
@@ -800,10 +816,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  chipsWrapContainer: {
+  chipsScrollWrapper: {
+    position: 'relative',
+    marginHorizontal: -20,
+  },
+  chipsScrollView: {
+    flexGrow: 0,
+  },
+  chipsScrollContent: {
+    paddingLeft: 20,
+    paddingRight: 8,
+    gap: 10,
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
+    alignItems: 'center',
+  },
+  chipsSpacer: {
+    width: 30,
+  },
+  chipsFadeRight: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    bottom: 0,
+    width: 40,
   },
   chip: {
     flexDirection: 'row',
@@ -814,6 +849,7 @@ const styles = StyleSheet.create({
     paddingLeft: 16,
     paddingRight: 12,
     gap: 8,
+    flexShrink: 0,
   },
   chipSmall: {
     paddingVertical: 6,
