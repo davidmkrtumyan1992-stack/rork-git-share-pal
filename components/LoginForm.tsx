@@ -214,7 +214,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
             <View style={styles.header}>
               <View style={styles.logoContainer}>
                 <Image
-                  source={{ uri: 'https://rork.app/pa/ywfta2lsth7893gaf5mzw/logo.png' }}
+                  source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/uqmnsi22xt6lebmzz3lbk' }}
                   style={styles.logo}
                   resizeMode="contain"
                 />
