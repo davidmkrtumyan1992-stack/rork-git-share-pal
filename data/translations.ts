@@ -3,7 +3,7 @@ export type Language = 'en' | 'ru';
 export const translations = {
   en: {
     app: {
-      title: 'GitSharePal',
+      title: 'KeepMyVow',
       subtitle: 'Commitment Management System',
     },
     auth: {
@@ -113,7 +113,7 @@ export const translations = {
   },
   ru: {
     app: {
-      title: 'GitSharePal',
+      title: 'Дневник Обетов',
       subtitle: 'Система управления обязательствами',
     },
     auth: {
