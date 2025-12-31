@@ -10,6 +10,7 @@ import {
   useWindowDimensions,
   Animated,
   Pressable,
+  Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
@@ -194,23 +195,47 @@ export function Dashboard({
   const handleSaveKeep = (vowType: string, cardKey: string, vowIndex: number) => {
     const state = cardStates[cardKey];
     const entryKey = `${vowType}_${vowIndex}`;
-    createEntry.mutate({
-      vowType: entryKey,
-      status: 'kept',
-      noteText: state?.noteText || undefined,
-    });
     handleCollapseCard(cardKey);
+    createEntry.mutate(
+      {
+        vowType: entryKey,
+        status: 'kept',
+        noteText: state?.noteText || undefined,
+      },
+      {
+        onError: () => {
+          Alert.alert(
+            language === 'ru' ? 'Ошибка' : 'Error',
+            language === 'ru' 
+              ? '«Не удалось сохранить запись. Попробуйте ещё раз»' 
+              : '"Failed to save entry. Please try again"'
+          );
+        },
+      }
+    );
   };
 
   const handleSaveBreak = (vowType: string, cardKey: string, vowIndex: number) => {
     const state = cardStates[cardKey];
     const entryKey = `${vowType}_${vowIndex}`;
-    createEntry.mutate({
-      vowType: entryKey,
-      status: 'broken',
-      antidoteText: state?.antidoteText || undefined,
-    });
     handleCollapseCard(cardKey);
+    createEntry.mutate(
+      {
+        vowType: entryKey,
+        status: 'broken',
+        antidoteText: state?.antidoteText || undefined,
+      },
+      {
+        onError: () => {
+          Alert.alert(
+            language === 'ru' ? 'Ошибка' : 'Error',
+            language === 'ru' 
+              ? '«Не удалось сохранить запись. Попробуйте ещё раз»' 
+              : '"Failed to save entry. Please try again"'
+          );
+        },
+      }
+    );
   };
 
   const selectAntidoteTag = (cardKey: string, tag: string) => {

@@ -85,9 +85,17 @@ export const useTodayEntries = () => {
   });
 };
 
+interface CreateVowEntryParams {
+  vowType: string;
+  status: VowStatus;
+  noteText?: string;
+  antidoteText?: string;
+}
+
 export const useCreateVowEntry = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const today = new Date().toISOString().split('T')[0];
 
   return useMutation({
     mutationFn: async ({
@@ -95,15 +103,9 @@ export const useCreateVowEntry = () => {
       status,
       noteText,
       antidoteText,
-    }: {
-      vowType: string;
-      status: VowStatus;
-      noteText?: string;
-      antidoteText?: string;
-    }) => {
+    }: CreateVowEntryParams) => {
       if (!user) throw new Error('Not authenticated');
       
-      const today = new Date().toISOString().split('T')[0];
       console.log('Creating vow entry:', vowType, status, today);
 
       const { data: existing, error: existingError } = await supabase
@@ -150,7 +152,51 @@ export const useCreateVowEntry = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onMutate: async (newEntry: CreateVowEntryParams) => {
+      await queryClient.cancelQueries({ queryKey: ['today-entries'] });
+      
+      const previousEntries = queryClient.getQueryData<VowEntry[]>(['today-entries', user?.id, today, user]);
+      
+      const optimisticEntry: VowEntry = {
+        id: `temp-${Date.now()}`,
+        user_id: user?.id || '',
+        vow_type: newEntry.vowType,
+        entry_date: today,
+        status: newEntry.status,
+        note_text: newEntry.noteText || null,
+        antidote_text: newEntry.antidoteText || null,
+        postponed_count: 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      
+      queryClient.setQueryData<VowEntry[]>(
+        ['today-entries', user?.id, today, user],
+        (old = []) => {
+          const existingIndex = old.findIndex(e => e.vow_type === newEntry.vowType);
+          if (existingIndex >= 0) {
+            const updated = [...old];
+            updated[existingIndex] = { ...old[existingIndex], ...optimisticEntry, id: old[existingIndex].id };
+            return updated;
+          }
+          return [...old, optimisticEntry];
+        }
+      );
+      
+      console.log('Optimistic update applied for:', newEntry.vowType);
+      
+      return { previousEntries };
+    },
+    onError: (err, newEntry, context) => {
+      console.log('Mutation error, rolling back:', err.message);
+      if (context?.previousEntries) {
+        queryClient.setQueryData(
+          ['today-entries', user?.id, today, user],
+          context.previousEntries
+        );
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['vow-entries'] });
       queryClient.invalidateQueries({ queryKey: ['today-entry'] });
       queryClient.invalidateQueries({ queryKey: ['today-entries'] });
