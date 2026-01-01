@@ -174,57 +174,12 @@ export function SettingsPanel({ onClose, onSelectVow }: SettingsPanelProps) {
   };
 
   const [localAvatarUrl, setLocalAvatarUrl] = useState<string | null>(null);
-  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
   useEffect(() => {
-    if (profile?.avatar_url && !isUploadingAvatar) {
+    if (profile?.avatar_url) {
       setLocalAvatarUrl(profile.avatar_url);
     }
-  }, [profile?.avatar_url, isUploadingAvatar]);
-
-  const compressImage = (base64: string, maxSize: number = 50000): Promise<string> => {
-    return new Promise((resolve) => {
-      if (Platform.OS === 'web') {
-        const img = new window.Image();
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          const maxDim = 150;
-          let width = img.width;
-          let height = img.height;
-          
-          if (width > height) {
-            if (width > maxDim) {
-              height = (height * maxDim) / width;
-              width = maxDim;
-            }
-          } else {
-            if (height > maxDim) {
-              width = (width * maxDim) / height;
-              height = maxDim;
-            }
-          }
-          
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          ctx?.drawImage(img, 0, 0, width, height);
-          
-          let quality = 0.7;
-          let result = canvas.toDataURL('image/jpeg', quality);
-          
-          while (result.length > maxSize && quality > 0.1) {
-            quality -= 0.1;
-            result = canvas.toDataURL('image/jpeg', quality);
-          }
-          
-          resolve(result);
-        };
-        img.src = base64;
-      } else {
-        resolve(base64);
-      }
-    });
-  };
+  }, [profile?.avatar_url]);
 
   const pickImage = async () => {
     if (Platform.OS === 'web') {
@@ -235,26 +190,21 @@ export function SettingsPanel({ onClose, onSelectVow }: SettingsPanelProps) {
         const target = e.target as HTMLInputElement;
         const file = target.files?.[0];
         if (file) {
-          if (file.size > 5000000) {
-            Alert.alert(t.common.error, 'Изображение слишком большое. Максимум 5 МБ.');
+          if (file.size > 500000) {
+            Alert.alert(t.common.error, 'Изображение слишком большое. Максимум 500 КБ.');
             return;
           }
-          setIsUploadingAvatar(true);
           const reader = new FileReader();
           reader.onload = async () => {
-            const base64Raw = reader.result as string;
+            const base64 = reader.result as string;
             try {
-              const compressedBase64 = await compressImage(base64Raw);
-              console.log('Compressed image size:', compressedBase64.length);
-              setLocalAvatarUrl(compressedBase64);
-              await updateProfile({ avatar_url: compressedBase64 });
+              setLocalAvatarUrl(base64);
+              await updateProfile({ avatar_url: base64 });
               Alert.alert(t.common.success, t.settings.photoUpdated);
             } catch (error) {
               console.log('Avatar update error:', error);
               setLocalAvatarUrl(profile?.avatar_url || null);
               Alert.alert(t.common.error, 'Не удалось сохранить фото');
-            } finally {
-              setIsUploadingAvatar(false);
             }
           };
           reader.readAsDataURL(file);
@@ -270,19 +220,17 @@ export function SettingsPanel({ onClose, onSelectVow }: SettingsPanelProps) {
       return;
     }
 
-    setIsUploadingAvatar(true);
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],
-      quality: 0.1,
+      quality: 0.3,
       base64: true,
     });
 
     if (!result.canceled && result.assets[0]) {
       const base64Image = `data:image/jpeg;base64,${result.assets[0].base64}`;
       try {
-        console.log('Image size:', base64Image.length);
         setLocalAvatarUrl(base64Image);
         await updateProfile({ avatar_url: base64Image });
         Alert.alert(t.common.success, t.settings.photoUpdated);
@@ -290,11 +238,7 @@ export function SettingsPanel({ onClose, onSelectVow }: SettingsPanelProps) {
         console.log('Avatar update error:', error);
         setLocalAvatarUrl(profile?.avatar_url || null);
         Alert.alert(t.common.error, 'Не удалось сохранить фото');
-      } finally {
-        setIsUploadingAvatar(false);
       }
-    } else {
-      setIsUploadingAvatar(false);
     }
   };
 
@@ -375,11 +319,9 @@ export function SettingsPanel({ onClose, onSelectVow }: SettingsPanelProps) {
                   <Image 
                     source={{ uri: localAvatarUrl }} 
                     style={styles.avatarImage}
-                    onError={(e) => {
-                      console.log('Avatar image load error:', e.nativeEvent);
-                      if (!isUploadingAvatar) {
-                        setLocalAvatarUrl(null);
-                      }
+                    onError={() => {
+                      console.log('Avatar image load error');
+                      setLocalAvatarUrl(null);
                     }}
                   />
                 ) : (
