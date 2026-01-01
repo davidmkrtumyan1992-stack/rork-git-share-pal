@@ -86,7 +86,15 @@ export function SettingsPanel({ onSelectVow }: SettingsPanelProps) {
 
   useEffect(() => {
     if (profile?.selected_vow_types) {
-      setSelectedVowTypes(profile.selected_vow_types);
+      try {
+        const types = Array.isArray(profile.selected_vow_types) 
+          ? profile.selected_vow_types 
+          : [];
+        setSelectedVowTypes(types);
+      } catch (error) {
+        console.log('Error parsing selected_vow_types:', error);
+        setSelectedVowTypes([]);
+      }
     }
   }, [profile?.selected_vow_types]);
 
