@@ -181,42 +181,43 @@ export function SettingsPanel({ onClose, onSelectVow }: SettingsPanelProps) {
     }
   }, [profile?.avatar_url]);
 
-  const compressBase64Image = (base64: string): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      if (Platform.OS === 'web') {
-        const img = new window.Image();
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          const maxSize = 200;
-          let width = img.width;
-          let height = img.height;
-          
-          if (width > height) {
-            if (width > maxSize) {
-              height = (height * maxSize) / width;
-              width = maxSize;
-            }
-          } else {
-            if (height > maxSize) {
-              width = (width * maxSize) / height;
-              height = maxSize;
-            }
-          }
-          
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          ctx?.drawImage(img, 0, 0, width, height);
-          
-          const compressed = canvas.toDataURL('image/jpeg', 0.6);
-          resolve(compressed);
-        };
-        img.onerror = () => reject(new Error('Ошибка загрузки изображения'));
-        img.src = base64;
-      } else {
-        resolve(base64);
-      }
-    });
+  const uploadAvatarToStorage = async (uri: string): Promise<string> => {
+    if (!profile?.user_id) {
+      throw new Error('User not found');
+    }
+
+    const fileExt = 'jpg';
+    const fileName = `${profile.user_id}/avatar-${Date.now()}.${fileExt}`;
+    
+    let fileToUpload: Blob | File;
+    
+    if (Platform.OS === 'web') {
+      const response = await fetch(uri);
+      fileToUpload = await response.blob();
+    } else {
+      const response = await fetch(uri);
+      fileToUpload = await response.blob();
+    }
+
+    console.log('Uploading file to storage:', fileName);
+    const { data, error } = await supabase.storage
+      .from('avatars')
+      .upload(fileName, fileToUpload, {
+        contentType: 'image/jpeg',
+        upsert: true,
+      });
+
+    if (error) {
+      console.log('Storage upload error:', error);
+      throw error;
+    }
+
+    const { data: urlData } = supabase.storage
+      .from('avatars')
+      .getPublicUrl(data.path);
+
+    console.log('File uploaded successfully:', urlData.publicUrl);
+    return urlData.publicUrl;
   };
 
   const pickImage = async () => {
@@ -234,21 +235,15 @@ export function SettingsPanel({ onClose, onSelectVow }: SettingsPanelProps) {
           }
           const reader = new FileReader();
           reader.onload = async () => {
-            const base64 = reader.result as string;
+            const dataUrl = reader.result as string;
             try {
-              console.log('Original base64 size:', base64.length);
-              const compressed = await compressBase64Image(base64);
-              console.log('Compressed base64 size:', compressed.length);
+              console.log('Uploading avatar to storage...');
+              const publicUrl = await uploadAvatarToStorage(dataUrl);
+              console.log('Avatar uploaded, URL:', publicUrl);
               
-              if (compressed.length > 100000) {
-                Alert.alert(t.common.error, 'Не удалось достаточно сжать изображение');
-                return;
-              }
-              
-              console.log('Uploading avatar...');
-              const result = await updateProfile({ avatar_url: compressed });
-              console.log('Avatar upload result:', result);
-              setLocalAvatarUrl(compressed);
+              const result = await updateProfile({ avatar_url: publicUrl });
+              console.log('Profile updated:', result);
+              setLocalAvatarUrl(publicUrl);
               Alert.alert(t.common.success, t.settings.photoUpdated);
             } catch (error) {
               console.log('Avatar update error:', error);
@@ -274,24 +269,20 @@ export function SettingsPanel({ onClose, onSelectVow }: SettingsPanelProps) {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],
-      quality: 0.2,
-      base64: true,
+      quality: 0.8,
     });
 
     if (!result.canceled && result.assets[0]) {
-      const base64Image = `data:image/jpeg;base64,${result.assets[0].base64}`;
-      console.log('Mobile base64 size:', base64Image.length);
-      
-      if (base64Image.length > 100000) {
-        Alert.alert(t.common.error, 'Изображение слишком большое. Выберите другое или уменьшите размер.');
-        return;
-      }
+      const imageUri = result.assets[0].uri;
       
       try {
-        console.log('Uploading avatar...');
-        const uploadResult = await updateProfile({ avatar_url: base64Image });
-        console.log('Avatar upload result:', uploadResult);
-        setLocalAvatarUrl(base64Image);
+        console.log('Uploading avatar to storage...');
+        const publicUrl = await uploadAvatarToStorage(imageUri);
+        console.log('Avatar uploaded, URL:', publicUrl);
+        
+        const uploadResult = await updateProfile({ avatar_url: publicUrl });
+        console.log('Profile updated:', uploadResult);
+        setLocalAvatarUrl(publicUrl);
         Alert.alert(t.common.success, t.settings.photoUpdated);
       } catch (error) {
         console.log('Avatar update error:', error);
