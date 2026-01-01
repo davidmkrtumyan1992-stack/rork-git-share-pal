@@ -25,7 +25,9 @@ import {
   Clock,
   Calendar,
   AlertTriangle,
+  Settings,
 } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCreateVowEntry, useTodayEntries, useHistoryEntries, useMarkAntidoteCompleted, usePostponeAntidote } from '@/hooks/useVows';
 import { useDailyVows, DailyVowItem } from '@/hooks/useVowCycle';
@@ -129,6 +131,7 @@ export function Dashboard({
   const { profile, language, isAdmin } = useAuth();
   const t = getTranslation(language);
   const { width: screenWidth } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   
   const isSmallScreen = screenWidth < BREAKPOINTS.md;
   const isLargeScreen = screenWidth >= BREAKPOINTS.lg;
@@ -342,102 +345,60 @@ export function Dashboard({
     return vowCategoryNames[category]?.[language] || category;
   }, [language]);
 
-  const renderTabs = () => (
-    <ScrollView 
-      horizontal 
-      showsHorizontalScrollIndicator={false}
-      style={styles.tabsScrollContainer}
-      contentContainerStyle={styles.tabsScrollContent}
-    >
-      <View style={[styles.tabsContainer, isLargeScreen && styles.tabsContainerLarge]}>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'diary' && styles.tabActive]}
-          onPress={() => setActiveTab('diary')}
-        >
-          {activeTab === 'diary' ? (
-            <LinearGradient
-              colors={['#6B8E7F', '#5A7A6D']}
-              style={styles.tabGradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-            >
-              <Bell size={isSmallScreen ? 16 : 18} color="#FFFFFF" />
-              {!isSmallScreen && (
-                <Text style={styles.tabTextActive}>
-                  {language === 'ru' ? 'Дневник' : 'Diary'}
-                </Text>
-              )}
-            </LinearGradient>
-          ) : (
-            <View style={styles.tabInner}>
-              <Bell size={isSmallScreen ? 16 : 18} color={darkTheme.colors.textMuted} />
-              {!isSmallScreen && (
-                <Text style={styles.tabText}>
-                  {language === 'ru' ? 'Дневник' : 'Diary'}
-                </Text>
-              )}
-            </View>
-          )}
-        </TouchableOpacity>
+  const renderBottomTabs = () => (
+    <View style={[styles.bottomTabBar, { paddingBottom: Math.max(insets.bottom, 20) }]}>
+      <LinearGradient
+        colors={['rgba(0, 0, 0, 0.03)', 'rgba(0, 0, 0, 0)']} 
+        style={styles.bottomTabShadow}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+      />
+      
+      <Pressable
+        style={styles.bottomTabItem}
+        onPress={() => setActiveTab('diary')}
+      >
+        <Bell 
+          size={24} 
+          color={activeTab === 'diary' ? darkTheme.colors.primary : '#5A6A66'}
+          strokeWidth={activeTab === 'diary' ? 2.5 : 2}
+        />
+        <Text style={[styles.bottomTabLabel, activeTab === 'diary' && styles.bottomTabLabelActive]}>
+          {language === 'ru' ? 'дневник' : 'diary'}
+        </Text>
+      </Pressable>
 
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'history' && styles.tabActive]}
-          onPress={() => setActiveTab('history')}
-        >
-          {activeTab === 'history' ? (
-            <LinearGradient
-              colors={['#6B8E7F', '#5A7A6D']}
-              style={styles.tabGradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-            >
-              <History size={isSmallScreen ? 16 : 18} color="#FFFFFF" />
-              {!isSmallScreen && (
-                <Text style={styles.tabTextActive}>
-                  {language === 'ru' ? 'История' : 'History'}
-                </Text>
-              )}
-            </LinearGradient>
-          ) : (
-            <View style={styles.tabInner}>
-              <History size={isSmallScreen ? 16 : 18} color={darkTheme.colors.textMuted} />
-              {!isSmallScreen && (
-                <Text style={styles.tabText}>
-                  {language === 'ru' ? 'История' : 'History'}
-                </Text>
-              )}
-            </View>
-          )}
-        </TouchableOpacity>
+      <Pressable
+        style={styles.bottomTabItem}
+        onPress={() => setActiveTab('history')}
+      >
+        <History 
+          size={24} 
+          color={activeTab === 'history' ? darkTheme.colors.primary : '#5A6A66'}
+          strokeWidth={activeTab === 'history' ? 2.5 : 2}
+        />
+        <Text style={[styles.bottomTabLabel, activeTab === 'history' && styles.bottomTabLabelActive]}>
+          {language === 'ru' ? 'история' : 'history'}
+        </Text>
+      </Pressable>
 
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'settings' && styles.tabActive]}
-          onPress={() => {
-            setActiveTab('settings');
-            onOpenSettings();
-          }}
-        >
-          {activeTab === 'settings' ? (
-            <LinearGradient
-              colors={['#6B8E7F', '#5A7A6D']}
-              style={styles.tabGradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-            >
-              <Text style={styles.tabTextActive}>
-                {language === 'ru' ? 'Настройки' : 'Settings'}
-              </Text>
-            </LinearGradient>
-          ) : (
-            <View style={styles.tabInner}>
-              <Text style={styles.tabText}>
-                {language === 'ru' ? 'Настройки' : 'Settings'}
-              </Text>
-            </View>
-          )}
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+      <Pressable
+        style={styles.bottomTabItem}
+        onPress={() => {
+          setActiveTab('settings');
+          onOpenSettings();
+        }}
+      >
+        <Settings 
+          size={24} 
+          color={activeTab === 'settings' ? darkTheme.colors.primary : '#5A6A66'}
+          strokeWidth={activeTab === 'settings' ? 2.5 : 2}
+        />
+        <Text style={[styles.bottomTabLabel, activeTab === 'settings' && styles.bottomTabLabelActive]}>
+          {language === 'ru' ? 'настройки' : 'settings'}
+        </Text>
+      </Pressable>
+    </View>
   );
 
   const renderSelectedVowsChips = () => (
@@ -1001,18 +962,20 @@ export function Dashboard({
       <ScrollView 
         style={styles.scrollView} 
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.scrollContent, responsiveStyles.scrollContent]}
+        contentContainerStyle={[
+          styles.scrollContent, 
+          responsiveStyles.scrollContent,
+          { paddingBottom: 100 + Math.max(insets.bottom, 20) }
+        ]}
       >
         <View style={styles.header}>
           <Text style={[styles.greeting, { fontSize: responsiveStyles.greeting.fontSize }]}>
-            {language === 'ru' ? 'Привет,' : 'Hello,'}{' '}
+            {language === 'ru' ? 'привет,' : 'hello,'}{' '}
             <Text style={styles.username}>
-              {profile?.username || profile?.full_name || 'User'}
+              {profile?.username || profile?.full_name || 'user'}
             </Text>
           </Text>
         </View>
-
-        {renderTabs()}
 
         {isAdmin && onOpenAdmin && (
           <TouchableOpacity style={styles.adminBanner} onPress={onOpenAdmin}>
@@ -1047,6 +1010,8 @@ export function Dashboard({
 
         {activeTab === 'history' && renderHistoryContent()}
       </ScrollView>
+
+      {renderBottomTabs()}
     </View>
   );
 }
@@ -1077,62 +1042,40 @@ const styles = StyleSheet.create({
   username: {
     fontWeight: '700' as const,
   },
-  tabsScrollContainer: {
-    marginBottom: 20,
-    marginHorizontal: -20,
-  },
-  tabsScrollContent: {
-    paddingHorizontal: 20,
-    flexGrow: 1,
-  },
-  tabsContainer: {
+  bottomTabBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
     flexDirection: 'row',
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    borderRadius: 16,
-    padding: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
-    minWidth: '100%',
+    backgroundColor: 'rgba(255, 255, 255, 0.98)',
+    paddingTop: 12,
+    paddingHorizontal: 8,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0, 0, 0, 0.08)',
   },
-  tabsContainerLarge: {
-    maxWidth: 500,
-    alignSelf: 'flex-start',
+  bottomTabShadow: {
+    position: 'absolute',
+    top: -10,
+    left: 0,
+    right: 0,
+    height: 10,
   },
-  tab: {
+  bottomTabItem: {
     flex: 1,
-    borderRadius: 12,
-    overflow: 'hidden',
-  },
-  tabActive: {},
-  tabGradient: {
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    gap: 6,
-    borderRadius: 12,
+    paddingVertical: 8,
+    gap: 4,
   },
-  tabInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    gap: 6,
-  },
-  tabText: {
-    fontSize: 14,
+  bottomTabLabel: {
+    fontSize: 10,
     fontWeight: '500' as const,
-    color: darkTheme.colors.textMuted,
+    color: '#5A6A66',
   },
-  tabTextActive: {
-    fontSize: 14,
+  bottomTabLabelActive: {
+    color: darkTheme.colors.primary,
     fontWeight: '600' as const,
-    color: '#FFFFFF',
   },
   adminBanner: {
     flexDirection: 'row',
