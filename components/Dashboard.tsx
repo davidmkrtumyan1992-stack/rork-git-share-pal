@@ -31,6 +31,7 @@ import { useCreateVowEntry, useTodayEntries, useHistoryEntries, useMarkAntidoteC
 import { VowEntry } from '@/types/database';
 import { getTranslation } from '@/data/translations';
 import { darkTheme } from '@/constants/theme';
+import { getVowsByCategory } from '@/data/vows';
 
 
 type TabType = 'diary' | 'history' | 'settings';
@@ -44,34 +45,11 @@ const vowCategoryNames: Record<string, { ru: string; en: string }> = {
   monks: { ru: 'Обеты монахов', en: 'Monk Vows' },
 };
 
-const vowItems: Record<string, { ru: string; en: string }[]> = {
-  tenPrinciples: [
-    { ru: 'Не убивать', en: 'Not to kill' },
-    { ru: 'Не воровать', en: 'Not to steal' },
-    { ru: 'Не лгать', en: 'Not to lie' },
-    { ru: 'Говорить о важном', en: 'Speak meaningfully' },
-    { ru: 'Не злословить', en: 'Not to slander' },
-    { ru: 'Не грубить', en: 'Not to speak harshly' },
-    { ru: 'Не завидовать', en: 'Not to covet' },
-    { ru: 'Не злиться', en: 'Not to harbor ill will' },
-    { ru: 'Не иметь ложных взглядов', en: 'Not to hold wrong views' },
-    { ru: 'Хранить целомудрие', en: 'To maintain purity' },
-  ],
-  freedom: [
-    { ru: 'Освобождение от привязанностей', en: 'Freedom from attachments' },
-    { ru: 'Практика осознанности', en: 'Mindfulness practice' },
-    { ru: 'Культивирование сострадания', en: 'Cultivating compassion' },
-  ],
-  bodhisattva: [
-    { ru: 'Помогать всем существам', en: 'Help all beings' },
-    { ru: 'Развивать мудрость', en: 'Develop wisdom' },
-    { ru: 'Практиковать щедрость', en: 'Practice generosity' },
-  ],
-};
+
 
 const antidoteTags = {
-  ru: ['Практиковать щедрость', 'Попросить прощения', 'Медитировать на сострадание', 'Сделать подношение', 'Прочитать мантру'],
-  en: ['Practice generosity', 'Ask for forgiveness', 'Meditate on compassion', 'Make an offering', 'Recite a mantra'],
+  ru: ['практиковать щедрость', 'попросить прощения', 'медитировать на сострадание', 'сделать подношение', 'прочитать мантру'],
+  en: ['practice generosity', 'ask for forgiveness', 'meditate on compassion', 'make an offering', 'recite a mantra'],
 };
 
 const BREAKPOINTS = {
@@ -168,7 +146,11 @@ export function Dashboard({
   }, [language]);
 
   const getVowItems = useCallback((vowKey: string) => {
-    return vowItems[vowKey] || [];
+    const vows = getVowsByCategory(vowKey);
+    return vows.map(vow => ({
+      ru: vow.textRu,
+      en: vow.textEn,
+    }));
   }, []);
 
   const handleExpandCard = (cardKey: string, type: 'keep' | 'break') => {
@@ -338,9 +320,9 @@ export function Dashboard({
   const getVowNameFromType = useCallback((vowType: string): string => {
     const [category, indexStr] = vowType.split('_');
     const index = parseInt(indexStr, 10);
-    const items = vowItems[category];
-    if (items && items[index]) {
-      return items[index][language];
+    const vows = getVowsByCategory(category);
+    if (vows && vows[index]) {
+      return language === 'ru' ? vows[index].textRu : vows[index].textEn;
     }
     return vowType;
   }, [language]);
@@ -628,8 +610,8 @@ export function Dashboard({
                 <TextInput
                   style={styles.noteInput}
                   placeholder={language === 'ru' 
-                    ? 'Например: помолился, попросил прощения...'
-                    : 'E.g.: prayed, asked for forgiveness...'}
+                    ? 'например: помолился, попросил прощения...'
+                    : 'e.g.: prayed, asked for forgiveness...'}
                   placeholderTextColor={darkTheme.colors.textMuted}
                   value={state?.noteText || ''}
                   onChangeText={(text) => updateNoteText(cardKey, text)}
@@ -719,8 +701,8 @@ export function Dashboard({
                 <TextInput
                   style={styles.noteInput}
                   placeholder={language === 'ru' 
-                    ? 'Или введите свой вариант...'
-                    : 'Or enter your own...'}
+                    ? 'или введите свой вариант...'
+                    : 'or enter your own...'}
                   placeholderTextColor={darkTheme.colors.textMuted}
                   value={state?.antidoteText || ''}
                   onChangeText={(text) => updateAntidoteText(cardKey, text)}
