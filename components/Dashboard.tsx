@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -28,6 +28,7 @@ import {
 } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCreateVowEntry, useTodayEntries, useHistoryEntries, useMarkAntidoteCompleted, usePostponeAntidote } from '@/hooks/useVows';
+import { useDailyVows, DailyVowItem } from '@/hooks/useVowCycle';
 import { VowEntry } from '@/types/database';
 import { getTranslation } from '@/data/translations';
 import { darkTheme } from '@/constants/theme';
@@ -138,20 +139,29 @@ export function Dashboard({
   const markAntidoteCompleted = useMarkAntidoteCompleted();
   const postponeAntidote = usePostponeAntidote();
   
+  const { dailyVows, isLoading: cycleLoading, initializeIfNeeded, advanceCyclePositions, needsUpdate } = useDailyVows(selectedVows);
+  
   const [activeTab, setActiveTab] = useState<TabType>('diary');
   const [cardStates, setCardStates] = useState<Record<string, VowCardState>>({});
+
+  useEffect(() => {
+    if (selectedVows.length > 0) {
+      initializeIfNeeded();
+    }
+  }, [selectedVows, initializeIfNeeded]);
+
+  useEffect(() => {
+    if (needsUpdate && selectedVows.length > 0) {
+      console.log('New day detected, advancing cycle positions');
+      advanceCyclePositions();
+    }
+  }, [needsUpdate, selectedVows, advanceCyclePositions]);
 
   const getVowCategoryName = useCallback((vowKey: string) => {
     return vowCategoryNames[vowKey]?.[language] || vowKey;
   }, [language]);
 
-  const getVowItems = useCallback((vowKey: string) => {
-    const vows = getVowsByCategory(vowKey);
-    return vows.map(vow => ({
-      ru: vow.textRu,
-      en: vow.textEn,
-    }));
-  }, []);
+  
 
   const handleExpandCard = (cardKey: string, type: 'keep' | 'break') => {
     setCardStates(prev => ({
@@ -753,17 +763,34 @@ export function Dashboard({
   };
 
   const renderVowCards = () => {
-    let globalIndex = 0;
-    return selectedVows.map((vowKey) => {
-      const items = getVowItems(vowKey);
-      const categoryName = getVowCategoryName(vowKey);
-      
-      return items.map((item, localIndex) => {
-        const currentGlobalIdx = globalIndex;
-        const card = renderVowCard(vowKey, item, localIndex, categoryName, currentGlobalIdx);
-        globalIndex++;
-        return card;
-      });
+    if (cycleLoading) {
+      return (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={darkTheme.colors.primary} />
+          <Text style={styles.loadingText}>
+            {language === 'ru' ? 'Загрузка обетов...' : 'Loading vows...'}
+          </Text>
+        </View>
+      );
+    }
+
+    if (dailyVows.length === 0) {
+      return null;
+    }
+
+    return dailyVows.map((dailyVow: DailyVowItem, index: number) => {
+      const vowItem = {
+        ru: dailyVow.vowItem.textRu,
+        en: dailyVow.vowItem.textEn,
+      };
+      const categoryName = getVowCategoryName(dailyVow.vowType);
+      return renderVowCard(
+        dailyVow.vowType,
+        vowItem,
+        dailyVow.vowIndex,
+        categoryName,
+        dailyVow.vowIndex
+      );
     });
   };
 
@@ -1703,5 +1730,17 @@ const styles = StyleSheet.create({
     color: darkTheme.colors.textMuted,
     marginTop: 8,
     textAlign: 'center',
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 48,
+    backgroundColor: 'rgba(255, 255, 255, 0.6)',
+    borderRadius: 24,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: darkTheme.colors.textMuted,
+    marginTop: 16,
   },
 });
