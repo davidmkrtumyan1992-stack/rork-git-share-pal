@@ -173,6 +173,14 @@ export function SettingsPanel({ onClose, onSelectVow }: SettingsPanelProps) {
     );
   };
 
+  const [localAvatarUrl, setLocalAvatarUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (profile?.avatar_url) {
+      setLocalAvatarUrl(profile.avatar_url);
+    }
+  }, [profile?.avatar_url]);
+
   const pickImage = async () => {
     if (Platform.OS === 'web') {
       const input = document.createElement('input');
@@ -182,11 +190,22 @@ export function SettingsPanel({ onClose, onSelectVow }: SettingsPanelProps) {
         const target = e.target as HTMLInputElement;
         const file = target.files?.[0];
         if (file) {
+          if (file.size > 500000) {
+            Alert.alert(t.common.error, 'Изображение слишком большое. Максимум 500 КБ.');
+            return;
+          }
           const reader = new FileReader();
-          reader.onload = () => {
+          reader.onload = async () => {
             const base64 = reader.result as string;
-            updateProfile({ avatar_url: base64 });
-            Alert.alert(t.common.success, t.settings.photoUpdated);
+            try {
+              setLocalAvatarUrl(base64);
+              await updateProfile({ avatar_url: base64 });
+              Alert.alert(t.common.success, t.settings.photoUpdated);
+            } catch (error) {
+              console.log('Avatar update error:', error);
+              setLocalAvatarUrl(profile?.avatar_url || null);
+              Alert.alert(t.common.error, 'Не удалось сохранить фото');
+            }
           };
           reader.readAsDataURL(file);
         }
@@ -205,14 +224,21 @@ export function SettingsPanel({ onClose, onSelectVow }: SettingsPanelProps) {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],
-      quality: 0.5,
+      quality: 0.3,
       base64: true,
     });
 
     if (!result.canceled && result.assets[0]) {
       const base64Image = `data:image/jpeg;base64,${result.assets[0].base64}`;
-      updateProfile({ avatar_url: base64Image });
-      Alert.alert(t.common.success, t.settings.photoUpdated);
+      try {
+        setLocalAvatarUrl(base64Image);
+        await updateProfile({ avatar_url: base64Image });
+        Alert.alert(t.common.success, t.settings.photoUpdated);
+      } catch (error) {
+        console.log('Avatar update error:', error);
+        setLocalAvatarUrl(profile?.avatar_url || null);
+        Alert.alert(t.common.error, 'Не удалось сохранить фото');
+      }
     }
   };
 
@@ -289,8 +315,15 @@ export function SettingsPanel({ onClose, onSelectVow }: SettingsPanelProps) {
           <View style={styles.profileInfoCard}>
             <View style={styles.profileRow}>
               <TouchableOpacity style={styles.avatarContainer} onPress={pickImage}>
-                {profile?.avatar_url ? (
-                  <Image source={{ uri: profile.avatar_url }} style={styles.avatarImage} />
+                {localAvatarUrl ? (
+                  <Image 
+                    source={{ uri: localAvatarUrl }} 
+                    style={styles.avatarImage}
+                    onError={() => {
+                      console.log('Avatar image load error');
+                      setLocalAvatarUrl(null);
+                    }}
+                  />
                 ) : (
                   <View style={styles.avatarPlaceholder}>
                     <Text style={styles.avatarInitials}>{getInitials()}</Text>
