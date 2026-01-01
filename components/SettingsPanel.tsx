@@ -198,12 +198,12 @@ export function SettingsPanel({ onClose, onSelectVow }: SettingsPanelProps) {
             <Text style={styles.cardTitle}>{t.settings.personalData}</Text>
           </View>
           
-          <View style={styles.profileInfo}>
-            <Text style={styles.userName}>
+          <View style={styles.profileInfoCard}>
+            <Text style={styles.userName} numberOfLines={1}>
               {profile?.username || 'User'}
             </Text>
             {profile?.full_name && (
-              <Text style={styles.userFullName}>{profile.full_name}</Text>
+              <Text style={styles.userFullName} numberOfLines={1}>{profile.full_name}</Text>
             )}
           </View>
 
@@ -303,29 +303,29 @@ export function SettingsPanel({ onClose, onSelectVow }: SettingsPanelProps) {
           </View>
 
           <TouchableOpacity style={styles.settingRow} onPress={handleLanguageChange}>
-            <Text style={styles.settingLabel}>{t.common.language}</Text>
+            <Text style={styles.settingLabelFlex}>{t.common.language}</Text>
             <View style={styles.settingRight}>
               <Text style={styles.settingValue}>
                 {language === 'ru' ? 'Русский' : 'English'}
               </Text>
-              <ChevronRight size={20} color={darkTheme.colors.textMuted} />
+              <ChevronRight size={16} color={darkTheme.colors.textMuted} />
             </View>
           </TouchableOpacity>
 
           <TouchableOpacity 
-            style={styles.settingRow} 
+            style={styles.settingRowVertical} 
             onPress={() => setShowTimezoneList(!showTimezoneList)}
           >
-            <View style={styles.settingLeft}>
-              <Clock size={20} color={darkTheme.colors.primary} />
-              <Text style={styles.settingLabel}>{t.settings.timezone}</Text>
+            <View style={styles.settingRowHeader}>
+              <View style={styles.settingLeft}>
+                <Clock size={18} color={darkTheme.colors.primary} />
+                <Text style={styles.settingLabel}>{t.settings.timezone}</Text>
+              </View>
+              <ChevronRight size={16} color={darkTheme.colors.textMuted} />
             </View>
-            <View style={styles.settingRight}>
-              <Text style={styles.settingValue}>
-                {TIMEZONES.find(tz => tz.value === profile?.notification_timezone)?.label || 'UTC+03:00 — Москва, Санкт-Петербург'}
-              </Text>
-              <ChevronRight size={20} color={darkTheme.colors.textMuted} />
-            </View>
+            <Text style={styles.settingValueTimezone} numberOfLines={1}>
+              {TIMEZONES.find(tz => tz.value === profile?.notification_timezone)?.label || 'UTC+03:00 — Москва, Санкт-Петербург'}
+            </Text>
           </TouchableOpacity>
 
           {showTimezoneList && (
@@ -388,7 +388,7 @@ export function SettingsPanel({ onClose, onSelectVow }: SettingsPanelProps) {
           </View>
 
           <View style={styles.settingRow}>
-            <Text style={styles.settingLabel}>{t.common.notifications}</Text>
+            <Text style={styles.settingLabelFlex}>{t.common.notifications}</Text>
             <Switch
               value={profile?.notifications_enabled || false}
               onValueChange={handleNotificationsToggle}
@@ -538,6 +538,11 @@ const styles = StyleSheet.create({
   },
   profileInfo: {
     flex: 1,
+    paddingHorizontal: darkTheme.spacing.md,
+  },
+  profileInfoCard: {
+    paddingHorizontal: darkTheme.spacing.lg,
+    paddingVertical: darkTheme.spacing.md,
   },
   profileName: {
     fontSize: darkTheme.fontSize.lg,
@@ -587,20 +592,35 @@ const styles = StyleSheet.create({
   settingLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: darkTheme.spacing.md,
+    gap: darkTheme.spacing.sm,
+    flexShrink: 1,
   },
   settingLabel: {
     fontSize: darkTheme.fontSize.md,
     color: darkTheme.colors.text,
+    flexShrink: 1,
+  },
+  settingLabelFlex: {
+    fontSize: darkTheme.fontSize.md,
+    color: darkTheme.colors.text,
+    flex: 1,
   },
   settingRight: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: darkTheme.spacing.xs,
+    flexShrink: 0,
+    marginLeft: darkTheme.spacing.sm,
   },
   settingValue: {
     fontSize: darkTheme.fontSize.sm,
     color: darkTheme.colors.textSecondary,
+  },
+  settingValueTimezone: {
+    fontSize: darkTheme.fontSize.sm,
+    color: darkTheme.colors.textSecondary,
+    marginTop: darkTheme.spacing.xs,
+    paddingLeft: 26,
   },
   logoutItem: {
     borderTopWidth: 0,
@@ -629,7 +649,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: darkTheme.spacing.md,
-    padding: darkTheme.spacing.md,
+    paddingVertical: darkTheme.spacing.md,
+    paddingHorizontal: darkTheme.spacing.lg,
     borderBottomWidth: 1,
     borderBottomColor: darkTheme.colors.border,
   },
@@ -657,7 +678,8 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   passwordSection: {
-    padding: darkTheme.spacing.md,
+    paddingVertical: darkTheme.spacing.md,
+    paddingHorizontal: darkTheme.spacing.lg,
   },
   subsectionTitle: {
     fontSize: darkTheme.fontSize.sm,
@@ -708,9 +730,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingVertical: darkTheme.spacing.md,
-    paddingHorizontal: darkTheme.spacing.md,
+    paddingHorizontal: darkTheme.spacing.lg,
     borderTopWidth: 1,
     borderTopColor: darkTheme.colors.border,
+    minHeight: 52,
+  },
+  settingRowVertical: {
+    paddingVertical: darkTheme.spacing.md,
+    paddingHorizontal: darkTheme.spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: darkTheme.colors.border,
+  },
+  settingRowHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   timezoneList: {
     maxHeight: 320,
@@ -720,20 +754,22 @@ const styles = StyleSheet.create({
   },
   timezoneItem: {
     paddingVertical: darkTheme.spacing.md,
-    paddingHorizontal: darkTheme.spacing.md,
+    paddingHorizontal: darkTheme.spacing.lg,
     borderBottomWidth: 1,
     borderBottomColor: darkTheme.colors.border,
   },
   timezoneText: {
     fontSize: darkTheme.fontSize.sm,
     color: darkTheme.colors.text,
+    lineHeight: 20,
   },
   timezoneTextActive: {
     color: darkTheme.colors.primary,
     fontWeight: darkTheme.fontWeight.semibold,
   },
   vowInfo: {
-    padding: darkTheme.spacing.md,
+    paddingVertical: darkTheme.spacing.md,
+    paddingHorizontal: darkTheme.spacing.lg,
     borderBottomWidth: 1,
     borderBottomColor: darkTheme.colors.border,
   },
@@ -750,7 +786,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: darkTheme.spacing.md,
+    paddingVertical: darkTheme.spacing.md,
+    paddingHorizontal: darkTheme.spacing.lg,
   },
   changeVowButtonText: {
     fontSize: darkTheme.fontSize.md,
@@ -758,7 +795,8 @@ const styles = StyleSheet.create({
     fontWeight: darkTheme.fontWeight.medium,
   },
   intervalSection: {
-    padding: darkTheme.spacing.md,
+    paddingVertical: darkTheme.spacing.md,
+    paddingHorizontal: darkTheme.spacing.lg,
     borderTopWidth: 1,
     borderTopColor: darkTheme.colors.border,
   },
