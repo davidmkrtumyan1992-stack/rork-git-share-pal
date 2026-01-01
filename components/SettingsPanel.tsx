@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   ScrollView,
   Switch,
   Alert,
+  TextInput,
   useWindowDimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -17,7 +18,13 @@ import {
   Bell,
   LogOut,
   ChevronRight,
+  User,
+  Clock,
+  Eye,
+  EyeOff,
+  Sparkles,
 } from 'lucide-react-native';
+import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { getTranslation } from '@/data/translations';
 import { darkTheme } from '@/constants/theme';
@@ -25,7 +32,36 @@ import { Language } from '@/types/database';
 
 interface SettingsPanelProps {
   onClose: () => void;
+  onSelectVow?: () => void;
 }
+
+const TIMEZONES = [
+  { label: 'UTC-12:00', value: 'Pacific/Kwajalein' },
+  { label: 'UTC-11:00', value: 'Pacific/Midway' },
+  { label: 'UTC-10:00', value: 'Pacific/Honolulu' },
+  { label: 'UTC-09:00', value: 'America/Anchorage' },
+  { label: 'UTC-08:00', value: 'America/Los_Angeles' },
+  { label: 'UTC-07:00', value: 'America/Denver' },
+  { label: 'UTC-06:00', value: 'America/Chicago' },
+  { label: 'UTC-05:00', value: 'America/New_York' },
+  { label: 'UTC-04:00', value: 'America/Caracas' },
+  { label: 'UTC-03:00', value: 'America/Sao_Paulo' },
+  { label: 'UTC-02:00', value: 'Atlantic/South_Georgia' },
+  { label: 'UTC-01:00', value: 'Atlantic/Azores' },
+  { label: 'UTC+00:00', value: 'Europe/London' },
+  { label: 'UTC+01:00', value: 'Europe/Paris' },
+  { label: 'UTC+02:00', value: 'Europe/Athens' },
+  { label: 'UTC+03:00 (Москва)', value: 'Europe/Moscow' },
+  { label: 'UTC+04:00', value: 'Asia/Dubai' },
+  { label: 'UTC+05:00', value: 'Asia/Karachi' },
+  { label: 'UTC+06:00', value: 'Asia/Dhaka' },
+  { label: 'UTC+07:00', value: 'Asia/Bangkok' },
+  { label: 'UTC+08:00', value: 'Asia/Singapore' },
+  { label: 'UTC+09:00', value: 'Asia/Tokyo' },
+  { label: 'UTC+10:00', value: 'Australia/Sydney' },
+  { label: 'UTC+11:00', value: 'Pacific/Noumea' },
+  { label: 'UTC+12:00', value: 'Pacific/Auckland' },
+];
 
 const BREAKPOINTS = {
   sm: 320,
@@ -33,13 +69,22 @@ const BREAKPOINTS = {
   lg: 1024,
 };
 
-export function SettingsPanel({ onClose }: SettingsPanelProps) {
+export function SettingsPanel({ onClose, onSelectVow }: SettingsPanelProps) {
   const { profile, language, signOut, setLanguage, updateProfile } = useAuth();
   const t = getTranslation(language);
   const { width: screenWidth } = useWindowDimensions();
   
   const isSmallScreen = screenWidth < BREAKPOINTS.md;
   const isLargeScreen = screenWidth >= BREAKPOINTS.lg;
+
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showOldPassword, setShowOldPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showTimezoneList, setShowTimezoneList] = useState(false);
+  const [notificationInterval, setNotificationInterval] = useState(2);
 
   const signOutMutation = useMutation({
     mutationFn: signOut,
@@ -48,13 +93,47 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
     },
   });
 
-  const handleLanguageChange = async () => {
+  const handleLanguageChange = () => {
     const newLang: Language = language === 'ru' ? 'en' : 'ru';
-    await setLanguage(newLang);
+    setLanguage(newLang);
   };
 
-  const handleNotificationsToggle = async (value: boolean) => {
-    await updateProfile({ notifications_enabled: value });
+  const handleNotificationsToggle = (value: boolean) => {
+    updateProfile({ notifications_enabled: value });
+  };
+
+  const updatePasswordMutation = useMutation({
+    mutationFn: async () => {
+      if (newPassword !== confirmPassword) {
+        throw new Error(t.settings.passwordMismatch);
+      }
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      Alert.alert(t.common.success, t.settings.passwordUpdated);
+      setOldPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    },
+    onError: (error: Error) => {
+      Alert.alert(t.common.error, error.message);
+    },
+  });
+
+  const handleUpdatePassword = () => {
+    if (!newPassword || !confirmPassword) {
+      Alert.alert(t.common.error, t.auth.fillAllFields);
+      return;
+    }
+    updatePasswordMutation.mutate();
+  };
+
+  const handleTimezoneChange = (timezone: string) => {
+    updateProfile({ notification_timezone: timezone });
+    setShowTimezoneList(false);
   };
 
   const handleSignOut = () => {
@@ -86,10 +165,10 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={[darkTheme.colors.background, darkTheme.colors.backgroundSecondary]}
+        colors={[darkTheme.colors.background, darkTheme.colors.backgroundSecondary, darkTheme.colors.backgroundTertiary]}
         style={styles.gradient}
         start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
+        end={{ x: 1, y: 1 }}
       />
       <View style={[styles.header, isLargeScreen && styles.headerLarge]}>
         <TouchableOpacity onPress={onClose} style={styles.backButton}>
@@ -108,37 +187,123 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
         ]}
       >
         <View style={[
-          styles.profileSection,
+          styles.card,
           { maxWidth: responsiveStyles.content.maxWidth },
-          isLargeScreen && styles.profileSectionLarge
+          isLargeScreen && styles.cardLarge
         ]}>
-          <View style={[styles.avatar, { width: responsiveStyles.avatarSize, height: responsiveStyles.avatarSize, borderRadius: responsiveStyles.avatarSize / 2 }]}>
-            <Text style={styles.avatarText}>
-              {profile?.username?.charAt(0).toUpperCase() || '?'}
-            </Text>
+          <View style={styles.cardHeader}>
+            <View style={styles.iconContainer}>
+              <User size={20} color="#FFFFFF" />
+            </View>
+            <Text style={styles.cardTitle}>{t.settings.personalData}</Text>
           </View>
+          
           <View style={styles.profileInfo}>
-            <Text style={styles.profileName}>
+            <Text style={styles.userName}>
               {profile?.username || 'User'}
             </Text>
             {profile?.full_name && (
-              <Text style={styles.profileFullName}>{profile.full_name}</Text>
+              <Text style={styles.userFullName}>{profile.full_name}</Text>
             )}
+          </View>
+
+          <View style={styles.passwordSection}>
+            <Text style={styles.subsectionTitle}>{t.settings.changePassword}</Text>
+            
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>{t.settings.oldPassword}</Text>
+              <View style={styles.passwordInput}>
+                <TextInput
+                  style={styles.input}
+                  value={oldPassword}
+                  onChangeText={setOldPassword}
+                  secureTextEntry={!showOldPassword}
+                  placeholder={t.settings.oldPassword}
+                  placeholderTextColor={darkTheme.colors.textMuted}
+                />
+                <TouchableOpacity onPress={() => setShowOldPassword(!showOldPassword)}>
+                  {showOldPassword ? (
+                    <EyeOff size={20} color={darkTheme.colors.textMuted} />
+                  ) : (
+                    <Eye size={20} color={darkTheme.colors.textMuted} />
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>{t.settings.newPassword}</Text>
+              <View style={styles.passwordInput}>
+                <TextInput
+                  style={styles.input}
+                  value={newPassword}
+                  onChangeText={setNewPassword}
+                  secureTextEntry={!showNewPassword}
+                  placeholder={t.settings.newPassword}
+                  placeholderTextColor={darkTheme.colors.textMuted}
+                />
+                <TouchableOpacity onPress={() => setShowNewPassword(!showNewPassword)}>
+                  {showNewPassword ? (
+                    <EyeOff size={20} color={darkTheme.colors.textMuted} />
+                  ) : (
+                    <Eye size={20} color={darkTheme.colors.textMuted} />
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>{t.settings.confirmPassword}</Text>
+              <View style={styles.passwordInput}>
+                <TextInput
+                  style={styles.input}
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  secureTextEntry={!showConfirmPassword}
+                  placeholder={t.settings.confirmPassword}
+                  placeholderTextColor={darkTheme.colors.textMuted}
+                />
+                <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
+                  {showConfirmPassword ? (
+                    <EyeOff size={20} color={darkTheme.colors.textMuted} />
+                  ) : (
+                    <Eye size={20} color={darkTheme.colors.textMuted} />
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <TouchableOpacity
+              style={styles.updateButton}
+              onPress={handleUpdatePassword}
+              disabled={updatePasswordMutation.isPending}
+            >
+              <LinearGradient
+                colors={[darkTheme.colors.primary, darkTheme.colors.primaryDark]}
+                style={styles.buttonGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+              >
+                <Text style={styles.updateButtonText}>{t.settings.updatePassword}</Text>
+              </LinearGradient>
+            </TouchableOpacity>
           </View>
         </View>
 
         <View style={[
-          styles.section,
+          styles.card,
           { maxWidth: responsiveStyles.content.maxWidth },
-          isLargeScreen && styles.sectionLarge
+          isLargeScreen && styles.cardLarge
         ]}>
-          <Text style={styles.sectionTitle}>{t.common.profile}</Text>
-          
-          <TouchableOpacity style={styles.settingItem} onPress={handleLanguageChange}>
-            <View style={styles.settingLeft}>
-              <Globe size={20} color={darkTheme.colors.primary} />
-              <Text style={styles.settingLabel}>{t.common.language}</Text>
+          <View style={styles.cardHeader}>
+            <View style={[styles.iconContainer, { backgroundColor: darkTheme.colors.primaryLight }]}>
+              <Globe size={20} color="#FFFFFF" />
             </View>
+            <Text style={styles.cardTitle}>{t.settings.localization}</Text>
+          </View>
+
+          <TouchableOpacity style={styles.settingRow} onPress={handleLanguageChange}>
+            <Text style={styles.settingLabel}>{t.common.language}</Text>
             <View style={styles.settingRight}>
               <Text style={styles.settingValue}>
                 {language === 'ru' ? 'Русский' : 'English'}
@@ -147,11 +312,83 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
             </View>
           </TouchableOpacity>
 
-          <View style={styles.settingItem}>
+          <TouchableOpacity 
+            style={styles.settingRow} 
+            onPress={() => setShowTimezoneList(!showTimezoneList)}
+          >
             <View style={styles.settingLeft}>
-              <Bell size={20} color={darkTheme.colors.warning} />
-              <Text style={styles.settingLabel}>{t.common.notifications}</Text>
+              <Clock size={20} color={darkTheme.colors.primary} />
+              <Text style={styles.settingLabel}>{t.settings.timezone}</Text>
             </View>
+            <View style={styles.settingRight}>
+              <Text style={styles.settingValue}>
+                {TIMEZONES.find(tz => tz.value === profile?.notification_timezone)?.label || 'UTC+03:00 (Москва)'}
+              </Text>
+              <ChevronRight size={20} color={darkTheme.colors.textMuted} />
+            </View>
+          </TouchableOpacity>
+
+          {showTimezoneList && (
+            <ScrollView style={styles.timezoneList} nestedScrollEnabled>
+              {TIMEZONES.map((tz) => (
+                <TouchableOpacity
+                  key={tz.value}
+                  style={styles.timezoneItem}
+                  onPress={() => handleTimezoneChange(tz.value)}
+                >
+                  <Text style={[
+                    styles.timezoneText,
+                    tz.value === profile?.notification_timezone && styles.timezoneTextActive
+                  ]}>
+                    {tz.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          )}
+        </View>
+
+        {onSelectVow && (
+          <View style={[
+            styles.card,
+            { maxWidth: responsiveStyles.content.maxWidth },
+            isLargeScreen && styles.cardLarge
+          ]}>
+            <View style={styles.cardHeader}>
+              <View style={[styles.iconContainer, { backgroundColor: darkTheme.colors.accent }]}>
+                <Sparkles size={20} color="#FFFFFF" />
+              </View>
+              <Text style={styles.cardTitle}>{t.settings.vowManagement}</Text>
+            </View>
+
+            <View style={styles.vowInfo}>
+              <Text style={styles.vowLabel}>{t.settings.currentVow}</Text>
+              <Text style={styles.vowValue}>
+                {profile?.selected_vow || t.dashboard.noVowSelected}
+              </Text>
+            </View>
+
+            <TouchableOpacity style={styles.changeVowButton} onPress={onSelectVow}>
+              <Text style={styles.changeVowButtonText}>{t.settings.changeVows}</Text>
+              <ChevronRight size={20} color={darkTheme.colors.primary} />
+            </TouchableOpacity>
+          </View>
+        )}
+
+        <View style={[
+          styles.card,
+          { maxWidth: responsiveStyles.content.maxWidth },
+          isLargeScreen && styles.cardLarge
+        ]}>
+          <View style={styles.cardHeader}>
+            <View style={[styles.iconContainer, { backgroundColor: darkTheme.colors.warning }]}>
+              <Bell size={20} color="#FFFFFF" />
+            </View>
+            <Text style={styles.cardTitle}>{t.settings.notificationSettings}</Text>
+          </View>
+
+          <View style={styles.settingRow}>
+            <Text style={styles.settingLabel}>{t.common.notifications}</Text>
             <Switch
               value={profile?.notifications_enabled || false}
               onValueChange={handleNotificationsToggle}
@@ -166,25 +403,55 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
               }
             />
           </View>
+
+          {profile?.notifications_enabled && (
+            <View style={styles.intervalSection}>
+              <Text style={styles.subsectionTitle}>{t.settings.notificationInterval}</Text>
+              <View style={styles.intervalButtons}>
+                <TouchableOpacity
+                  style={[
+                    styles.intervalButton,
+                    notificationInterval === 2 && styles.intervalButtonActive
+                  ]}
+                  onPress={() => setNotificationInterval(2)}
+                >
+                  <Text style={[
+                    styles.intervalButtonText,
+                    notificationInterval === 2 && styles.intervalButtonTextActive
+                  ]}>
+                    2 {t.settings.hours}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.intervalButton,
+                    notificationInterval === 3 && styles.intervalButtonActive
+                  ]}
+                  onPress={() => setNotificationInterval(3)}
+                >
+                  <Text style={[
+                    styles.intervalButtonText,
+                    notificationInterval === 3 && styles.intervalButtonTextActive
+                  ]}>
+                    3 {t.settings.hours}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
         </View>
 
-        <View style={[
-          styles.section,
-          { maxWidth: responsiveStyles.content.maxWidth },
-          isLargeScreen && styles.sectionLarge
-        ]}>
+        {isSmallScreen && (
           <TouchableOpacity
-            style={[styles.settingItem, styles.logoutItem]}
+            style={styles.logoutButton}
             onPress={handleSignOut}
           >
-            <View style={styles.settingLeft}>
-              <LogOut size={20} color={darkTheme.colors.error} />
-              <Text style={[styles.settingLabel, styles.logoutLabel]}>
-                {t.auth.logout}
-              </Text>
-            </View>
+            <LogOut size={20} color={darkTheme.colors.error} />
+            <Text style={styles.logoutButtonText}>
+              {t.auth.logout}
+            </Text>
           </TouchableOpacity>
-        </View>
+        )}
       </ScrollView>
     </View>
   );
@@ -340,5 +607,201 @@ const styles = StyleSheet.create({
   },
   logoutLabel: {
     color: darkTheme.colors.error,
+  },
+  card: {
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    borderRadius: darkTheme.borderRadius.xl,
+    marginBottom: darkTheme.spacing.lg,
+    borderWidth: 1,
+    borderColor: darkTheme.colors.border,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+    width: '100%',
+  },
+  cardLarge: {
+    alignSelf: 'center',
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: darkTheme.spacing.md,
+    padding: darkTheme.spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: darkTheme.colors.border,
+  },
+  iconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: darkTheme.colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cardTitle: {
+    fontSize: darkTheme.fontSize.md,
+    fontWeight: darkTheme.fontWeight.semibold,
+    color: darkTheme.colors.text,
+  },
+  userName: {
+    fontSize: darkTheme.fontSize.lg,
+    fontWeight: darkTheme.fontWeight.semibold,
+    color: darkTheme.colors.text,
+  },
+  userFullName: {
+    fontSize: darkTheme.fontSize.sm,
+    color: darkTheme.colors.textSecondary,
+    marginTop: 2,
+  },
+  passwordSection: {
+    padding: darkTheme.spacing.md,
+  },
+  subsectionTitle: {
+    fontSize: darkTheme.fontSize.sm,
+    fontWeight: darkTheme.fontWeight.semibold,
+    color: darkTheme.colors.textMuted,
+    marginBottom: darkTheme.spacing.md,
+  },
+  inputGroup: {
+    marginBottom: darkTheme.spacing.md,
+  },
+  inputLabel: {
+    fontSize: darkTheme.fontSize.sm,
+    color: darkTheme.colors.textSecondary,
+    marginBottom: darkTheme.spacing.xs,
+  },
+  passwordInput: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: darkTheme.colors.surface,
+    borderRadius: darkTheme.borderRadius.md,
+    paddingHorizontal: darkTheme.spacing.md,
+    borderWidth: 1,
+    borderColor: darkTheme.colors.border,
+  },
+  input: {
+    flex: 1,
+    paddingVertical: darkTheme.spacing.md,
+    color: darkTheme.colors.text,
+    fontSize: darkTheme.fontSize.md,
+  },
+  updateButton: {
+    marginTop: darkTheme.spacing.md,
+    borderRadius: darkTheme.borderRadius.md,
+    overflow: 'hidden',
+  },
+  buttonGradient: {
+    paddingVertical: darkTheme.spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  updateButtonText: {
+    color: '#FFFFFF',
+    fontSize: darkTheme.fontSize.md,
+    fontWeight: darkTheme.fontWeight.semibold,
+  },
+  settingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: darkTheme.spacing.md,
+    paddingHorizontal: darkTheme.spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: darkTheme.colors.border,
+  },
+  timezoneList: {
+    maxHeight: 320,
+    backgroundColor: darkTheme.colors.backgroundTertiary,
+    borderTopWidth: 1,
+    borderTopColor: darkTheme.colors.border,
+  },
+  timezoneItem: {
+    paddingVertical: darkTheme.spacing.md,
+    paddingHorizontal: darkTheme.spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: darkTheme.colors.border,
+  },
+  timezoneText: {
+    fontSize: darkTheme.fontSize.sm,
+    color: darkTheme.colors.text,
+  },
+  timezoneTextActive: {
+    color: darkTheme.colors.primary,
+    fontWeight: darkTheme.fontWeight.semibold,
+  },
+  vowInfo: {
+    padding: darkTheme.spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: darkTheme.colors.border,
+  },
+  vowLabel: {
+    fontSize: darkTheme.fontSize.xs,
+    color: darkTheme.colors.textMuted,
+    marginBottom: darkTheme.spacing.xs,
+  },
+  vowValue: {
+    fontSize: darkTheme.fontSize.md,
+    color: darkTheme.colors.text,
+  },
+  changeVowButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: darkTheme.spacing.md,
+  },
+  changeVowButtonText: {
+    fontSize: darkTheme.fontSize.md,
+    color: darkTheme.colors.primary,
+    fontWeight: darkTheme.fontWeight.medium,
+  },
+  intervalSection: {
+    padding: darkTheme.spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: darkTheme.colors.border,
+  },
+  intervalButtons: {
+    flexDirection: 'row',
+    gap: darkTheme.spacing.md,
+  },
+  intervalButton: {
+    flex: 1,
+    paddingVertical: darkTheme.spacing.sm,
+    borderRadius: darkTheme.borderRadius.md,
+    borderWidth: 1,
+    borderColor: darkTheme.colors.border,
+    alignItems: 'center',
+    backgroundColor: darkTheme.colors.surface,
+  },
+  intervalButtonActive: {
+    backgroundColor: darkTheme.colors.primary,
+    borderColor: darkTheme.colors.primary,
+  },
+  intervalButtonText: {
+    fontSize: darkTheme.fontSize.sm,
+    color: darkTheme.colors.text,
+  },
+  intervalButtonTextActive: {
+    color: '#FFFFFF',
+    fontWeight: darkTheme.fontWeight.semibold,
+  },
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: darkTheme.spacing.sm,
+    padding: darkTheme.spacing.md,
+    borderRadius: darkTheme.borderRadius.md,
+    borderWidth: 1,
+    borderColor: darkTheme.colors.error,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    marginTop: darkTheme.spacing.lg,
+  },
+  logoutButtonText: {
+    fontSize: darkTheme.fontSize.md,
+    color: darkTheme.colors.error,
+    fontWeight: darkTheme.fontWeight.medium,
   },
 });

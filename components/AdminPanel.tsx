@@ -8,9 +8,11 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  useWindowDimensions,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Search, Users, Activity, Trash2, ArrowLeft } from 'lucide-react-native';
+import { Search, Users, Activity, Trash2, ArrowLeft, CheckCircle } from 'lucide-react-native';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { getTranslation, formatNumber } from '@/data/translations';
@@ -29,12 +31,21 @@ interface AdminPanelProps {
   onClose: () => void;
 }
 
+const BREAKPOINTS = {
+  sm: 320,
+  md: 768,
+  lg: 1024,
+};
+
 export function AdminPanel({ onClose }: AdminPanelProps) {
   const { language } = useAuth();
   const t = getTranslation(language);
   const queryClient = useQueryClient();
+  const { width: screenWidth } = useWindowDimensions();
   
   const [searchQuery, setSearchQuery] = useState('');
+  const isSmallScreen = screenWidth < BREAKPOINTS.md;
+  const isLargeScreen = screenWidth >= BREAKPOINTS.lg;
 
   const { data: users, isLoading } = useQuery({
     queryKey: ['admin-users'] as const,
@@ -90,9 +101,16 @@ export function AdminPanel({ onClose }: AdminPanelProps) {
         .select('*', { count: 'exact', head: true })
         .eq('entry_date', today);
 
+      const { count: completedAntidotes } = await supabase
+        .from('vow_entries')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'broken')
+        .eq('antidote_completed', true);
+
       return {
         totalUsers: totalUsers || 0,
         activeToday: activeToday || 0,
+        completedAntidotes: completedAntidotes || 0,
       };
     },
   });
@@ -143,9 +161,22 @@ export function AdminPanel({ onClose }: AdminPanelProps) {
     }
   };
 
+  const responsiveStyles = {
+    content: {
+      padding: isSmallScreen ? 16 : isLargeScreen ? 32 : 24,
+      maxWidth: isLargeScreen ? 900 : undefined,
+    },
+  };
+
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
+      <LinearGradient
+        colors={[darkTheme.colors.background, darkTheme.colors.backgroundSecondary, darkTheme.colors.backgroundTertiary]}
+        style={styles.gradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      />
+      <View style={[styles.header, isLargeScreen && styles.headerLarge]}>
         <TouchableOpacity onPress={onClose} style={styles.backButton}>
           <ArrowLeft size={24} color={darkTheme.colors.text} />
         </TouchableOpacity>
@@ -153,10 +184,23 @@ export function AdminPanel({ onClose }: AdminPanelProps) {
         <View style={styles.placeholder} />
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.statsRow}>
+      <ScrollView 
+        style={styles.content} 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={[
+          { padding: responsiveStyles.content.padding },
+          isLargeScreen && styles.contentLarge
+        ]}
+      >
+        <View style={[
+          styles.statsContainer,
+          { maxWidth: responsiveStyles.content.maxWidth },
+          isLargeScreen && styles.statsContainerLarge
+        ]}>
           <View style={styles.statCard}>
-            <Users size={24} color={darkTheme.colors.primary} />
+            <View style={[styles.statIcon, { backgroundColor: darkTheme.colors.primary + '20' }]}>
+              <Users size={24} color={darkTheme.colors.primary} />
+            </View>
             <Text style={styles.statValue}>
               {formatNumber(stats?.totalUsers || 0)}
             </Text>
@@ -164,88 +208,117 @@ export function AdminPanel({ onClose }: AdminPanelProps) {
           </View>
 
           <View style={styles.statCard}>
-            <Activity size={24} color={darkTheme.colors.success} />
+            <View style={[styles.statIcon, { backgroundColor: darkTheme.colors.success + '20' }]}>
+              <Activity size={24} color={darkTheme.colors.success} />
+            </View>
             <Text style={styles.statValue}>
               {formatNumber(stats?.activeToday || 0)}
             </Text>
             <Text style={styles.statLabel}>{t.admin.activeToday}</Text>
           </View>
+
+          <View style={styles.statCard}>
+            <View style={[styles.statIcon, { backgroundColor: darkTheme.colors.accent + '20' }]}>
+              <CheckCircle size={24} color={darkTheme.colors.accent} />
+            </View>
+            <Text style={styles.statValue}>
+              {formatNumber(stats?.completedAntidotes || 0)}
+            </Text>
+            <Text style={styles.statLabel}>{t.admin.completedAntidotes}</Text>
+          </View>
         </View>
 
-        <View style={styles.searchContainer}>
-          <Search size={20} color={darkTheme.colors.textMuted} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder={t.admin.searchUsers}
-            placeholderTextColor={darkTheme.colors.textMuted}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
+        <View style={[
+          styles.card,
+          { maxWidth: responsiveStyles.content.maxWidth },
+          isLargeScreen && styles.cardLarge
+        ]}>
+          <View style={styles.searchContainer}>
+            <Search size={20} color={darkTheme.colors.textMuted} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder={t.admin.searchUsers}
+              placeholderTextColor={darkTheme.colors.textMuted}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+          </View>
         </View>
 
-        <Text style={styles.sectionTitle}>{t.admin.users}</Text>
+        <View style={[
+          styles.card,
+          { maxWidth: responsiveStyles.content.maxWidth },
+          isLargeScreen && styles.cardLarge
+        ]}>
+          <Text style={styles.sectionTitle}>{t.admin.users}</Text>
 
-        {isLoading ? (
-          <ActivityIndicator color={darkTheme.colors.primary} size="large" />
-        ) : (
-          <View style={styles.usersList}>
-            {filteredUsers?.map((user) => (
-              <View key={user.id} style={styles.userCard}>
-                <View style={styles.userInfo}>
-                  <View style={styles.avatar}>
-                    <Text style={styles.avatarText}>
-                      {user.profile?.username?.charAt(0).toUpperCase() || '?'}
-                    </Text>
+          {isLoading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator color={darkTheme.colors.primary} size="large" />
+            </View>
+          ) : (
+            <View style={styles.usersList}>
+              {filteredUsers?.map((user) => (
+                <View key={user.id} style={styles.userCard}>
+                  <View style={styles.userHeader}>
+                    <View style={styles.userInfo}>
+                      <View style={styles.avatar}>
+                        <Text style={styles.avatarText}>
+                          {user.profile?.username?.charAt(0).toUpperCase() || '?'}
+                        </Text>
+                      </View>
+                      <View style={styles.userDetails}>
+                        <Text style={styles.userName}>
+                          {user.profile?.username || 'Unknown'}
+                        </Text>
+                        {user.profile?.full_name && (
+                          <Text style={styles.userFullName}>
+                            {user.profile.full_name}
+                          </Text>
+                        )}
+                        <View style={styles.rolesContainer}>
+                          {user.roles.map((r, index) => (
+                            <View
+                              key={index}
+                              style={[
+                                styles.roleBadge,
+                                { backgroundColor: getRoleBadgeColor(r.role) + '30' },
+                              ]}
+                            >
+                              <Text
+                                style={[
+                                  styles.roleText,
+                                  { color: getRoleBadgeColor(r.role) },
+                                ]}
+                              >
+                                {r.role}
+                              </Text>
+                            </View>
+                          ))}
+                        </View>
+                      </View>
+                    </View>
+                    <TouchableOpacity
+                      style={styles.deleteButton}
+                      onPress={() => handleDeleteUser(user)}
+                      disabled={deleteUserMutation.isPending}
+                    >
+                      <Trash2 size={18} color={darkTheme.colors.error} />
+                    </TouchableOpacity>
                   </View>
-                  <View style={styles.userDetails}>
-                    <Text style={styles.userName}>
-                      {user.profile?.username || 'Unknown'}
-                    </Text>
-                    {user.profile?.full_name && (
-                      <Text style={styles.userFullName}>
-                        {user.profile.full_name}
+
+                  <View style={styles.userFooter}>
+                    {user.lastEntry && (
+                      <Text style={styles.lastActive}>
+                        {t.admin.lastActive}: {user.lastEntry}
                       </Text>
                     )}
-                    <View style={styles.rolesContainer}>
-                      {user.roles.map((r, index) => (
-                        <View
-                          key={index}
-                          style={[
-                            styles.roleBadge,
-                            { backgroundColor: getRoleBadgeColor(r.role) + '30' },
-                          ]}
-                        >
-                          <Text
-                            style={[
-                              styles.roleText,
-                              { color: getRoleBadgeColor(r.role) },
-                            ]}
-                          >
-                            {r.role}
-                          </Text>
-                        </View>
-                      ))}
-                    </View>
                   </View>
                 </View>
-                <View style={styles.userActions}>
-                  {user.lastEntry && (
-                    <Text style={styles.lastActive}>
-                      {t.admin.lastActive}: {user.lastEntry}
-                    </Text>
-                  )}
-                  <TouchableOpacity
-                    style={styles.deleteButton}
-                    onPress={() => handleDeleteUser(user)}
-                    disabled={deleteUserMutation.isPending}
-                  >
-                    <Trash2 size={18} color={darkTheme.colors.error} />
-                  </TouchableOpacity>
-                </View>
-              </View>
-            ))}
-          </View>
-        )}
+              ))}
+            </View>
+          )}
+        </View>
       </ScrollView>
     </View>
   );
@@ -256,14 +329,21 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: darkTheme.colors.background,
   },
+  gradient: {
+    ...StyleSheet.absoluteFillObject,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: darkTheme.spacing.md,
-    paddingVertical: darkTheme.spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: darkTheme.colors.border,
+    paddingHorizontal: darkTheme.spacing.lg,
+    paddingVertical: darkTheme.spacing.lg,
+  },
+  headerLarge: {
+    maxWidth: 900,
+    alignSelf: 'center',
+    width: '100%',
+    paddingHorizontal: 32,
   },
   backButton: {
     width: 40,
@@ -281,21 +361,40 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    padding: darkTheme.spacing.md,
   },
-  statsRow: {
+  contentLarge: {
+    alignItems: 'center',
+  },
+  statsContainer: {
     flexDirection: 'row',
     gap: darkTheme.spacing.md,
     marginBottom: darkTheme.spacing.lg,
+    width: '100%',
+  },
+  statsContainerLarge: {
+    alignSelf: 'center',
   },
   statCard: {
     flex: 1,
-    backgroundColor: darkTheme.colors.surface,
-    borderRadius: darkTheme.borderRadius.lg,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: darkTheme.borderRadius.xl,
     padding: darkTheme.spacing.md,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: darkTheme.colors.border,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  statIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: darkTheme.spacing.sm,
   },
   statValue: {
     fontSize: darkTheme.fontSize.xxl,
@@ -307,16 +406,30 @@ const styles = StyleSheet.create({
     fontSize: darkTheme.fontSize.xs,
     color: darkTheme.colors.textSecondary,
     marginTop: darkTheme.spacing.xs,
+    textAlign: 'center',
+  },
+  card: {
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: darkTheme.borderRadius.xl,
+    marginBottom: darkTheme.spacing.lg,
+    borderWidth: 1,
+    borderColor: darkTheme.colors.border,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+    width: '100%',
+  },
+  cardLarge: {
+    alignSelf: 'center',
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: darkTheme.colors.surface,
-    borderRadius: darkTheme.borderRadius.md,
     paddingHorizontal: darkTheme.spacing.md,
-    marginBottom: darkTheme.spacing.lg,
-    borderWidth: 1,
-    borderColor: darkTheme.colors.border,
+    paddingVertical: darkTheme.spacing.sm,
   },
   searchInput: {
     flex: 1,
@@ -326,12 +439,19 @@ const styles = StyleSheet.create({
     fontSize: darkTheme.fontSize.md,
   },
   sectionTitle: {
-    fontSize: darkTheme.fontSize.lg,
+    fontSize: darkTheme.fontSize.md,
     fontWeight: darkTheme.fontWeight.semibold,
     color: darkTheme.colors.text,
-    marginBottom: darkTheme.spacing.md,
+    padding: darkTheme.spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: darkTheme.colors.border,
+  },
+  loadingContainer: {
+    padding: darkTheme.spacing.xl,
+    alignItems: 'center',
   },
   usersList: {
+    padding: darkTheme.spacing.md,
     gap: darkTheme.spacing.md,
   },
   userCard: {
@@ -341,10 +461,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: darkTheme.colors.border,
   },
+  userHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    marginBottom: darkTheme.spacing.sm,
+  },
   userInfo: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: darkTheme.spacing.md,
+    flex: 1,
   },
   avatar: {
     width: 48,
@@ -357,7 +484,7 @@ const styles = StyleSheet.create({
   avatarText: {
     fontSize: darkTheme.fontSize.lg,
     fontWeight: darkTheme.fontWeight.bold,
-    color: darkTheme.colors.text,
+    color: '#FFFFFF',
   },
   userDetails: {
     flex: 1,
@@ -370,6 +497,7 @@ const styles = StyleSheet.create({
   userFullName: {
     fontSize: darkTheme.fontSize.sm,
     color: darkTheme.colors.textSecondary,
+    marginTop: 2,
   },
   rolesContainer: {
     flexDirection: 'row',
@@ -386,12 +514,8 @@ const styles = StyleSheet.create({
     fontWeight: darkTheme.fontWeight.semibold,
     textTransform: 'uppercase',
   },
-  userActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: darkTheme.spacing.md,
-    paddingTop: darkTheme.spacing.md,
+  userFooter: {
+    paddingTop: darkTheme.spacing.sm,
     borderTopWidth: 1,
     borderTopColor: darkTheme.colors.border,
   },
