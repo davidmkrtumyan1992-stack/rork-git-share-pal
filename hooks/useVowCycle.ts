@@ -70,37 +70,27 @@ export const useUpdateCyclePosition = () => {
       
       const today = new Date().toISOString().split('T')[0];
 
-      const { data: existing } = await supabase
-        .from('vow_cycle_positions')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('vow_type', vowType)
-        .maybeSingle();
-
-      if (existing) {
-        const { data, error } = await supabase
-          .from('vow_cycle_positions')
-          .update({ current_position: newPosition, last_updated: today })
-          .eq('id', existing.id)
-          .select()
-          .single();
-
-        if (error) throw error;
-        return data;
-      }
-
       const { data, error } = await supabase
         .from('vow_cycle_positions')
-        .insert({
-          user_id: user.id,
-          vow_type: vowType,
-          current_position: newPosition,
-          last_updated: today,
-        })
+        .upsert(
+          {
+            user_id: user.id,
+            vow_type: vowType,
+            current_position: newPosition,
+            last_updated: today,
+          },
+          {
+            onConflict: 'user_id,vow_type',
+            ignoreDuplicates: false,
+          }
+        )
         .select()
-        .single();
+        .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error upserting cycle position:', error);
+        throw error;
+      }
       return data;
     },
     onSettled: () => {
@@ -121,20 +111,7 @@ export const useInitializeCyclePositions = () => {
       
       const today = new Date().toISOString().split('T')[0];
 
-      const { data: existing } = await supabase
-        .from('vow_cycle_positions')
-        .select('vow_type')
-        .eq('user_id', user.id);
-
-      const existingTypes = new Set(existing?.map(e => e.vow_type) || []);
-      const newTypes = selectedVowTypes.filter(type => !existingTypes.has(type));
-
-      if (newTypes.length === 0) {
-        console.log('All cycle positions already exist');
-        return [];
-      }
-
-      const insertData = newTypes.map(vowType => ({
+      const insertData = selectedVowTypes.map(vowType => ({
         user_id: user.id,
         vow_type: vowType,
         current_position: 0,
@@ -143,12 +120,19 @@ export const useInitializeCyclePositions = () => {
 
       const { data, error } = await supabase
         .from('vow_cycle_positions')
-        .insert(insertData)
+        .upsert(insertData, {
+          onConflict: 'user_id,vow_type',
+          ignoreDuplicates: true,
+        })
         .select();
 
-      if (error) throw error;
+      if (error && error.code !== '23505') {
+        console.error('Error initializing cycle positions:', error);
+        throw error;
+      }
+      
       console.log('Initialized cycle positions:', data);
-      return data;
+      return data || [];
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['cycle-positions'] });
