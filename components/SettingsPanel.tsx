@@ -181,6 +181,44 @@ export function SettingsPanel({ onClose, onSelectVow }: SettingsPanelProps) {
     }
   }, [profile?.avatar_url]);
 
+  const compressBase64Image = (base64: string): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      if (Platform.OS === 'web') {
+        const img = new window.Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const maxSize = 200;
+          let width = img.width;
+          let height = img.height;
+          
+          if (width > height) {
+            if (width > maxSize) {
+              height = (height * maxSize) / width;
+              width = maxSize;
+            }
+          } else {
+            if (height > maxSize) {
+              width = (width * maxSize) / height;
+              height = maxSize;
+            }
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, width, height);
+          
+          const compressed = canvas.toDataURL('image/jpeg', 0.6);
+          resolve(compressed);
+        };
+        img.onerror = () => reject(new Error('Ошибка загрузки изображения'));
+        img.src = base64;
+      } else {
+        resolve(base64);
+      }
+    });
+  };
+
   const pickImage = async () => {
     if (Platform.OS === 'web') {
       const input = document.createElement('input');
@@ -190,21 +228,33 @@ export function SettingsPanel({ onClose, onSelectVow }: SettingsPanelProps) {
         const target = e.target as HTMLInputElement;
         const file = target.files?.[0];
         if (file) {
-          if (file.size > 500000) {
-            Alert.alert(t.common.error, 'Изображение слишком большое. Максимум 500 КБ.');
+          if (file.size > 5000000) {
+            Alert.alert(t.common.error, 'Изображение слишком большое. Максимум 5 МБ.');
             return;
           }
           const reader = new FileReader();
           reader.onload = async () => {
             const base64 = reader.result as string;
             try {
-              setLocalAvatarUrl(base64);
-              await updateProfile({ avatar_url: base64 });
+              console.log('Original base64 size:', base64.length);
+              const compressed = await compressBase64Image(base64);
+              console.log('Compressed base64 size:', compressed.length);
+              
+              if (compressed.length > 100000) {
+                Alert.alert(t.common.error, 'Не удалось достаточно сжать изображение');
+                return;
+              }
+              
+              console.log('Uploading avatar...');
+              const result = await updateProfile({ avatar_url: compressed });
+              console.log('Avatar upload result:', result);
+              setLocalAvatarUrl(compressed);
               Alert.alert(t.common.success, t.settings.photoUpdated);
             } catch (error) {
               console.log('Avatar update error:', error);
               setLocalAvatarUrl(profile?.avatar_url || null);
-              Alert.alert(t.common.error, 'Не удалось сохранить фото');
+              const errorMessage = error instanceof Error ? error.message : 'Не удалось сохранить фото';
+              Alert.alert(t.common.error, errorMessage);
             }
           };
           reader.readAsDataURL(file);
@@ -224,20 +274,30 @@ export function SettingsPanel({ onClose, onSelectVow }: SettingsPanelProps) {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],
-      quality: 0.3,
+      quality: 0.2,
       base64: true,
     });
 
     if (!result.canceled && result.assets[0]) {
       const base64Image = `data:image/jpeg;base64,${result.assets[0].base64}`;
+      console.log('Mobile base64 size:', base64Image.length);
+      
+      if (base64Image.length > 100000) {
+        Alert.alert(t.common.error, 'Изображение слишком большое. Выберите другое или уменьшите размер.');
+        return;
+      }
+      
       try {
+        console.log('Uploading avatar...');
+        const uploadResult = await updateProfile({ avatar_url: base64Image });
+        console.log('Avatar upload result:', uploadResult);
         setLocalAvatarUrl(base64Image);
-        await updateProfile({ avatar_url: base64Image });
         Alert.alert(t.common.success, t.settings.photoUpdated);
       } catch (error) {
         console.log('Avatar update error:', error);
         setLocalAvatarUrl(profile?.avatar_url || null);
-        Alert.alert(t.common.error, 'Не удалось сохранить фото');
+        const errorMessage = error instanceof Error ? error.message : 'Не удалось сохранить фото';
+        Alert.alert(t.common.error, errorMessage);
       }
     }
   };
