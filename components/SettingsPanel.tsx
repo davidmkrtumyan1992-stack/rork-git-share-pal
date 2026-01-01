@@ -36,31 +36,31 @@ interface SettingsPanelProps {
 }
 
 const TIMEZONES = [
-  { label: 'UTC-12:00', value: 'Pacific/Kwajalein' },
-  { label: 'UTC-11:00', value: 'Pacific/Midway' },
-  { label: 'UTC-10:00', value: 'Pacific/Honolulu' },
-  { label: 'UTC-09:00', value: 'America/Anchorage' },
-  { label: 'UTC-08:00', value: 'America/Los_Angeles' },
-  { label: 'UTC-07:00', value: 'America/Denver' },
-  { label: 'UTC-06:00', value: 'America/Chicago' },
-  { label: 'UTC-05:00', value: 'America/New_York' },
-  { label: 'UTC-04:00', value: 'America/Caracas' },
-  { label: 'UTC-03:00', value: 'America/Sao_Paulo' },
-  { label: 'UTC-02:00', value: 'Atlantic/South_Georgia' },
-  { label: 'UTC-01:00', value: 'Atlantic/Azores' },
-  { label: 'UTC+00:00', value: 'Europe/London' },
-  { label: 'UTC+01:00', value: 'Europe/Paris' },
-  { label: 'UTC+02:00', value: 'Europe/Athens' },
-  { label: 'UTC+03:00 (Москва)', value: 'Europe/Moscow' },
-  { label: 'UTC+04:00', value: 'Asia/Dubai' },
-  { label: 'UTC+05:00', value: 'Asia/Karachi' },
-  { label: 'UTC+06:00', value: 'Asia/Dhaka' },
-  { label: 'UTC+07:00', value: 'Asia/Bangkok' },
-  { label: 'UTC+08:00', value: 'Asia/Singapore' },
-  { label: 'UTC+09:00', value: 'Asia/Tokyo' },
-  { label: 'UTC+10:00', value: 'Australia/Sydney' },
-  { label: 'UTC+11:00', value: 'Pacific/Noumea' },
-  { label: 'UTC+12:00', value: 'Pacific/Auckland' },
+  { label: 'UTC-12:00 — Бейкер, Хауленд', value: 'Pacific/Kwajalein' },
+  { label: 'UTC-11:00 — Мидуэй, Самоа', value: 'Pacific/Midway' },
+  { label: 'UTC-10:00 — Гонолулу, Гавайи', value: 'Pacific/Honolulu' },
+  { label: 'UTC-09:00 — Анкоридж, Аляска', value: 'America/Anchorage' },
+  { label: 'UTC-08:00 — Лос-Анджелес, Сиэтл', value: 'America/Los_Angeles' },
+  { label: 'UTC-07:00 — Денвер, Финикс', value: 'America/Denver' },
+  { label: 'UTC-06:00 — Чикаго, Мехико', value: 'America/Chicago' },
+  { label: 'UTC-05:00 — Нью-Йорк, Торонто', value: 'America/New_York' },
+  { label: 'UTC-04:00 — Каракас, Сантьяго', value: 'America/Caracas' },
+  { label: 'UTC-03:00 — Сан-Паулу, Буэнос-Айрес', value: 'America/Sao_Paulo' },
+  { label: 'UTC-02:00 — Южная Георгия', value: 'Atlantic/South_Georgia' },
+  { label: 'UTC-01:00 — Азорские острова', value: 'Atlantic/Azores' },
+  { label: 'UTC+00:00 — Лондон, Лиссабон', value: 'Europe/London' },
+  { label: 'UTC+01:00 — Париж, Берлин', value: 'Europe/Paris' },
+  { label: 'UTC+02:00 — Афины, Киев', value: 'Europe/Athens' },
+  { label: 'UTC+03:00 — Москва, Санкт-Петербург', value: 'Europe/Moscow' },
+  { label: 'UTC+04:00 — Дубай, Баку', value: 'Asia/Dubai' },
+  { label: 'UTC+05:00 — Карачи, Ташкент', value: 'Asia/Karachi' },
+  { label: 'UTC+06:00 — Дакка, Алматы', value: 'Asia/Dhaka' },
+  { label: 'UTC+07:00 — Бангкок, Джакарта', value: 'Asia/Bangkok' },
+  { label: 'UTC+08:00 — Сингапур, Пекин', value: 'Asia/Singapore' },
+  { label: 'UTC+09:00 — Токио, Сеул', value: 'Asia/Tokyo' },
+  { label: 'UTC+10:00 — Сидней, Владивосток', value: 'Australia/Sydney' },
+  { label: 'UTC+11:00 — Магадан, Нумеа', value: 'Pacific/Noumea' },
+  { label: 'UTC+12:00 — Окленд, Камчатка', value: 'Pacific/Auckland' },
 ];
 
 const BREAKPOINTS = {
@@ -322,7 +322,7 @@ export function SettingsPanel({ onClose, onSelectVow }: SettingsPanelProps) {
             </View>
             <View style={styles.settingRight}>
               <Text style={styles.settingValue}>
-                {TIMEZONES.find(tz => tz.value === profile?.notification_timezone)?.label || 'UTC+03:00 (Москва)'}
+                {TIMEZONES.find(tz => tz.value === profile?.notification_timezone)?.label || 'UTC+03:00 — Москва, Санкт-Петербург'}
               </Text>
               <ChevronRight size={20} color={darkTheme.colors.textMuted} />
             </View>
