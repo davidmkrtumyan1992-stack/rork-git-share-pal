@@ -9,10 +9,12 @@ export interface Profile {
   user_id: string;
   username: string;
   full_name: string | null;
+  avatar_url: string | null;
   language: 'en' | 'ru';
   notifications_enabled: boolean;
   notification_timezone: string;
   selected_vow: string | null;
+  selected_vow_types: string[] | null;
   created_at: string;
   updated_at: string;
 }

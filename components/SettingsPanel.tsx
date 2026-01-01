@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,8 +9,11 @@ import {
   Alert,
   TextInput,
   useWindowDimensions,
+  Image,
+  Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as ImagePicker from 'expo-image-picker';
 import { useMutation } from '@tanstack/react-query';
 import {
   ArrowLeft,
@@ -23,6 +26,9 @@ import {
   Eye,
   EyeOff,
   Sparkles,
+  Camera,
+  Check,
+  BookOpen,
 } from 'lucide-react-native';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -63,6 +69,15 @@ const TIMEZONES = [
   { label: 'UTC+12:00 — Окленд, Камчатка', value: 'Pacific/Auckland' },
 ];
 
+const VOW_TYPES = [
+  { key: 'tenPrinciples', labelKey: 'tenPrinciples', descKey: 'tenPrinciplesDesc', locked: false },
+  { key: 'freedom', labelKey: 'freedom', descKey: 'freedomDesc', locked: false },
+  { key: 'bodhisattva', labelKey: 'bodhisattva', descKey: 'bodhisattvaDesc', locked: false },
+  { key: 'tantric', labelKey: 'tantric', descKey: 'tantricDesc', locked: true },
+  { key: 'nuns', labelKey: 'nuns', descKey: 'nunsDesc', locked: true },
+  { key: 'monks', labelKey: 'monks', descKey: 'monksDesc', locked: true },
+];
+
 const BREAKPOINTS = {
   sm: 320,
   md: 768,
@@ -85,6 +100,13 @@ export function SettingsPanel({ onClose, onSelectVow }: SettingsPanelProps) {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showTimezoneList, setShowTimezoneList] = useState(false);
   const [notificationInterval, setNotificationInterval] = useState(2);
+  const [selectedVowTypes, setSelectedVowTypes] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (profile?.selected_vow_types) {
+      setSelectedVowTypes(profile.selected_vow_types);
+    }
+  }, [profile?.selected_vow_types]);
 
   const signOutMutation = useMutation({
     mutationFn: signOut,
@@ -151,6 +173,67 @@ export function SettingsPanel({ onClose, onSelectVow }: SettingsPanelProps) {
     );
   };
 
+  const pickImage = async () => {
+    if (Platform.OS === 'web') {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.onchange = async (e: Event) => {
+        const target = e.target as HTMLInputElement;
+        const file = target.files?.[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = () => {
+            const base64 = reader.result as string;
+            updateProfile({ avatar_url: base64 });
+            Alert.alert(t.common.success, t.settings.photoUpdated);
+          };
+          reader.readAsDataURL(file);
+        }
+      };
+      input.click();
+      return;
+    }
+
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert(t.common.error, 'Нужно разрешение для доступа к галерее');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.5,
+      base64: true,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      const base64Image = `data:image/jpeg;base64,${result.assets[0].base64}`;
+      updateProfile({ avatar_url: base64Image });
+      Alert.alert(t.common.success, t.settings.photoUpdated);
+    }
+  };
+
+  const toggleVowType = (vowKey: string) => {
+    const isLocked = VOW_TYPES.find(v => v.key === vowKey)?.locked;
+    if (isLocked) {
+      Alert.alert(
+        t.vows.lockedTitle,
+        `${t.vows.lockedDesc}\nsupport@keepmyvow.com`
+      );
+      return;
+    }
+
+    const newSelection = selectedVowTypes.includes(vowKey)
+      ? selectedVowTypes.filter(k => k !== vowKey)
+      : [...selectedVowTypes, vowKey];
+    
+    setSelectedVowTypes(newSelection);
+    updateProfile({ selected_vow_types: newSelection });
+  };
+
   const responsiveStyles = {
     content: {
       padding: isSmallScreen ? 16 : isLargeScreen ? 32 : 24,
@@ -160,6 +243,11 @@ export function SettingsPanel({ onClose, onSelectVow }: SettingsPanelProps) {
       fontSize: isSmallScreen ? 18 : 20,
     },
     avatarSize: isSmallScreen ? 56 : 64,
+  };
+
+  const getInitials = () => {
+    const name = profile?.username || profile?.full_name || 'U';
+    return name.charAt(0).toUpperCase();
   };
 
   return (
@@ -199,12 +287,31 @@ export function SettingsPanel({ onClose, onSelectVow }: SettingsPanelProps) {
           </View>
           
           <View style={styles.profileInfoCard}>
-            <Text style={styles.userName} numberOfLines={1}>
-              {profile?.username || 'User'}
-            </Text>
-            {profile?.full_name && (
-              <Text style={styles.userFullName} numberOfLines={1}>{profile.full_name}</Text>
-            )}
+            <View style={styles.profileRow}>
+              <TouchableOpacity style={styles.avatarContainer} onPress={pickImage}>
+                {profile?.avatar_url ? (
+                  <Image source={{ uri: profile.avatar_url }} style={styles.avatarImage} />
+                ) : (
+                  <View style={styles.avatarPlaceholder}>
+                    <Text style={styles.avatarInitials}>{getInitials()}</Text>
+                  </View>
+                )}
+                <View style={styles.cameraIconContainer}>
+                  <Camera size={14} color="#FFFFFF" />
+                </View>
+              </TouchableOpacity>
+              <View style={styles.profileTextContainer}>
+                <Text style={styles.userName} numberOfLines={1}>
+                  {profile?.username || 'User'}
+                </Text>
+                {profile?.full_name && (
+                  <Text style={styles.userFullName} numberOfLines={1}>{profile.full_name}</Text>
+                )}
+                <TouchableOpacity onPress={pickImage}>
+                  <Text style={styles.changePhotoText}>{t.settings.changePhoto}</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
           </View>
 
           <View style={styles.passwordSection}>
@@ -288,6 +395,68 @@ export function SettingsPanel({ onClose, onSelectVow }: SettingsPanelProps) {
               </LinearGradient>
             </TouchableOpacity>
           </View>
+        </View>
+
+        <View style={[
+          styles.card,
+          { maxWidth: responsiveStyles.content.maxWidth },
+          isLargeScreen && styles.cardLarge
+        ]}>
+          <View style={styles.cardHeader}>
+            <View style={[styles.iconContainer, { backgroundColor: darkTheme.colors.accent }]}>
+              <BookOpen size={20} color="#FFFFFF" />
+            </View>
+            <Text style={styles.cardTitle}>{t.settings.selectVowTypes}</Text>
+          </View>
+
+          <View style={styles.vowTypesDescription}>
+            <Text style={styles.vowTypesDescText}>{t.settings.vowTypesDesc}</Text>
+          </View>
+
+          {VOW_TYPES.map((vowType) => {
+            const isSelected = selectedVowTypes.includes(vowType.key);
+            const vowLabel = t.vows[vowType.labelKey as keyof typeof t.vows] || vowType.labelKey;
+            const vowDesc = t.vows[vowType.descKey as keyof typeof t.vows] || vowType.descKey;
+            
+            return (
+              <TouchableOpacity
+                key={vowType.key}
+                style={[
+                  styles.vowTypeItem,
+                  isSelected && styles.vowTypeItemSelected,
+                  vowType.locked && styles.vowTypeItemLocked,
+                ]}
+                onPress={() => toggleVowType(vowType.key)}
+                activeOpacity={0.7}
+              >
+                <View style={styles.vowTypeContent}>
+                  <Text style={[
+                    styles.vowTypeLabel,
+                    isSelected && styles.vowTypeLabelSelected,
+                    vowType.locked && styles.vowTypeLabelLocked,
+                  ]}>
+                    {vowLabel}
+                  </Text>
+                  <Text style={[
+                    styles.vowTypeDesc,
+                    vowType.locked && styles.vowTypeDescLocked,
+                  ]} numberOfLines={2}>
+                    {vowDesc}
+                  </Text>
+                </View>
+                <View style={[
+                  styles.vowTypeCheckbox,
+                  isSelected && styles.vowTypeCheckboxSelected,
+                  vowType.locked && styles.vowTypeCheckboxLocked,
+                ]}>
+                  {isSelected && <Check size={16} color="#FFFFFF" />}
+                  {vowType.locked && !isSelected && (
+                    <Text style={styles.lockIcon}>🔒</Text>
+                  )}
+                </View>
+              </TouchableOpacity>
+            );
+          })}
         </View>
 
         <View style={[
@@ -498,136 +667,6 @@ const styles = StyleSheet.create({
   contentLarge: {
     alignItems: 'center',
   },
-  profileSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    borderRadius: darkTheme.borderRadius.xl,
-    padding: darkTheme.spacing.lg,
-    marginBottom: darkTheme.spacing.lg,
-    borderWidth: 1,
-    borderColor: darkTheme.colors.border,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
-    width: '100%',
-  },
-  profileSectionLarge: {
-    alignSelf: 'center',
-  },
-  avatar: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: darkTheme.colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: darkTheme.spacing.md,
-    shadowColor: darkTheme.colors.primary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 4,
-  },
-  avatarText: {
-    fontSize: darkTheme.fontSize.xxl,
-    fontWeight: darkTheme.fontWeight.bold,
-    color: '#FFFFFF',
-  },
-  profileInfo: {
-    flex: 1,
-    paddingHorizontal: darkTheme.spacing.md,
-  },
-  profileInfoCard: {
-    paddingHorizontal: darkTheme.spacing.lg,
-    paddingVertical: darkTheme.spacing.md,
-  },
-  profileName: {
-    fontSize: darkTheme.fontSize.lg,
-    fontWeight: darkTheme.fontWeight.semibold,
-    color: darkTheme.colors.text,
-  },
-  profileFullName: {
-    fontSize: darkTheme.fontSize.sm,
-    color: darkTheme.colors.textSecondary,
-    marginTop: 2,
-  },
-  section: {
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    borderRadius: darkTheme.borderRadius.xl,
-    marginBottom: darkTheme.spacing.lg,
-    borderWidth: 1,
-    borderColor: darkTheme.colors.border,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
-    width: '100%',
-  },
-  sectionLarge: {
-    alignSelf: 'center',
-  },
-  sectionTitle: {
-    fontSize: darkTheme.fontSize.sm,
-    fontWeight: darkTheme.fontWeight.semibold,
-    color: darkTheme.colors.textMuted,
-    textTransform: 'uppercase',
-    paddingHorizontal: darkTheme.spacing.md,
-    paddingTop: darkTheme.spacing.md,
-    paddingBottom: darkTheme.spacing.sm,
-  },
-  settingItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: darkTheme.spacing.md,
-    paddingHorizontal: darkTheme.spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: darkTheme.colors.border,
-  },
-  settingLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: darkTheme.spacing.sm,
-    flexShrink: 1,
-  },
-  settingLabel: {
-    fontSize: darkTheme.fontSize.md,
-    color: darkTheme.colors.text,
-    flexShrink: 1,
-  },
-  settingLabelFlex: {
-    fontSize: darkTheme.fontSize.md,
-    color: darkTheme.colors.text,
-    flex: 1,
-  },
-  settingRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: darkTheme.spacing.xs,
-    flexShrink: 0,
-    marginLeft: darkTheme.spacing.sm,
-  },
-  settingValue: {
-    fontSize: darkTheme.fontSize.sm,
-    color: darkTheme.colors.textSecondary,
-  },
-  settingValueTimezone: {
-    fontSize: darkTheme.fontSize.sm,
-    color: darkTheme.colors.textSecondary,
-    marginTop: darkTheme.spacing.xs,
-    paddingLeft: 26,
-  },
-  logoutItem: {
-    borderTopWidth: 0,
-  },
-  logoutLabel: {
-    color: darkTheme.colors.error,
-  },
   card: {
     backgroundColor: 'rgba(255, 255, 255, 0.8)',
     borderRadius: darkTheme.borderRadius.xl,
@@ -666,6 +705,54 @@ const styles = StyleSheet.create({
     fontSize: darkTheme.fontSize.md,
     fontWeight: darkTheme.fontWeight.semibold,
     color: darkTheme.colors.text,
+    flex: 1,
+  },
+  profileInfoCard: {
+    paddingHorizontal: darkTheme.spacing.lg,
+    paddingVertical: darkTheme.spacing.md,
+  },
+  profileRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: darkTheme.spacing.md,
+  },
+  avatarContainer: {
+    position: 'relative',
+  },
+  avatarImage: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: darkTheme.colors.backgroundTertiary,
+  },
+  avatarPlaceholder: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: darkTheme.colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarInitials: {
+    fontSize: 24,
+    fontWeight: darkTheme.fontWeight.bold,
+    color: '#FFFFFF',
+  },
+  cameraIconContainer: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: darkTheme.colors.primaryDark,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+  },
+  profileTextContainer: {
+    flex: 1,
   },
   userName: {
     fontSize: darkTheme.fontSize.lg,
@@ -676,6 +763,11 @@ const styles = StyleSheet.create({
     fontSize: darkTheme.fontSize.sm,
     color: darkTheme.colors.textSecondary,
     marginTop: 2,
+  },
+  changePhotoText: {
+    fontSize: darkTheme.fontSize.sm,
+    color: darkTheme.colors.primary,
+    marginTop: 4,
   },
   passwordSection: {
     paddingVertical: darkTheme.spacing.md,
@@ -725,6 +817,74 @@ const styles = StyleSheet.create({
     fontSize: darkTheme.fontSize.md,
     fontWeight: darkTheme.fontWeight.semibold,
   },
+  vowTypesDescription: {
+    paddingHorizontal: darkTheme.spacing.lg,
+    paddingVertical: darkTheme.spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: darkTheme.colors.border,
+  },
+  vowTypesDescText: {
+    fontSize: darkTheme.fontSize.sm,
+    color: darkTheme.colors.textSecondary,
+  },
+  vowTypeItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: darkTheme.spacing.md,
+    paddingHorizontal: darkTheme.spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: darkTheme.colors.border,
+  },
+  vowTypeItemSelected: {
+    backgroundColor: 'rgba(76, 175, 80, 0.1)',
+  },
+  vowTypeItemLocked: {
+    opacity: 0.6,
+  },
+  vowTypeContent: {
+    flex: 1,
+    marginRight: darkTheme.spacing.md,
+  },
+  vowTypeLabel: {
+    fontSize: darkTheme.fontSize.md,
+    fontWeight: darkTheme.fontWeight.medium,
+    color: darkTheme.colors.text,
+    marginBottom: 2,
+  },
+  vowTypeLabelSelected: {
+    color: darkTheme.colors.primary,
+  },
+  vowTypeLabelLocked: {
+    color: darkTheme.colors.textMuted,
+  },
+  vowTypeDesc: {
+    fontSize: darkTheme.fontSize.xs,
+    color: darkTheme.colors.textSecondary,
+    lineHeight: 16,
+  },
+  vowTypeDescLocked: {
+    color: darkTheme.colors.textMuted,
+  },
+  vowTypeCheckbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: darkTheme.colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'transparent',
+  },
+  vowTypeCheckboxSelected: {
+    backgroundColor: darkTheme.colors.primary,
+    borderColor: darkTheme.colors.primary,
+  },
+  vowTypeCheckboxLocked: {
+    borderColor: darkTheme.colors.textMuted,
+  },
+  lockIcon: {
+    fontSize: 12,
+  },
   settingRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -745,6 +905,39 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+  },
+  settingLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: darkTheme.spacing.sm,
+    flexShrink: 1,
+  },
+  settingLabel: {
+    fontSize: darkTheme.fontSize.md,
+    color: darkTheme.colors.text,
+    flexShrink: 1,
+  },
+  settingLabelFlex: {
+    fontSize: darkTheme.fontSize.md,
+    color: darkTheme.colors.text,
+    flex: 1,
+  },
+  settingRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: darkTheme.spacing.xs,
+    flexShrink: 0,
+    marginLeft: darkTheme.spacing.sm,
+  },
+  settingValue: {
+    fontSize: darkTheme.fontSize.sm,
+    color: darkTheme.colors.textSecondary,
+  },
+  settingValueTimezone: {
+    fontSize: darkTheme.fontSize.sm,
+    color: darkTheme.colors.textSecondary,
+    marginTop: darkTheme.spacing.xs,
+    paddingLeft: 26,
   },
   timezoneList: {
     maxHeight: 320,

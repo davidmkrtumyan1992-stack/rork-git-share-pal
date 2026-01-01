@@ -130,6 +130,11 @@ export const translations = {
       hours: 'hours',
       passwordUpdated: 'Password updated successfully',
       passwordMismatch: 'Passwords do not match',
+      changePhoto: 'Change photo',
+      selectVowTypes: 'Select vow types',
+      vowTypesDesc: 'Choose the types of vows you want to track',
+      photoUpdated: 'Photo updated successfully',
+      vowTypesUpdated: 'Vow types updated',
     },
     common: {
       save: 'Save',
@@ -284,6 +289,11 @@ export const translations = {
       hours: 'часа',
       passwordUpdated: 'Пароль обновлён успешно',
       passwordMismatch: 'Пароли не совпадают',
+      changePhoto: 'Изменить фото',
+      selectVowTypes: 'Выбор типов обетов',
+      vowTypesDesc: 'Выберите типы обетов, которые хотите отслеживать',
+      photoUpdated: 'Фото обновлено',
+      vowTypesUpdated: 'Типы обетов обновлены',
     },
     common: {
       save: 'Сохранить',
