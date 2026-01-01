@@ -9,11 +9,8 @@ import {
   Alert,
   TextInput,
   useWindowDimensions,
-  Image,
-  Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import * as ImagePicker from 'expo-image-picker';
 import { useMutation } from '@tanstack/react-query';
 import {
   ArrowLeft,
@@ -26,7 +23,6 @@ import {
   Eye,
   EyeOff,
   Sparkles,
-  Camera,
   Check,
   BookOpen,
 } from 'lucide-react-native';
@@ -173,125 +169,7 @@ export function SettingsPanel({ onClose, onSelectVow }: SettingsPanelProps) {
     );
   };
 
-  const [localAvatarUrl, setLocalAvatarUrl] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (profile?.avatar_url) {
-      setLocalAvatarUrl(profile.avatar_url);
-    }
-  }, [profile?.avatar_url]);
-
-  const uploadAvatarToStorage = async (uri: string): Promise<string> => {
-    if (!profile?.user_id) {
-      throw new Error('User not found');
-    }
-
-    const fileExt = 'jpg';
-    const fileName = `${profile.user_id}/avatar-${Date.now()}.${fileExt}`;
-    
-    let fileToUpload: Blob | File;
-    
-    if (Platform.OS === 'web') {
-      const response = await fetch(uri);
-      fileToUpload = await response.blob();
-    } else {
-      const response = await fetch(uri);
-      fileToUpload = await response.blob();
-    }
-
-    console.log('Uploading file to storage:', fileName);
-    const { data, error } = await supabase.storage
-      .from('avatars')
-      .upload(fileName, fileToUpload, {
-        contentType: 'image/jpeg',
-        upsert: true,
-      });
-
-    if (error) {
-      console.log('Storage upload error:', error);
-      throw error;
-    }
-
-    const { data: urlData } = supabase.storage
-      .from('avatars')
-      .getPublicUrl(data.path);
-
-    console.log('File uploaded successfully:', urlData.publicUrl);
-    return urlData.publicUrl;
-  };
-
-  const pickImage = async () => {
-    if (Platform.OS === 'web') {
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = 'image/*';
-      input.onchange = async (e: Event) => {
-        const target = e.target as HTMLInputElement;
-        const file = target.files?.[0];
-        if (file) {
-          if (file.size > 5000000) {
-            Alert.alert(t.common.error, 'Изображение слишком большое. Максимум 5 МБ.');
-            return;
-          }
-          const reader = new FileReader();
-          reader.onload = async () => {
-            const dataUrl = reader.result as string;
-            try {
-              console.log('Uploading avatar to storage...');
-              const publicUrl = await uploadAvatarToStorage(dataUrl);
-              console.log('Avatar uploaded, URL:', publicUrl);
-              
-              const result = await updateProfile({ avatar_url: publicUrl });
-              console.log('Profile updated:', result);
-              setLocalAvatarUrl(publicUrl);
-              Alert.alert(t.common.success, t.settings.photoUpdated);
-            } catch (error) {
-              console.log('Avatar update error:', error);
-              setLocalAvatarUrl(profile?.avatar_url || null);
-              const errorMessage = error instanceof Error ? error.message : 'Не удалось сохранить фото';
-              Alert.alert(t.common.error, errorMessage);
-            }
-          };
-          reader.readAsDataURL(file);
-        }
-      };
-      input.click();
-      return;
-    }
-
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert(t.common.error, 'Нужно разрешение для доступа к галерее');
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    });
-
-    if (!result.canceled && result.assets[0]) {
-      const imageUri = result.assets[0].uri;
-      
-      try {
-        console.log('Uploading avatar to storage...');
-        const publicUrl = await uploadAvatarToStorage(imageUri);
-        console.log('Avatar uploaded, URL:', publicUrl);
-        
-        const uploadResult = await updateProfile({ avatar_url: publicUrl });
-        console.log('Profile updated:', uploadResult);
-        setLocalAvatarUrl(publicUrl);
-        Alert.alert(t.common.success, t.settings.photoUpdated);
-      } catch (error) {
-        console.log('Avatar update error:', error);
-        setLocalAvatarUrl(profile?.avatar_url || null);
-        const errorMessage = error instanceof Error ? error.message : 'Не удалось сохранить фото';
-        Alert.alert(t.common.error, errorMessage);
-      }
-    }
-  };
 
   const toggleVowType = (vowKey: string) => {
     const isLocked = VOW_TYPES.find(v => v.key === vowKey)?.locked;
@@ -365,25 +243,11 @@ export function SettingsPanel({ onClose, onSelectVow }: SettingsPanelProps) {
           
           <View style={styles.profileInfoCard}>
             <View style={styles.profileRow}>
-              <TouchableOpacity style={styles.avatarContainer} onPress={pickImage}>
-                {localAvatarUrl ? (
-                  <Image 
-                    source={{ uri: localAvatarUrl }} 
-                    style={styles.avatarImage}
-                    onError={() => {
-                      console.log('Avatar image load error');
-                      setLocalAvatarUrl(null);
-                    }}
-                  />
-                ) : (
-                  <View style={styles.avatarPlaceholder}>
-                    <Text style={styles.avatarInitials}>{getInitials()}</Text>
-                  </View>
-                )}
-                <View style={styles.cameraIconContainer}>
-                  <Camera size={14} color="#FFFFFF" />
+              <View style={styles.avatarContainer}>
+                <View style={styles.avatarPlaceholder}>
+                  <Text style={styles.avatarInitials}>{getInitials()}</Text>
                 </View>
-              </TouchableOpacity>
+              </View>
               <View style={styles.profileTextContainer}>
                 <Text style={styles.userName} numberOfLines={1}>
                   {profile?.username || 'User'}
@@ -391,9 +255,6 @@ export function SettingsPanel({ onClose, onSelectVow }: SettingsPanelProps) {
                 {profile?.full_name && (
                   <Text style={styles.userFullName} numberOfLines={1}>{profile.full_name}</Text>
                 )}
-                <TouchableOpacity onPress={pickImage}>
-                  <Text style={styles.changePhotoText}>{t.settings.changePhoto}</Text>
-                </TouchableOpacity>
               </View>
             </View>
           </View>
@@ -803,12 +664,7 @@ const styles = StyleSheet.create({
   avatarContainer: {
     position: 'relative',
   },
-  avatarImage: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: darkTheme.colors.backgroundTertiary,
-  },
+
   avatarPlaceholder: {
     width: 64,
     height: 64,
@@ -822,19 +678,7 @@ const styles = StyleSheet.create({
     fontWeight: darkTheme.fontWeight.bold,
     color: '#FFFFFF',
   },
-  cameraIconContainer: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: darkTheme.colors.primaryDark,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
-  },
+
   profileTextContainer: {
     flex: 1,
   },
@@ -848,11 +692,7 @@ const styles = StyleSheet.create({
     color: darkTheme.colors.textSecondary,
     marginTop: 2,
   },
-  changePhotoText: {
-    fontSize: darkTheme.fontSize.sm,
-    color: darkTheme.colors.primary,
-    marginTop: 4,
-  },
+
   passwordSection: {
     paddingVertical: darkTheme.spacing.md,
     paddingHorizontal: darkTheme.spacing.lg,
