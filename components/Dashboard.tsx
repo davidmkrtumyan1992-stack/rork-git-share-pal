@@ -35,6 +35,7 @@ import { VowEntry } from '@/types/database';
 import { getTranslation } from '@/data/translations';
 import { darkTheme } from '@/constants/theme';
 import { getVowsByCategory } from '@/data/vows';
+import { SettingsPanel } from '@/components/SettingsPanel';
 
 
 type TabType = 'diary' | 'history' | 'settings';
@@ -66,7 +67,6 @@ interface DashboardProps {
   activeVow: string | null;
   onSetActiveVow: (vow: string) => void;
   onSelectVow: () => void;
-  onOpenSettings: () => void;
   onOpenAdmin?: () => void;
   onRemoveVow?: (vow: string) => void;
 }
@@ -124,7 +124,6 @@ export function Dashboard({
   activeVow, 
   onSetActiveVow, 
   onSelectVow, 
-  onOpenSettings, 
   onOpenAdmin,
   onRemoveVow,
 }: DashboardProps) {
@@ -384,10 +383,7 @@ export function Dashboard({
 
       <Pressable
         style={styles.bottomTabItem}
-        onPress={() => {
-          setActiveTab('settings');
-          onOpenSettings();
-        }}
+        onPress={() => setActiveTab('settings')}
       >
         <Settings 
           size={24} 
@@ -1009,6 +1005,10 @@ export function Dashboard({
         )}
 
         {activeTab === 'history' && renderHistoryContent()}
+
+        {activeTab === 'settings' && (
+          <SettingsPanel onSelectVow={onSelectVow} />
+        )}
       </ScrollView>
 
       {renderBottomTabs()}

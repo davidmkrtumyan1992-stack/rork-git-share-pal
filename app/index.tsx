@@ -12,7 +12,6 @@ import { LoginForm } from '@/components/LoginForm';
 import { Dashboard } from '@/components/Dashboard';
 import { VowSelection } from '@/components/VowSelection';
 import { AdminPanel } from '@/components/AdminPanel';
-import { SettingsPanel } from '@/components/SettingsPanel';
 import { darkTheme } from '@/constants/theme';
 
 type Screen = 'dashboard' | 'vowSelection' | 'settings' | 'admin';
@@ -111,7 +110,6 @@ export default function HomeScreen() {
             activeVow={activeVow}
             onSetActiveVow={setActiveVow}
             onSelectVow={() => setCurrentScreen('vowSelection')}
-            onOpenSettings={() => setCurrentScreen('settings')}
             onOpenAdmin={() => setCurrentScreen('admin')}
             onRemoveVow={handleRemoveVow}
           />
@@ -131,16 +129,6 @@ export default function HomeScreen() {
             onClose={handleCloseVowSelection}
             isLoading={isSaving}
           />
-        </View>
-      </Modal>
-
-      <Modal
-        visible={currentScreen === 'settings'}
-        animationType="slide"
-        onRequestClose={() => setCurrentScreen('dashboard')}
-      >
-        <View style={[styles.modalContainer, { paddingTop: insets.top }]}>
-          <SettingsPanel onClose={() => setCurrentScreen('dashboard')} />
         </View>
       </Modal>
 
