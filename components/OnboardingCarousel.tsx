@@ -31,7 +31,6 @@ export function OnboardingCarousel({ language, onComplete }: OnboardingCarouselP
   const buttonScale = useRef(new Animated.Value(1)).current;
   const slide1Opacity = useRef(new Animated.Value(0)).current;
   const slide1Scale = useRef(new Animated.Value(0.95)).current;
-  const arrowTranslateX = useRef(new Animated.Value(0)).current;
 
   const content = onboardingContent[language] || onboardingContent.en;
   const slides = [content.slide1, content.slide2, content.slide3];
@@ -51,22 +50,7 @@ export function OnboardingCarousel({ language, onComplete }: OnboardingCarouselP
         useNativeDriver: true,
       }),
     ]).start();
-
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(arrowTranslateX, {
-          toValue: 12,
-          duration: 1200,
-          useNativeDriver: true,
-        }),
-        Animated.timing(arrowTranslateX, {
-          toValue: 0,
-          duration: 1200,
-          useNativeDriver: true,
-        }),
-      ])
-    ).start();
-  }, [slide1Opacity, slide1Scale, arrowTranslateX]);
+  }, [slide1Opacity, slide1Scale]);
 
   const handleScroll = Animated.event(
     [{ nativeEvent: { contentOffset: { x: scrollX } } }],
@@ -231,18 +215,7 @@ export function OnboardingCarousel({ language, onComplete }: OnboardingCarouselP
                         },
                       ]}
                     >
-                      <View style={styles.slide1TitleContainer}>
-                        <Animated.View style={[
-                          styles.arrowContainer,
-                          { transform: [{ translateX: arrowTranslateX }] }
-                        ]}>
-                          <View style={styles.customArrow}>
-                            <View style={styles.arrowLine} />
-                            <View style={styles.arrowHead} />
-                          </View>
-                        </Animated.View>
-                        <Text style={styles.slide1Title}>{slide.title}</Text>
-                      </View>
+                      <Text style={styles.slide1Title}>{slide.title}</Text>
                     </Animated.View>
                   </LinearGradient>
                 </ImageBackground>
@@ -373,45 +346,11 @@ const styles = StyleSheet.create({
   },
   slide1Content: {
     position: 'absolute' as const,
-    bottom: '20%',
+    top: '75%',
     left: 0,
     right: 0,
     alignItems: 'center',
     paddingHorizontal: 32,
-  },
-  slide1TitleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-  },
-  arrowContainer: {
-    marginRight: 8,
-  },
-  customArrow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: 40,
-    height: 24,
-  },
-  arrowLine: {
-    width: 28,
-    height: 1.5,
-    backgroundColor: '#2C3E3A',
-  },
-  arrowHead: {
-    width: 0,
-    height: 0,
-    backgroundColor: 'transparent',
-    borderStyle: 'solid',
-    borderLeftWidth: 10,
-    borderRightWidth: 0,
-    borderBottomWidth: 6,
-    borderTopWidth: 6,
-    borderLeftColor: '#2C3E3A',
-    borderRightColor: 'transparent',
-    borderBottomColor: 'transparent',
-    borderTopColor: 'transparent',
-    marginLeft: -1,
   },
   slide1Title: {
     fontSize: Platform.OS === 'web' ? 48 : 40,
