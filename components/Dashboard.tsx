@@ -50,6 +50,10 @@ const vowCategoryNames: Record<string, { ru: string; en: string }> = {
   monks: { ru: 'Обеты монахов', en: 'Monk Vows' },
 };
 
+const getLocalizedText = (lang: string): 'ru' | 'en' => {
+  return lang === 'ru' ? 'ru' : 'en';
+};
+
 
 
 const antidoteTags = {
@@ -166,7 +170,8 @@ export function Dashboard({
   }, [needsUpdate, selectedVows, advanceCyclePositions]);
 
   const getVowCategoryName = useCallback((vowKey: string) => {
-    return vowCategoryNames[vowKey]?.[language] || vowKey;
+    const langKey = getLocalizedText(language);
+    return vowCategoryNames[vowKey]?.[langKey] || vowKey;
   }, [language]);
 
   
@@ -347,7 +352,8 @@ export function Dashboard({
 
   const getVowCategoryFromType = useCallback((vowType: string): string => {
     const [category] = vowType.split('_');
-    return vowCategoryNames[category]?.[language] || category;
+    const langKey = getLocalizedText(language);
+    return vowCategoryNames[category]?.[langKey] || category;
   }, [language]);
 
   const renderBottomTabs = () => (
@@ -491,7 +497,7 @@ export function Dashboard({
           )}
         </View>
 
-        <Text style={styles.vowText}>{vowItem[language]}</Text>
+        <Text style={styles.vowText}>{vowItem[getLocalizedText(language)]}</Text>
 
         {isSubmitted ? (
           <View style={styles.submittedView}>
@@ -653,7 +659,7 @@ export function Dashboard({
                     decelerationRate="fast"
                     snapToAlignment="start"
                   >
-                    {antidoteTags[language].map((tag) => (
+                    {antidoteTags[getLocalizedText(language)].map((tag: string) => (
                       <AntidoteTagButton
                         key={tag}
                         tag={tag}

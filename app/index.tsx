@@ -11,18 +11,21 @@ import { useAuth } from '@/contexts/AuthContext';
 import { LoginForm } from '@/components/LoginForm';
 import { Dashboard } from '@/components/Dashboard';
 import { AdminPanel } from '@/components/AdminPanel';
+import { OnboardingScreen } from '@/components/OnboardingScreen';
 import { darkTheme } from '@/constants/theme';
+import { Language } from '@/types/database';
 
 type Screen = 'dashboard' | 'admin';
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
-  const { user, profile, isLoading, updateProfile } = useAuth();
+  const { user, profile, isLoading, updateProfile, setLanguage } = useAuth();
   
   const [currentScreen, setCurrentScreen] = useState<Screen>('dashboard');
   const [selectedVows, setSelectedVows] = useState<string[]>([]);
   const [activeVow, setActiveVow] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
     if (profile?.selected_vow) {
@@ -33,6 +36,25 @@ export default function HomeScreen() {
       }
     }
   }, [profile?.selected_vow, activeVow]);
+
+  useEffect(() => {
+    if (user && profile && profile.is_first_login !== false) {
+      console.log('First login detected, showing onboarding');
+      setShowOnboarding(true);
+    }
+  }, [user, profile]);
+
+  const handleOnboardingComplete = async (language: Language) => {
+    console.log('Onboarding complete, setting language:', language);
+    try {
+      await setLanguage(language);
+      await updateProfile({ is_first_login: false });
+      setShowOnboarding(false);
+    } catch (error) {
+      console.log('Error completing onboarding:', error);
+      setShowOnboarding(false);
+    }
+  };
 
   const handleToggleVow = (vowType: string) => {
     setSelectedVows(prev => {
@@ -85,6 +107,15 @@ export default function HomeScreen() {
       <>
         <StatusBar style="light" />
         <LoginForm />
+      </>
+    );
+  }
+
+  if (showOnboarding) {
+    return (
+      <>
+        <StatusBar style="dark" />
+        <OnboardingScreen onComplete={handleOnboardingComplete} />
       </>
     );
   }

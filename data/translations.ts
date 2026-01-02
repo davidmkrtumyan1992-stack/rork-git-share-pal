@@ -1,4 +1,4 @@
-export type Language = 'en' | 'ru';
+export type Language = 'en' | 'ru' | 'es' | 'zh' | 'de' | 'fr' | 'hy' | 'it';
 
 export const translations = {
   en: {
@@ -321,7 +321,12 @@ export const translations = {
   },
 };
 
-export const getTranslation = (lang: Language) => translations[lang];
+export const getTranslation = (lang: Language) => {
+  if (lang === 'en' || lang === 'ru') {
+    return translations[lang];
+  }
+  return translations['en'];
+};
 
 export const formatNumber = (num: number): string => {
   return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');

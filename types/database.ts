@@ -1,6 +1,6 @@
 export type AppRole = 'admin' | 'owner' | 'user';
 
-export type Language = 'en' | 'ru';
+export type Language = 'en' | 'ru' | 'es' | 'zh' | 'de' | 'fr' | 'hy' | 'it';
 
 export type VowStatus = 'kept' | 'broken' | 'postponed';
 
@@ -10,11 +10,12 @@ export interface Profile {
   username: string;
   full_name: string | null;
   avatar_url: string | null;
-  language: 'en' | 'ru';
+  language: 'en' | 'ru' | 'es' | 'zh' | 'de' | 'fr' | 'hy' | 'it';
   notifications_enabled: boolean;
   notification_timezone: string;
   selected_vow: string | null;
   selected_vow_types: string[] | null;
+  is_first_login: boolean;
   created_at: string;
   updated_at: string;
 }
