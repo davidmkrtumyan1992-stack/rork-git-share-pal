@@ -338,7 +338,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
         opacity: circle1Anim.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0.08, 0.12, 0.08] }),
       }]} />
 
-      <View style={styles.content}>
+      <View style={[styles.content, { paddingTop: insets.top + 20 }]}>
         <View style={styles.greetingContainer}>
           <Animated.Text
             style={[
@@ -357,30 +357,30 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
           <Text style={styles.subtitleText}>{getSubtitleText()}</Text>
 
           <View style={styles.pickerContainer}>
-          <View style={styles.pickerHighlight}>
-            <View style={styles.pickerHighlightLine} />
-            <View style={styles.pickerHighlightLine} />
-          </View>
-          
-          <ScrollView
-            ref={scrollViewRef}
-            style={styles.picker}
-            contentContainerStyle={[
-              styles.pickerContent,
-              { paddingVertical: (PICKER_HEIGHT - ITEM_HEIGHT) / 2 }
-            ]}
-            showsVerticalScrollIndicator={false}
-            snapToInterval={ITEM_HEIGHT}
-            decelerationRate="fast"
-            onScroll={handleScroll}
-            onMomentumScrollEnd={handleMomentumScrollEnd}
-            scrollEventThrottle={16}
-          >
-            {LANGUAGES.map((lang, index) => renderPickerItem(lang, index))}
-          </ScrollView>
+            <View style={styles.pickerHighlight}>
+              <View style={styles.pickerHighlightLine} />
+              <View style={styles.pickerHighlightLine} />
+            </View>
+            
+            <ScrollView
+              ref={scrollViewRef}
+              style={styles.picker}
+              contentContainerStyle={[
+                styles.pickerContent,
+                { paddingVertical: (PICKER_HEIGHT - ITEM_HEIGHT) / 2 }
+              ]}
+              showsVerticalScrollIndicator={false}
+              snapToInterval={ITEM_HEIGHT}
+              decelerationRate="fast"
+              onScroll={handleScroll}
+              onMomentumScrollEnd={handleMomentumScrollEnd}
+              scrollEventThrottle={16}
+            >
+              {LANGUAGES.map((lang, index) => renderPickerItem(lang, index))}
+            </ScrollView>
 
-          <View style={styles.pickerFadeTop} pointerEvents="none" />
-          <View style={styles.pickerFadeBottom} pointerEvents="none" />
+            <View style={styles.pickerFadeTop} pointerEvents="none" />
+            <View style={styles.pickerFadeBottom} pointerEvents="none" />
           </View>
         </View>
       </View>
@@ -459,18 +459,18 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 24,
   },
   greetingContainer: {
-    position: 'absolute',
-    top: '35%',
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
+    minHeight: 100,
   },
   pickerSection: {
-    position: 'absolute',
-    bottom: 140,
     alignItems: 'center',
+    paddingBottom: 16,
   },
   greetingText: {
     fontSize: Platform.OS === 'web' ? 64 : 56,

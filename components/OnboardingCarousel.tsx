@@ -16,7 +16,8 @@ import { ChevronRight, ArrowRight, Plus } from 'lucide-react-native';
 import { Language } from '@/types/database';
 import { onboardingContent } from '@/data/translations';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const isSmallScreen = SCREEN_HEIGHT < 700;
 
 interface OnboardingCarouselProps {
   language: Language;
@@ -268,7 +269,7 @@ export function OnboardingCarousel({ language, onComplete }: OnboardingCarouselP
           if (index === 1) {
             return (
               <View key={index} style={styles.slide}>
-                <View style={[styles.spotlightContainer, { paddingTop: insets.top + 60, paddingBottom: 20 }]}>
+                <View style={[styles.spotlightContainer, { paddingTop: insets.top + (isSmallScreen ? 50 : 60) }]}>
                   <View style={styles.screenshotWrapper}>
                     <ImageBackground
                       source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/z395lhjq19ba2xibneocb' }}
@@ -278,17 +279,17 @@ export function OnboardingCarousel({ language, onComplete }: OnboardingCarouselP
                     >
                       <View style={styles.darkOverlay} />
 
-                      <View style={styles.spotlightCircle}>
-                        <View style={styles.plusButton}>
-                          <Plus size={28} color="#6B8E7F" strokeWidth={2.5} />
+                      <View style={[styles.spotlightCircle, { top: isSmallScreen ? 12 : 20, right: isSmallScreen ? 20 : 30 }]}>
+                        <View style={[styles.plusButton, isSmallScreen && styles.plusButtonSmall]}>
+                          <Plus size={isSmallScreen ? 22 : 28} color="#6B8E7F" strokeWidth={2.5} />
                         </View>
                       </View>
 
-                      <View style={styles.hintContainer}>
+                      <View style={[styles.hintContainer, { top: isSmallScreen ? 45 : 60, right: isSmallScreen ? 90 : 120 }]}>
                         <Animated.View style={{ transform: [{ translateX: arrowTranslateX }] }}>
-                          <ArrowRight size={22} color="#F5F2ED" strokeWidth={2} />
+                          <ArrowRight size={isSmallScreen ? 18 : 22} color="#F5F2ED" strokeWidth={2} />
                         </Animated.View>
-                        <Text style={styles.hintText}>{slide.hint}</Text>
+                        <Text style={[styles.hintText, isSmallScreen && styles.hintTextSmall]}>{slide.hint}</Text>
                       </View>
                     </ImageBackground>
                   </View>
@@ -396,18 +397,18 @@ const styles = StyleSheet.create({
     maxWidth: 400,
   },
   slideTitle: {
-    fontSize: Platform.OS === 'web' ? 32 : 28,
+    fontSize: Platform.OS === 'web' ? 32 : (isSmallScreen ? 24 : 28),
     fontWeight: '700' as const,
     color: '#2C3E3A',
     textAlign: 'center',
-    marginBottom: 24,
+    marginBottom: isSmallScreen ? 16 : 24,
   },
   slideText: {
-    fontSize: 18,
+    fontSize: isSmallScreen ? 16 : 18,
     fontWeight: '400' as const,
     color: '#5A6A66',
     textAlign: 'center',
-    lineHeight: 28,
+    lineHeight: isSmallScreen ? 24 : 28,
   },
   imageBackground: {
     width: SCREEN_WIDTH,
@@ -427,7 +428,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
   },
   slide1Title: {
-    fontSize: Platform.OS === 'web' ? 48 : 40,
+    fontSize: Platform.OS === 'web' ? 48 : (isSmallScreen ? 32 : 40),
     fontWeight: '700' as const,
     color: '#2C3E3A',
     textAlign: 'center',
@@ -476,11 +477,12 @@ const styles = StyleSheet.create({
     width: SCREEN_WIDTH,
     justifyContent: 'flex-start',
     alignItems: 'center',
+    paddingBottom: 8,
   },
   screenshotWrapper: {
-    width: SCREEN_WIDTH * 0.85,
+    width: SCREEN_WIDTH * (isSmallScreen ? 0.88 : 0.85),
     flex: 1,
-    borderRadius: 24,
+    borderRadius: isSmallScreen ? 18 : 24,
     overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 10 },
@@ -493,7 +495,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   dashboardImageStyle: {
-    borderRadius: 24,
+    borderRadius: isSmallScreen ? 18 : 24,
     resizeMode: 'contain',
     top: 0,
   },
@@ -504,11 +506,9 @@ const styles = StyleSheet.create({
   },
   spotlightCircle: {
     position: 'absolute' as const,
-    top: 20,
-    right: 30,
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: isSmallScreen ? 60 : 80,
+    height: isSmallScreen ? 60 : 80,
+    borderRadius: isSmallScreen ? 30 : 40,
     backgroundColor: 'rgba(245, 242, 237, 0)',
     justifyContent: 'center',
     alignItems: 'center',
@@ -533,10 +533,13 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 5,
   },
+  plusButtonSmall: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+  },
   hintContainer: {
     position: 'absolute' as const,
-    top: 60,
-    right: 120,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
@@ -553,5 +556,8 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0, 0, 0, 0.5)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 3,
+  },
+  hintTextSmall: {
+    fontSize: 14,
   },
 });
