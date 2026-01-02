@@ -476,7 +476,6 @@ const styles = StyleSheet.create({
     width: SCREEN_WIDTH,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 60,
   },
   screenshotWrapper: {
     width: SCREEN_WIDTH * 0.85,
