@@ -486,11 +486,15 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: ITEM_HEIGHT,
+    flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
   },
   pickerHighlightLine: {
+    width: 20,
     height: 1,
-    backgroundColor: 'rgba(44, 62, 58, 0.3)',
+    backgroundColor: 'rgba(90, 106, 102, 0.2)',
   },
   picker: {
     flex: 1,
