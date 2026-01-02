@@ -19,14 +19,28 @@ const createSafeStorage = () => {
         if (value === null || value === undefined) {
           return null;
         }
-        if (value === 'undefined' || value === 'null' || value === '[object Object]' || value === 'object') {
-          console.warn(`Corrupted AsyncStorage value for key ${key}, clearing...`);
+        
+        if (typeof value !== 'string') {
+          console.warn(`Non-string value in AsyncStorage for key ${key}, clearing...`);
           await AsyncStorage.removeItem(key);
           return null;
         }
         
-        if (typeof value === 'string' && value.trim().length === 0) {
+        if (value.trim().length === 0) {
           console.warn(`Empty string in AsyncStorage for key ${key}, clearing...`);
+          await AsyncStorage.removeItem(key);
+          return null;
+        }
+        
+        const trimmedValue = value.trim();
+        if (
+          trimmedValue === 'undefined' || 
+          trimmedValue === 'null' || 
+          trimmedValue === 'object' ||
+          trimmedValue.startsWith('[object') ||
+          (!trimmedValue.startsWith('{') && !trimmedValue.startsWith('[') && !trimmedValue.startsWith('"'))
+        ) {
+          console.warn(`Corrupted AsyncStorage value for key ${key}: "${trimmedValue.substring(0, 50)}", clearing...`);
           await AsyncStorage.removeItem(key);
           return null;
         }
@@ -35,7 +49,7 @@ const createSafeStorage = () => {
           JSON.parse(value);
           return value;
         } catch {
-          console.warn(`Invalid JSON in AsyncStorage for key ${key}, clearing...`);
+          console.warn(`Invalid JSON in AsyncStorage for key ${key}: "${value.substring(0, 50)}...", clearing...`);
           await AsyncStorage.removeItem(key);
           return null;
         }
