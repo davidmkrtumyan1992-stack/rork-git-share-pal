@@ -24,7 +24,7 @@ const GREETINGS = [
   { text: '你好', lang: 'zh' },
   { text: 'Guten Tag', lang: 'de' },
   { text: 'Bonjour', lang: 'fr' },
-  { text: 'Barev', lang: 'hy' },
+  { text: 'Բարև', lang: 'hy' },
   { text: 'Ciao', lang: 'it' },
 ];
 
