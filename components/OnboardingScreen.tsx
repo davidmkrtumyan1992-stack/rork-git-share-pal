@@ -343,7 +343,10 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
         <Text style={styles.subtitleText}>{getSubtitleText()}</Text>
 
         <View style={styles.pickerContainer}>
-          <View style={styles.pickerHighlight} />
+          <View style={styles.pickerHighlight}>
+            <View style={styles.pickerHighlightLine} />
+            <View style={styles.pickerHighlightLine} />
+          </View>
           
           <ScrollView
             ref={scrollViewRef}
@@ -483,10 +486,11 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: ITEM_HEIGHT,
-    backgroundColor: 'rgba(107, 142, 127, 0.12)',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(107, 142, 127, 0.25)',
+    justifyContent: 'space-between',
+  },
+  pickerHighlightLine: {
+    height: 1,
+    backgroundColor: 'rgba(44, 62, 58, 0.3)',
   },
   picker: {
     flex: 1,

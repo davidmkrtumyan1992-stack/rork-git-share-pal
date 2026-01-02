@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   StyleSheet,
@@ -26,6 +26,7 @@ export default function HomeScreen() {
   const [activeVow, setActiveVow] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const hasShownOnboarding = useRef(false);
 
   useEffect(() => {
     if (profile?.selected_vow) {
@@ -38,18 +39,24 @@ export default function HomeScreen() {
   }, [profile?.selected_vow, activeVow]);
 
   useEffect(() => {
-    if (user && profile && profile.is_first_login !== false) {
-      console.log('First login detected, showing onboarding');
-      setShowOnboarding(true);
+    if (user && profile) {
+      if (profile.is_first_login !== false && !hasShownOnboarding.current) {
+        console.log('First login detected, showing onboarding');
+        setShowOnboarding(true);
+        hasShownOnboarding.current = true;
+      } else if (profile.is_first_login === false && showOnboarding) {
+        console.log('Onboarding already completed, hiding screen');
+        setShowOnboarding(false);
+      }
     }
-  }, [user, profile]);
+  }, [user, profile, showOnboarding]);
 
   const handleOnboardingComplete = async (language: Language) => {
     console.log('Onboarding complete, setting language:', language);
     try {
       await setLanguage(language);
       await updateProfile({ is_first_login: false });
-      setShowOnboarding(false);
+      console.log('Onboarding completed successfully, profile updated');
     } catch (error) {
       console.log('Error completing onboarding:', error);
       setShowOnboarding(false);
