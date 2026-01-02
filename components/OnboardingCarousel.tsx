@@ -31,6 +31,7 @@ export function OnboardingCarousel({ language, onComplete }: OnboardingCarouselP
   const buttonScale = useRef(new Animated.Value(1)).current;
   const slide1Opacity = useRef(new Animated.Value(0)).current;
   const slide1Scale = useRef(new Animated.Value(0.95)).current;
+  const arrowTranslateX = useRef(new Animated.Value(0)).current;
 
   const content = onboardingContent[language] || onboardingContent.en;
   const slides = [content.slide1, content.slide2, content.slide3];
@@ -50,7 +51,22 @@ export function OnboardingCarousel({ language, onComplete }: OnboardingCarouselP
         useNativeDriver: true,
       }),
     ]).start();
-  }, [slide1Opacity, slide1Scale]);
+
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(arrowTranslateX, {
+          toValue: 8,
+          duration: 1200,
+          useNativeDriver: true,
+        }),
+        Animated.timing(arrowTranslateX, {
+          toValue: 0,
+          duration: 1200,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  }, [slide1Opacity, slide1Scale, arrowTranslateX]);
 
   const handleScroll = Animated.event(
     [{ nativeEvent: { contentOffset: { x: scrollX } } }],
@@ -201,7 +217,7 @@ export function OnboardingCarousel({ language, onComplete }: OnboardingCarouselP
                   resizeMode="cover"
                 >
                   <LinearGradient
-                    colors={['rgba(245, 242, 237, 0.85)', 'rgba(248, 243, 235, 0.85)', 'rgba(232, 220, 200, 0.9)', 'rgba(217, 196, 165, 0.95)']}
+                    colors={['rgba(245, 242, 237, 0.7)', 'rgba(248, 243, 235, 0.7)', 'rgba(232, 220, 200, 0.75)', 'rgba(217, 196, 165, 0.8)']}
                     style={styles.imageOverlay}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
@@ -215,7 +231,12 @@ export function OnboardingCarousel({ language, onComplete }: OnboardingCarouselP
                         },
                       ]}
                     >
-                      <Text style={styles.slide1Title}>{slide.title}</Text>
+                      <View style={styles.slide1TitleContainer}>
+                        <Animated.View style={{ transform: [{ translateX: arrowTranslateX }] }}>
+                          <ChevronRight size={Platform.OS === 'web' ? 48 : 40} color="#2C3E3A" strokeWidth={2} />
+                        </Animated.View>
+                        <Text style={styles.slide1Title}>{slide.title}</Text>
+                      </View>
                     </Animated.View>
                   </LinearGradient>
                 </ImageBackground>
@@ -348,6 +369,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 32,
+  },
+  slide1TitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
   },
   slide1Title: {
     fontSize: Platform.OS === 'web' ? 48 : 40,
