@@ -36,9 +36,10 @@ import { getTranslation } from '@/data/translations';
 import { darkTheme } from '@/constants/theme';
 import { getVowsByCategory } from '@/data/vows';
 import { SettingsPanel } from '@/components/SettingsPanel';
+import { VowSelection } from '@/components/VowSelection';
 
 
-type TabType = 'diary' | 'history' | 'settings';
+type TabType = 'diary' | 'history' | 'settings' | 'vowSelection';
 
 const vowCategoryNames: Record<string, { ru: string; en: string }> = {
   tenPrinciples: { ru: '10 этических принципов', en: '10 Ethical Principles' },
@@ -69,6 +70,9 @@ interface DashboardProps {
   onSelectVow: () => void;
   onOpenAdmin?: () => void;
   onRemoveVow?: (vow: string) => void;
+  onToggleVow?: (vowType: string) => void;
+  onConfirmVows?: () => void;
+  isVowSaving?: boolean;
 }
 
 interface VowCardState {
@@ -126,6 +130,9 @@ export function Dashboard({
   onSelectVow, 
   onOpenAdmin,
   onRemoveVow,
+  onToggleVow,
+  onConfirmVows,
+  isVowSaving,
 }: DashboardProps) {
   const { profile, language, isAdmin } = useAuth();
   const t = getTranslation(language);
@@ -402,7 +409,7 @@ export function Dashboard({
         <Text style={[styles.chipsSectionTitle, isLargeScreen && styles.chipsSectionTitleLarge]}>
           {language === 'ru' ? 'Выбранные обеты' : 'Selected Vows'}
         </Text>
-        <TouchableOpacity style={styles.addButton} onPress={onSelectVow}>
+        <TouchableOpacity style={styles.addButton} onPress={() => setActiveTab('vowSelection')}>
           <Plus size={isSmallScreen ? 18 : 20} color={darkTheme.colors.primary} />
         </TouchableOpacity>
       </View>
@@ -984,7 +991,7 @@ export function Dashboard({
         {activeTab === 'diary' && (
           <>
             {selectedVows.length === 0 ? (
-              <TouchableOpacity style={[styles.emptyState, isLargeScreen && styles.emptyStateLarge]} onPress={onSelectVow}>
+              <TouchableOpacity style={[styles.emptyState, isLargeScreen && styles.emptyStateLarge]} onPress={() => setActiveTab('vowSelection')}>
                 <Plus size={isSmallScreen ? 40 : 48} color={darkTheme.colors.textMuted} />
                 <Text style={[styles.emptyStateText, isSmallScreen && styles.emptyStateTextSmall]}>
                   {language === 'ru' 
@@ -1006,7 +1013,20 @@ export function Dashboard({
         {activeTab === 'history' && renderHistoryContent()}
 
         {activeTab === 'settings' && (
-          <SettingsPanel onSelectVow={onSelectVow} />
+          <SettingsPanel onSelectVow={() => setActiveTab('vowSelection')} />
+        )}
+
+        {activeTab === 'vowSelection' && onToggleVow && onConfirmVows && (
+          <VowSelection
+            selectedVows={selectedVows}
+            onToggleVow={onToggleVow}
+            onConfirm={() => {
+              onConfirmVows();
+              setActiveTab('diary');
+            }}
+            isLoading={isVowSaving}
+            isInline={true}
+          />
         )}
       </ScrollView>
 

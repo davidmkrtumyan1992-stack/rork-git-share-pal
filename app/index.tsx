@@ -10,11 +10,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/contexts/AuthContext';
 import { LoginForm } from '@/components/LoginForm';
 import { Dashboard } from '@/components/Dashboard';
-import { VowSelection } from '@/components/VowSelection';
 import { AdminPanel } from '@/components/AdminPanel';
 import { darkTheme } from '@/constants/theme';
 
-type Screen = 'dashboard' | 'vowSelection' | 'settings' | 'admin';
+type Screen = 'dashboard' | 'admin';
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
@@ -65,20 +64,11 @@ export default function HomeScreen() {
       if (selectedVows.length > 0 && !selectedVows.includes(activeVow || '')) {
         setActiveVow(selectedVows[0]);
       }
-      setCurrentScreen('dashboard');
     } catch (error) {
       console.log('Error saving vows:', error);
     } finally {
       setIsSaving(false);
     }
-  };
-
-  const handleCloseVowSelection = () => {
-    if (profile?.selected_vow) {
-      const vows = profile.selected_vow.split(',').filter(Boolean);
-      setSelectedVows(vows);
-    }
-    setCurrentScreen('dashboard');
   };
 
   if (isLoading) {
@@ -103,34 +93,19 @@ export default function HomeScreen() {
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <StatusBar style="light" />
       
-      {currentScreen === 'dashboard' && (
-        <View style={styles.screenContainer}>
-          <Dashboard
-            selectedVows={selectedVows}
-            activeVow={activeVow}
-            onSetActiveVow={setActiveVow}
-            onSelectVow={() => setCurrentScreen('vowSelection')}
-            onOpenAdmin={() => setCurrentScreen('admin')}
-            onRemoveVow={handleRemoveVow}
-          />
-        </View>
-      )}
-
-      <Modal
-        visible={currentScreen === 'vowSelection'}
-        animationType="slide"
-        onRequestClose={handleCloseVowSelection}
-      >
-        <View style={[styles.modalContainer, { paddingTop: insets.top }]}>
-          <VowSelection
-            selectedVows={selectedVows}
-            onToggleVow={handleToggleVow}
-            onConfirm={handleConfirmVows}
-            onClose={handleCloseVowSelection}
-            isLoading={isSaving}
-          />
-        </View>
-      </Modal>
+      <View style={styles.screenContainer}>
+        <Dashboard
+          selectedVows={selectedVows}
+          activeVow={activeVow}
+          onSetActiveVow={setActiveVow}
+          onSelectVow={() => {}}
+          onOpenAdmin={() => setCurrentScreen('admin')}
+          onRemoveVow={handleRemoveVow}
+          onToggleVow={handleToggleVow}
+          onConfirmVows={handleConfirmVows}
+          isVowSaving={isSaving}
+        />
+      </View>
 
       <Modal
         visible={currentScreen === 'admin'}

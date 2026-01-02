@@ -95,8 +95,9 @@ interface VowSelectionProps {
   selectedVows: string[];
   onToggleVow: (vowType: string) => void;
   onConfirm: () => void;
-  onClose: () => void;
+  onClose?: () => void;
   isLoading?: boolean;
+  isInline?: boolean;
 }
 
 export function VowSelection({ 
@@ -104,9 +105,10 @@ export function VowSelection({
   onToggleVow, 
   onConfirm, 
   onClose,
-  isLoading 
+  isLoading,
+  isInline = false,
 }: VowSelectionProps) {
-  const { language, setLanguage } = useAuth();
+  const { language } = useAuth();
   const t = getTranslation(language);
   const insets = useSafeAreaInsets();
   const { width: screenWidth } = useWindowDimensions();
@@ -140,6 +142,166 @@ export function VowSelection({
     iconSize: isSmallScreen ? 56 : 64,
   };
 
+  if (isInline) {
+    return (
+      <View style={styles.inlineContainer}>
+        <View style={[styles.titleContainer, isLargeScreen && styles.titleContainerLarge]}>
+          <Text style={[styles.title, { fontSize: responsiveStyles.title.fontSize }]}>
+            {t.vows.title}
+          </Text>
+          <Text style={[styles.subtitle, { fontSize: responsiveStyles.subtitle.fontSize }]}>
+            {t.vows.subtitle}
+          </Text>
+        </View>
+
+        <View style={[
+          styles.inlineScrollContent,
+          (isMediumScreen || isLargeScreen) && styles.scrollContentGrid
+        ]}>
+          {vowTypes.map((vow) => {
+            const IconComponent = vow.icon;
+            const isSelected = selectedVows.includes(vow.key);
+            const title = t.vows[vow.titleKey] as string;
+            const desc = t.vows[vow.descKey] as string;
+
+            return (
+              <TouchableOpacity
+                key={vow.key}
+                style={[
+                  styles.vowCard,
+                  { padding: responsiveStyles.cardPadding },
+                  isSelected && styles.vowCardSelected,
+                  vow.isLocked && styles.vowCardLocked,
+                  (isMediumScreen || isLargeScreen) && styles.vowCardGrid,
+                ]}
+                onPress={() => handleVowPress(vow)}
+                activeOpacity={0.7}
+                testID={`vow-${vow.key}`}
+              >
+                <View style={styles.cardContent}>
+                  <View style={styles.iconWrapper}>
+                    <LinearGradient
+                      colors={vow.gradientColors}
+                      style={[styles.iconGradient, { width: responsiveStyles.iconSize, height: responsiveStyles.iconSize }]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                    >
+                      <IconComponent size={isSmallScreen ? 28 : 32} color="#FFFFFF" />
+                    </LinearGradient>
+                    {vow.isLocked && (
+                      <View style={styles.lockOverlay}>
+                        <Lock size={isSmallScreen ? 14 : 16} color="#FFFFFF" />
+                      </View>
+                    )}
+                  </View>
+                  
+                  <View style={styles.textContainer}>
+                    <Text style={[styles.vowTitle, vow.isLocked && styles.textLocked, isSmallScreen && styles.vowTitleSmall]}>
+                      {title}
+                    </Text>
+                    <Text style={[styles.vowDesc, vow.isLocked && styles.textLocked, isSmallScreen && styles.vowDescSmall]}>
+                      {desc}
+                    </Text>
+                    {isSelected && !vow.isLocked && (
+                      <View style={styles.selectedBadge}>
+                        <Check size={12} color="#6B8E7F" />
+                        <Text style={styles.selectedText}>• {t.vows.selected}</Text>
+                      </View>
+                    )}
+                  </View>
+                </View>
+                
+                <LinearGradient
+                  colors={vow.gradientColors}
+                  style={styles.cardAccent}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                />
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
+        {selectedVows.length > 0 && (
+          <View style={[styles.inlineFooter, isLargeScreen && styles.footerLarge]}>
+            <TouchableOpacity
+              style={[styles.confirmButton, isLargeScreen && styles.confirmButtonLarge]}
+              onPress={onConfirm}
+              disabled={isLoading}
+              activeOpacity={0.8}
+            >
+              <LinearGradient
+                colors={['#6B8E7F', '#5A7A6D']}
+                style={styles.confirmGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+              >
+                {isLoading ? (
+                  <ActivityIndicator color="#FFFFFF" />
+                ) : (
+                  <Text style={[styles.confirmText, isSmallScreen && styles.confirmTextSmall]}>
+                    {t.vows.continue} ({selectedVows.length})
+                  </Text>
+                )}
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        <Modal
+          visible={showLockedDialog}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowLockedDialog(false)}
+        >
+          <Pressable 
+            style={styles.modalOverlay}
+            onPress={() => setShowLockedDialog(false)}
+          >
+            <Pressable style={[
+              styles.modalContent,
+              isSmallScreen && styles.modalContentSmall,
+              isLargeScreen && styles.modalContentLarge
+            ]} onPress={(e) => e.stopPropagation()}>
+              <View style={styles.modalHeader}>
+                <View style={styles.modalIconContainer}>
+                  <Lock size={32} color="#B85C4F" />
+                </View>
+                <Text style={styles.modalTitle}>{t.vows.lockedTitle}</Text>
+              </View>
+              
+              <Text style={styles.modalDesc}>{t.vows.lockedDesc}</Text>
+              <Text style={styles.modalEmail}>access@example.com</Text>
+              
+              <View style={styles.requirementsContainer}>
+                <Text style={styles.requirementsTitle}>{t.vows.lockedRequirements}:</Text>
+                <View style={styles.requirementItem}>
+                  <View style={styles.bulletPoint} />
+                  <Text style={styles.requirementText}>{t.vows.lockedReq1}</Text>
+                </View>
+                <View style={styles.requirementItem}>
+                  <View style={styles.bulletPoint} />
+                  <Text style={styles.requirementText}>{t.vows.lockedReq2}</Text>
+                </View>
+                <View style={styles.requirementItem}>
+                  <View style={styles.bulletPoint} />
+                  <Text style={styles.requirementText}>{t.vows.lockedReq3}</Text>
+                </View>
+              </View>
+
+              <TouchableOpacity
+                style={styles.modalCloseButton}
+                onPress={() => setShowLockedDialog(false)}
+              >
+                <Text style={styles.modalCloseText}>{t.common.cancel}</Text>
+              </TouchableOpacity>
+            </Pressable>
+          </Pressable>
+        </Modal>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <LinearGradient
@@ -159,42 +321,13 @@ export function VowSelection({
           width: isLargeScreen ? '100%' : undefined,
         }
       ]}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <X size={24} color="#2C3E3A" />
-          </TouchableOpacity>
-          
-          <View style={styles.languageSwitcher}>
-            <TouchableOpacity
-              style={[
-                styles.langButton,
-                language === 'ru' && styles.langButtonActive,
-              ]}
-              onPress={() => setLanguage('ru')}
-            >
-              <Text style={[
-                styles.langText,
-                language === 'ru' && styles.langTextActive,
-              ]}>
-                РУ
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.langButton,
-                language === 'en' && styles.langButtonActive,
-              ]}
-              onPress={() => setLanguage('en')}
-            >
-              <Text style={[
-                styles.langText,
-                language === 'en' && styles.langTextActive,
-              ]}>
-                EN
-              </Text>
+        {onClose && (
+          <View style={styles.header}>
+            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+              <X size={24} color="#2C3E3A" />
             </TouchableOpacity>
           </View>
-        </View>
+        )}
 
         <View style={[styles.titleContainer, isLargeScreen && styles.titleContainerLarge]}>
           <Text style={[styles.title, { fontSize: responsiveStyles.title.fontSize }]}>
@@ -372,6 +505,16 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: 20,
+  },
+  inlineContainer: {
+    flex: 1,
+  },
+  inlineScrollContent: {
+    gap: 16,
+  },
+  inlineFooter: {
+    paddingTop: 20,
+    paddingBottom: 24,
   },
   header: {
     flexDirection: 'row',
