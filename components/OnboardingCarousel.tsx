@@ -55,13 +55,13 @@ export function OnboardingCarousel({ language, onComplete }: OnboardingCarouselP
     Animated.loop(
       Animated.sequence([
         Animated.timing(arrowTranslateX, {
-          toValue: 10,
-          duration: 1000,
+          toValue: 12,
+          duration: 1200,
           useNativeDriver: true,
         }),
         Animated.timing(arrowTranslateX, {
           toValue: 0,
-          duration: 1000,
+          duration: 1200,
           useNativeDriver: true,
         }),
       ])
@@ -236,7 +236,10 @@ export function OnboardingCarousel({ language, onComplete }: OnboardingCarouselP
                           styles.arrowContainer,
                           { transform: [{ translateX: arrowTranslateX }] }
                         ]}>
-                          <ChevronRight size={Platform.OS === 'web' ? 48 : 40} color="#2C3E3A" strokeWidth={1.5} />
+                          <View style={styles.customArrow}>
+                            <View style={styles.arrowLine} />
+                            <View style={styles.arrowHead} />
+                          </View>
                         </Animated.View>
                         <Text style={styles.slide1Title}>{slide.title}</Text>
                       </View>
@@ -370,7 +373,7 @@ const styles = StyleSheet.create({
   },
   slide1Content: {
     position: 'absolute' as const,
-    bottom: '30%',
+    bottom: '20%',
     left: 0,
     right: 0,
     alignItems: 'center',
@@ -382,11 +385,33 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   arrowContainer: {
-    shadowColor: '#2C3E3A',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 2,
+    marginRight: 8,
+  },
+  customArrow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: 40,
+    height: 24,
+  },
+  arrowLine: {
+    width: 28,
+    height: 1.5,
+    backgroundColor: '#2C3E3A',
+  },
+  arrowHead: {
+    width: 0,
+    height: 0,
+    backgroundColor: 'transparent',
+    borderStyle: 'solid',
+    borderLeftWidth: 10,
+    borderRightWidth: 0,
+    borderBottomWidth: 6,
+    borderTopWidth: 6,
+    borderLeftColor: '#2C3E3A',
+    borderRightColor: 'transparent',
+    borderBottomColor: 'transparent',
+    borderTopColor: 'transparent',
+    marginLeft: -1,
   },
   slide1Title: {
     fontSize: Platform.OS === 'web' ? 48 : 40,
