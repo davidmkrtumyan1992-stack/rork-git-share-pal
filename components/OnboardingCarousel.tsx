@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ChevronRight } from 'lucide-react-native';
+import { ChevronRight, ArrowRight, Plus } from 'lucide-react-native';
 import { Language } from '@/types/database';
 import { onboardingContent } from '@/data/translations';
 
@@ -32,6 +32,7 @@ export function OnboardingCarousel({ language, onComplete }: OnboardingCarouselP
   const buttonScale = useRef(new Animated.Value(1)).current;
   const slide1Opacity = useRef(new Animated.Value(0)).current;
   const slide1Scale = useRef(new Animated.Value(0.95)).current;
+  const arrowTranslateX = useRef(new Animated.Value(0)).current;
 
   const content = onboardingContent[language] || onboardingContent.en;
   const slides = [content.slide1, content.slide2, content.slide3];
@@ -60,7 +61,7 @@ export function OnboardingCarousel({ language, onComplete }: OnboardingCarouselP
         if (current === 6) {
           clearInterval(interval);
         }
-      }, 150);
+      }, 300);
 
       return () => clearInterval(interval);
     };
@@ -73,6 +74,25 @@ export function OnboardingCarousel({ language, onComplete }: OnboardingCarouselP
       clearTimeout(timer);
     };
   }, [slide1Opacity, slide1Scale]);
+
+  useEffect(() => {
+    if (currentSlide === 1) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(arrowTranslateX, {
+            toValue: 8,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+          Animated.timing(arrowTranslateX, {
+            toValue: 0,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+    }
+  }, [currentSlide, arrowTranslateX]);
 
   const handleScroll = Animated.event(
     [{ nativeEvent: { contentOffset: { x: scrollX } } }],
@@ -241,6 +261,46 @@ export function OnboardingCarousel({ language, onComplete }: OnboardingCarouselP
                     </Animated.View>
                   </LinearGradient>
                 </ImageBackground>
+              </View>
+            );
+          }
+
+          if (index === 1) {
+            return (
+              <View key={index} style={styles.slide}>
+                <View style={styles.spotlightContainer}>
+                  <LinearGradient
+                    colors={['#F5F2ED', '#F8F3EB', '#E8DCC8', '#D9C4A5']}
+                    style={styles.mockDashboard}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                  >
+                    <View style={styles.mockHeader}>
+                      <View style={styles.mockHeaderText} />
+                    </View>
+                    <View style={styles.mockContent}>
+                      <View style={styles.mockCard} />
+                      <View style={styles.mockCard} />
+                    </View>
+                  </LinearGradient>
+
+                  <View style={styles.darkOverlay} />
+
+                  <View style={styles.spotlightCircle}>
+                    <View style={styles.plusButton}>
+                      <Plus size={32} color="#6B8E7F" strokeWidth={2.5} />
+                    </View>
+                  </View>
+
+                  <Text style={[styles.slideTitle, styles.slide2Title]}>{slide.title}</Text>
+
+                  <View style={styles.hintContainer}>
+                    <Animated.View style={{ transform: [{ translateX: arrowTranslateX }] }}>
+                      <ArrowRight size={24} color="#2C3E3A" strokeWidth={2} />
+                    </Animated.View>
+                    <Text style={styles.hintText}>{slide.hint}</Text>
+                  </View>
+                </View>
               </View>
             );
           }
@@ -418,5 +478,97 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600' as const,
     color: '#FFFFFF',
+  },
+  spotlightContainer: {
+    flex: 1,
+    width: SCREEN_WIDTH,
+    position: 'relative' as const,
+  },
+  mockDashboard: {
+    flex: 1,
+    padding: 24,
+  },
+  mockHeader: {
+    marginTop: 60,
+    marginBottom: 32,
+  },
+  mockHeaderText: {
+    width: 150,
+    height: 24,
+    backgroundColor: 'rgba(44, 62, 58, 0.2)',
+    borderRadius: 8,
+  },
+  mockContent: {
+    gap: 16,
+  },
+  mockCard: {
+    height: 120,
+    backgroundColor: 'rgba(255, 255, 255, 0.4)',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(44, 62, 58, 0.1)',
+  },
+  darkOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+  },
+  spotlightCircle: {
+    position: 'absolute' as const,
+    bottom: 100,
+    left: SCREEN_WIDTH / 2 - 80,
+    width: 160,
+    height: 160,
+    borderRadius: 80,
+    backgroundColor: 'rgba(245, 242, 237, 0.95)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#6B8E7F',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.4,
+    shadowRadius: 40,
+    elevation: 10,
+  },
+  plusButton: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#6B8E7F',
+    shadowColor: '#6B8E7F',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  slide2Title: {
+    position: 'absolute' as const,
+    top: 80,
+    left: 32,
+    right: 32,
+    color: '#F5F2ED',
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  },
+  hintContainer: {
+    position: 'absolute' as const,
+    bottom: 280,
+    left: SCREEN_WIDTH / 2 - 100,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  hintText: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: '#2C3E3A',
+    fontFamily: Platform.select({
+      ios: 'Georgia',
+      android: 'serif',
+      web: 'Georgia, "Times New Roman", serif',
+    }),
   },
 });

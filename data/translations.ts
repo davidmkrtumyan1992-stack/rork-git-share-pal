@@ -340,120 +340,144 @@ export const onboardingContent = {
   ru: {
     slide1: { 
       title: '6 разовый дневник', 
-      text: '' 
+      text: '',
+      hint: ''
     },
     slide2: { 
-      title: '6 напоминаний в день', 
-      text: 'Приложение присылает по 6 обетов ежедневно. Они чередуются циклично, чтобы вы могли постепенно и глубоко проработать каждое наставление.' 
+      title: 'Начни свой путь', 
+      text: '',
+      hint: 'Добавить обет'
     },
     slide3: { 
       title: 'Путь к осознанности', 
-      text: 'Если обет был нарушен — не страшно. Просто зафиксируйте это и выполните «антидот». Мы поможем вам не забыть об этом.' 
+      text: 'Если обет был нарушен — не страшно. Просто зафиксируйте это и выполните «антидот». Мы поможем вам не забыть об этом.',
+      hint: ''
     },
     buttons: { next: 'Далее', skip: 'Пропустить', start: 'Начать' }
   },
   en: {
     slide1: { 
       title: '6 times a day diary', 
-      text: '' 
+      text: '',
+      hint: ''
     },
     slide2: { 
-      title: '6 reminders a day', 
-      text: 'The app sends 6 vows daily. They rotate cyclically, allowing you to work through each instruction gradually and deeply.' 
+      title: 'Start your journey', 
+      text: '',
+      hint: 'Add a vow'
     },
     slide3: { 
       title: 'Path to mindfulness', 
-      text: 'If a vow is broken, it\'s okay. Just record it and perform an "antidote". We\'ll help you remember to do it.' 
+      text: 'If a vow is broken, it\'s okay. Just record it and perform an "antidote". We\'ll help you remember to do it.',
+      hint: ''
     },
     buttons: { next: 'Next', skip: 'Skip', start: 'Start' }
   },
   hy: {
     slide1: { 
       title: 'Օրական 6-անգամյա օրագիր', 
-      text: '' 
+      text: '',
+      hint: ''
     },
     slide2: { 
-      title: 'Օրական 6 հիշեցում', 
-      text: 'Հավելվածն ամեն օր ուղարկում է 6 ուխտ: Դրանք հերթագայում են պարբերաբար, որպեսզի դուք կարողանաք աստիճանաբար և խորությամբ աշխատել յուրաքանչյուրի վրա:' 
+      title: 'Սկսեք ձեր ճանապարհը', 
+      text: '',
+      hint: 'Ավելացնել ուխտ'
     },
     slide3: { 
       title: 'Գիտակցության ուղին', 
-      text: 'Եթե ուխտը դրժվել է, դա սարսափելի չէ: Պարզապես արձանագրեք դա և կատարեք «հակաթույնը»: Մենք կօգնենք ձեզ չմոռանալ դրա մասին:' 
+      text: 'Եթե ուխտը դրժվել է, դա սարսափելի չէ: Պարզապես արձանագրեք դա և կատարեք «հակաթույնը»: Մենք կօգնենք ձեզ չմոռանալ դրա մասին:',
+      hint: ''
     },
     buttons: { next: 'Հաջորդը', skip: 'Բաց թողնել', start: 'Սկսել' }
   },
   es: {
     slide1: { 
       title: 'Diario de 6 veces al día', 
-      text: '' 
+      text: '',
+      hint: ''
     },
     slide2: { 
-      title: '6 recordatorios al día', 
-      text: 'La aplicación envía 6 votos diarios. Rotan cíclicamente para que puedas trabajar cada instrucción de manera gradual y profunda.' 
+      title: 'Comienza tu viaje', 
+      text: '',
+      hint: 'Añadir voto'
     },
     slide3: { 
       title: 'Camino a la conciencia', 
-      text: 'Si se rompe un voto, no pasa nada. Simplemente regístralo y realiza un "antídoto". Te ayudaremos a recordar hacerlo.' 
+      text: 'Si se rompe un voto, no pasa nada. Simplemente regístralo y realiza un "antídoto". Te ayudaremos a recordar hacerlo.',
+      hint: ''
     },
     buttons: { next: 'Siguiente', skip: 'Omitir', start: 'Comenzar' }
   },
   de: {
     slide1: { 
       title: '6-mal am Tag Tagebuch', 
-      text: '' 
+      text: '',
+      hint: ''
     },
     slide2: { 
-      title: '6 Erinnerungen am Tag', 
-      text: 'Die App sendet täglich 6 Gelübde. Sie rotieren zyklisch, sodass Sie jede Anweisung schrittweise und tiefgehend bearbeiten können.' 
+      title: 'Beginnen Sie Ihre Reise', 
+      text: '',
+      hint: 'Gelübde hinzufügen'
     },
     slide3: { 
       title: 'Pfad zur Achtsamkeit', 
-      text: 'Wenn ein Gelübde gebrochen wird, ist das nicht schlimm. Registrieren Sie es einfach und führen Sie ein „Gegenmittel" aus. Wir helfen Ihnen, daran zu denken.' 
+      text: 'Wenn ein Gelübde gebrochen wird, ist das nicht schlimm. Registrieren Sie es einfach und führen Sie ein „Gegenmittel" aus. Wir helfen Ihnen, daran zu denken.',
+      hint: ''
     },
     buttons: { next: 'Weiter', skip: 'Überspringen', start: 'Starten' }
   },
   zh: {
     slide1: { 
       title: '每日 6 次日记', 
-      text: '' 
+      text: '',
+      hint: ''
     },
     slide2: { 
-      title: '每天 6 次提醒', 
-      text: '该应用程序每天发送 6 条誓言。它们循环往复，让您可以逐步深入地完成每项指令。' 
+      title: '开始你的旅程', 
+      text: '',
+      hint: '添加誓言'
     },
     slide3: { 
       title: '正念之路', 
-      text: '如果违反了誓言，也没关系。只需记录下来并执行「解毒剂」。我们会帮您记住去执行。' 
+      text: '如果违反了誓言，也没关系。只需记录下来并执行「解毒剂」。我们会帮您记住去执行。',
+      hint: ''
     },
     buttons: { next: '下一步', skip: '跳过', start: '开始' }
   },
   fr: {
     slide1: { 
       title: 'Journal 6 fois par jour', 
-      text: '' 
+      text: '',
+      hint: ''
     },
     slide2: { 
-      title: '6 rappels par jour', 
-      text: 'L\'application envoie 6 vœux par jour. Ils tournent de manière cyclique afin que vous puissiez approfondir chaque instruction progressivement.' 
+      title: 'Commencez votre voyage', 
+      text: '',
+      hint: 'Ajouter un vœu'
     },
     slide3: { 
       title: 'Chemin vers la pleine conscience', 
-      text: 'Si un vœu est rompu, ce n\'est pas grave. Enregistrez-le simplement et effectuez un « antidote ». Nous vous aiderons à ne pas oublier.' 
+      text: 'Si un vœu est rompu, ce n\'est pas grave. Enregistrez-le simplement et effectuez un « antidote ». Nous vous aiderons à ne pas oublier.',
+      hint: ''
     },
     buttons: { next: 'Suivant', skip: 'Passer', start: 'Commencer' }
   },
   it: {
     slide1: { 
       title: 'Diario 6 volte al giorno', 
-      text: '' 
+      text: '',
+      hint: ''
     },
     slide2: { 
-      title: '6 promemoria al giorno', 
-      text: 'L\'app invia 6 voti al giorno. Ruotano ciclicamente in modo da poter lavorare su ogni istruzione in modo graduale e profondo.' 
+      title: 'Inizia il tuo viaggio', 
+      text: '',
+      hint: 'Aggiungi voto'
     },
     slide3: { 
       title: 'Sentiero verso la consapevolezza', 
-      text: 'Se un voto viene infranto, non importa. Basta registrarlo ed eseguire un "antidoto". Ti aiuteremo a ricordare di farlo.' 
+      text: 'Se un voto viene infranto, non importa. Basta registrarlo ed eseguire un "antidoto". Ti aiuteremo a ricordare di farlo.',
+      hint: ''
     },
     buttons: { next: 'Avanti', skip: 'Salta', start: 'Inizia' }
   },
