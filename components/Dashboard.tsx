@@ -154,7 +154,6 @@ export function Dashboard({
 
   useEffect(() => {
     if (needsUpdate && selectedVows.length > 0) {
-      console.log('New day detected, advancing cycle positions');
       advanceCyclePositions();
     }
   }, [needsUpdate, selectedVows, advanceCyclePositions]);
@@ -165,7 +164,7 @@ export function Dashboard({
 
   
 
-  const handleExpandCard = (cardKey: string, type: 'keep' | 'break') => {
+  const handleExpandCard = useCallback((cardKey: string, type: 'keep' | 'break') => {
     setCardStates(prev => ({
       ...prev,
       [cardKey]: {
@@ -176,9 +175,9 @@ export function Dashboard({
         selectedAntidotes: prev[cardKey]?.selectedAntidotes || [],
       }
     }));
-  };
+  }, []);
 
-  const handleCollapseCard = (cardKey: string) => {
+  const handleCollapseCard = useCallback((cardKey: string) => {
     setCardStates(prev => ({
       ...prev,
       [cardKey]: {
@@ -189,9 +188,9 @@ export function Dashboard({
         selectedAntidotes: [],
       }
     }));
-  };
+  }, []);
 
-  const handleSaveKeep = (vowType: string, cardKey: string, vowIndex: number) => {
+  const handleSaveKeep = useCallback((vowType: string, cardKey: string, vowIndex: number) => {
     const state = cardStates[cardKey];
     const entryKey = `${vowType}_${vowIndex}`;
     handleCollapseCard(cardKey);
@@ -212,9 +211,9 @@ export function Dashboard({
         },
       }
     );
-  };
+  }, [cardStates, handleCollapseCard, createEntry, language]);
 
-  const handleSaveBreak = (vowType: string, cardKey: string, vowIndex: number) => {
+  const handleSaveBreak = useCallback((vowType: string, cardKey: string, vowIndex: number) => {
     const state = cardStates[cardKey];
     const entryKey = `${vowType}_${vowIndex}`;
     handleCollapseCard(cardKey);
@@ -235,9 +234,9 @@ export function Dashboard({
         },
       }
     );
-  };
+  }, [cardStates, handleCollapseCard, createEntry, language]);
 
-  const selectAntidoteTag = (cardKey: string, tag: string) => {
+  const selectAntidoteTag = useCallback((cardKey: string, tag: string) => {
     setCardStates(prev => {
       const currentText = prev[cardKey]?.antidoteText || '';
       const newText = currentText ? `${currentText}; ${tag}` : tag;
@@ -249,9 +248,9 @@ export function Dashboard({
         }
       };
     });
-  };
+  }, []);
 
-  const updateNoteText = (cardKey: string, text: string) => {
+  const updateNoteText = useCallback((cardKey: string, text: string) => {
     setCardStates(prev => ({
       ...prev,
       [cardKey]: {
@@ -259,9 +258,9 @@ export function Dashboard({
         noteText: text,
       }
     }));
-  };
+  }, []);
 
-  const updateAntidoteText = (cardKey: string, text: string) => {
+  const updateAntidoteText = useCallback((cardKey: string, text: string) => {
     setCardStates(prev => ({
       ...prev,
       [cardKey]: {
@@ -269,7 +268,7 @@ export function Dashboard({
         antidoteText: text,
       }
     }));
-  };
+  }, []);
 
   const findTodayEntry = useCallback((vowType: string, vowIndex: number): VowEntry | null => {
     const entryKey = `${vowType}_${vowIndex}`;

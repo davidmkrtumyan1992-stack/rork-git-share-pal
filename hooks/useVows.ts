@@ -12,7 +12,6 @@ export const useVowEntries = () => {
     queryFn: async () => {
       if (!user) return [];
       
-      console.log('Fetching vow entries for user:', user.id);
       const { data, error } = await supabase
         .from('vow_entries')
         .select('*')
@@ -20,7 +19,6 @@ export const useVowEntries = () => {
         .order('entry_date', { ascending: false });
 
       if (error) {
-        console.log('Vow entries fetch error:', error.message);
         throw error;
       }
 
@@ -39,7 +37,6 @@ export const useTodayEntry = (vowType: string | null) => {
     queryFn: async () => {
       if (!user || !vowType) return null;
       
-      console.log('Fetching today entry:', vowType, today);
       const { data, error } = await supabase
         .from('vow_entries')
         .select('*')
@@ -49,7 +46,6 @@ export const useTodayEntry = (vowType: string | null) => {
         .maybeSingle();
 
       if (error) {
-        console.log('Today entry fetch error:', error.message);
         throw error;
       }
 
@@ -68,7 +64,6 @@ export const useTodayEntries = () => {
     queryFn: async () => {
       if (!user) return [];
       
-      console.log('Fetching all today entries for user:', user.id, today);
       const { data, error } = await supabase
         .from('vow_entries')
         .select('*')
@@ -107,8 +102,6 @@ export const useCreateVowEntry = () => {
     }: CreateVowEntryParams) => {
       if (!user) throw new Error('Not authenticated');
       
-      console.log('Creating vow entry:', vowType, status, today);
-
       const { data: existing, error: existingError } = await supabase
         .from('vow_entries')
         .select('id')
@@ -118,7 +111,7 @@ export const useCreateVowEntry = () => {
         .maybeSingle();
 
       if (existingError) {
-        console.log('Error checking existing entry:', existingError.message);
+        throw existingError;
       }
 
       if (existing) {
@@ -185,12 +178,9 @@ export const useCreateVowEntry = () => {
         }
       );
       
-      console.log('Optimistic update applied for:', newEntry.vowType);
-      
       return { previousEntries };
     },
     onError: (err, newEntry, context) => {
-      console.log('Mutation error, rolling back:', err.message);
       if (context?.previousEntries) {
         queryClient.setQueryData(
           ['today-entries', user?.id, today],
@@ -199,10 +189,13 @@ export const useCreateVowEntry = () => {
       }
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['vow-entries'] });
-      queryClient.invalidateQueries({ queryKey: ['today-entry'] });
-      queryClient.invalidateQueries({ queryKey: ['today-entries'] });
-      queryClient.invalidateQueries({ queryKey: ['vow-stats'] });
+      queryClient.invalidateQueries({ 
+        predicate: (query) => 
+          query.queryKey[0] === 'vow-entries' || 
+          query.queryKey[0] === 'today-entry' || 
+          query.queryKey[0] === 'today-entries' ||
+          query.queryKey[0] === 'vow-stats'
+      });
     },
   });
 };
@@ -217,7 +210,6 @@ export const useVowStats = (vowType: string | null) => {
         return { streak: 0, totalKept: 0, totalBroken: 0, totalDays: 0 };
       }
 
-      console.log('Calculating vow stats for:', vowType);
       const { data, error } = await supabase
         .from('vow_entries')
         .select('*')
@@ -278,8 +270,6 @@ export const useHistoryEntries = () => {
     queryFn: async () => {
       if (!user) return [];
 
-      console.log('Fetching history entries for user:', user.id);
-      
       const twoDaysAgo = new Date();
       twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
       const twoDaysAgoStr = twoDaysAgo.toISOString().split('T')[0];
@@ -293,7 +283,6 @@ export const useHistoryEntries = () => {
         .order('entry_date', { ascending: false });
 
       if (error) {
-        console.log('History entries fetch error:', error.message);
         throw error;
       }
 
@@ -311,8 +300,6 @@ export const useUncompletedAntidotes = () => {
     queryFn: async () => {
       if (!user) return [];
 
-      console.log('Fetching uncompleted antidotes for user:', user.id);
-
       const { data, error } = await supabase
         .from('vow_entries')
         .select('*')
@@ -322,7 +309,6 @@ export const useUncompletedAntidotes = () => {
         .order('entry_date', { ascending: false });
 
       if (error) {
-        console.log('Uncompleted antidotes fetch error:', error.message);
         throw error;
       }
 
@@ -339,8 +325,6 @@ export const useMarkAntidoteCompleted = () => {
   return useMutation({
     mutationFn: async (entryId: string) => {
       if (!user) throw new Error('Not authenticated');
-
-      console.log('Marking antidote as completed:', entryId);
 
       const { data, error } = await supabase
         .from('vow_entries')
@@ -373,7 +357,6 @@ export const useMarkAntidoteCompleted = () => {
       return { previousHistory, previousUncompleted };
     },
     onError: (err, entryId, context) => {
-      console.log('Mark antidote completed error:', err.message);
       if (context?.previousHistory) {
         queryClient.setQueryData(['history-entries', user?.id, new Date().toISOString().split('T')[0]], context.previousHistory);
       }
@@ -382,9 +365,12 @@ export const useMarkAntidoteCompleted = () => {
       }
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['history-entries'] });
-      queryClient.invalidateQueries({ queryKey: ['uncompleted-antidotes'] });
-      queryClient.invalidateQueries({ queryKey: ['vow-entries'] });
+      queryClient.invalidateQueries({ 
+        predicate: (query) => 
+          query.queryKey[0] === 'history-entries' || 
+          query.queryKey[0] === 'uncompleted-antidotes' || 
+          query.queryKey[0] === 'vow-entries'
+      });
     },
   });
 };
@@ -399,8 +385,6 @@ export const usePostponeAntidote = () => {
   return useMutation({
     mutationFn: async (entryId: string) => {
       if (!user) throw new Error('Not authenticated');
-
-      console.log('Postponing antidote to:', tomorrowStr);
 
       const { data: entry, error: fetchError } = await supabase
         .from('vow_entries')
@@ -425,10 +409,13 @@ export const usePostponeAntidote = () => {
       return data;
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['history-entries'] });
-      queryClient.invalidateQueries({ queryKey: ['uncompleted-antidotes'] });
-      queryClient.invalidateQueries({ queryKey: ['vow-entries'] });
-      queryClient.invalidateQueries({ queryKey: ['today-entries'] });
+      queryClient.invalidateQueries({ 
+        predicate: (query) => 
+          query.queryKey[0] === 'history-entries' || 
+          query.queryKey[0] === 'uncompleted-antidotes' || 
+          query.queryKey[0] === 'vow-entries' ||
+          query.queryKey[0] === 'today-entries'
+      });
     },
   });
 };

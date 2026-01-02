@@ -30,7 +30,6 @@ export const calculateDistribution = (selectedTypes: string[]): Map<string, numb
     distribution.set(type, count);
   });
   
-  console.log('Distribution calculated:', Object.fromEntries(distribution));
   return distribution;
 };
 
@@ -42,14 +41,12 @@ export const useCyclePositions = () => {
     queryFn: async () => {
       if (!user) return [];
 
-      console.log('Fetching cycle positions for user:', user.id);
       const { data, error } = await supabase
         .from('vow_cycle_positions')
         .select('*')
         .eq('user_id', user.id);
 
       if (error) {
-        console.log('Cycle positions fetch error:', error.message);
         throw error;
       }
 
@@ -67,8 +64,6 @@ export const useUpdateCyclePosition = () => {
     mutationFn: async ({ vowType, newPosition }: { vowType: string; newPosition: number }) => {
       if (!user) throw new Error('Not authenticated');
 
-      console.log('Updating cycle position:', vowType, 'to', newPosition);
-      
       const today = new Date().toISOString().split('T')[0];
 
       const { data, error } = await supabase
@@ -108,8 +103,6 @@ export const useInitializeCyclePositions = () => {
     mutationFn: async (selectedVowTypes: string[]) => {
       if (!user) throw new Error('Not authenticated');
 
-      console.log('Initializing cycle positions for types:', selectedVowTypes);
-      
       const today = new Date().toISOString().split('T')[0];
 
       const insertData = selectedVowTypes.map(vowType => ({
@@ -132,7 +125,6 @@ export const useInitializeCyclePositions = () => {
         throw error;
       }
       
-      console.log('Initialized cycle positions:', data);
       return data || [];
     },
     onSettled: () => {
@@ -143,9 +135,9 @@ export const useInitializeCyclePositions = () => {
 
 export const useDailyVows = (selectedVowTypes: string[]) => {
   const { data: cyclePositions = [], isLoading: positionsLoading } = useCyclePositions();
-  const updatePosition = useUpdateCyclePosition();
   const initializePositions = useInitializeCyclePositions();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   const today = useMemo(() => new Date().toISOString().split('T')[0], []);
 
@@ -209,29 +201,48 @@ export const useDailyVows = (selectedVowTypes: string[]) => {
       });
     }
 
-    console.log('Daily vows generated:', result.length, 'items');
     return result;
   }, [selectedVowTypes, cyclePositions, positionsLoading]);
 
   const advanceCyclePositions = useCallback(async () => {
     if (!user || selectedVowTypes.length === 0) return;
 
-    console.log('Advancing cycle positions for new day');
-    
     const distribution = calculateDistribution(selectedVowTypes);
+    const today = new Date().toISOString().split('T')[0];
 
-    for (const vowType of selectedVowTypes) {
+    const updates = selectedVowTypes.map(vowType => {
       const category = vowsData.find(cat => cat.key === vowType);
-      if (!category || category.vows.length === 0) continue;
+      if (!category || category.vows.length === 0) return null;
 
       const position = cyclePositions.find(p => p.vow_type === vowType);
       const currentPos = position?.current_position || 0;
       const advance = distribution.get(vowType) || 0;
       const newPosition = (currentPos + advance) % category.vows.length;
 
-      await updatePosition.mutateAsync({ vowType, newPosition });
+      return {
+        user_id: user.id,
+        vow_type: vowType,
+        current_position: newPosition,
+        last_updated: today,
+      };
+    }).filter(Boolean);
+
+    if (updates.length === 0) return;
+
+    const { error } = await supabase
+      .from('vow_cycle_positions')
+      .upsert(updates, {
+        onConflict: 'user_id,vow_type',
+        ignoreDuplicates: false,
+      });
+
+    if (error) {
+      console.error('Error advancing cycle positions:', error);
+      throw error;
     }
-  }, [user, selectedVowTypes, cyclePositions, updatePosition]);
+
+    queryClient.invalidateQueries({ queryKey: ['cycle-positions'] });
+  }, [user, selectedVowTypes, cyclePositions, queryClient]);
 
   const initializeIfNeeded = useCallback(async () => {
     if (!user || selectedVowTypes.length === 0) return;
@@ -240,7 +251,6 @@ export const useDailyVows = (selectedVowTypes: string[]) => {
     const missingTypes = selectedVowTypes.filter(type => !existingTypes.has(type));
     
     if (missingTypes.length > 0) {
-      console.log('Missing cycle positions for:', missingTypes);
       await initializePositions.mutateAsync(selectedVowTypes);
     }
   }, [user, selectedVowTypes, cyclePositions, initializePositions]);
