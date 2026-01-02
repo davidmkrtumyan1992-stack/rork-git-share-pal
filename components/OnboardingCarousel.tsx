@@ -26,6 +26,7 @@ interface OnboardingCarouselProps {
 export function OnboardingCarousel({ language, onComplete }: OnboardingCarouselProps) {
   const insets = useSafeAreaInsets();
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [counter, setCounter] = useState(1);
   const scrollViewRef = useRef<ScrollView>(null);
   const scrollX = useRef(new Animated.Value(0)).current;
   const buttonScale = useRef(new Animated.Value(1)).current;
@@ -50,6 +51,27 @@ export function OnboardingCarousel({ language, onComplete }: OnboardingCarouselP
         useNativeDriver: true,
       }),
     ]).start();
+
+    const animateCounter = () => {
+      let current = 1;
+      const interval = setInterval(() => {
+        current += 1;
+        setCounter(current);
+        if (current === 6) {
+          clearInterval(interval);
+        }
+      }, 80);
+
+      return () => clearInterval(interval);
+    };
+
+    const timer = setTimeout(() => {
+      animateCounter();
+    }, 500);
+
+    return () => {
+      clearTimeout(timer);
+    };
   }, [slide1Opacity, slide1Scale]);
 
   const handleScroll = Animated.event(
@@ -215,7 +237,7 @@ export function OnboardingCarousel({ language, onComplete }: OnboardingCarouselP
                         },
                       ]}
                     >
-                      <Text style={styles.slide1Title}>{slide.title}</Text>
+                      <Text style={styles.slide1Title}>{slide.title.replace('6', counter.toString())}</Text>
                     </Animated.View>
                   </LinearGradient>
                 </ImageBackground>
