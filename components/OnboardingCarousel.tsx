@@ -55,13 +55,13 @@ export function OnboardingCarousel({ language, onComplete }: OnboardingCarouselP
     Animated.loop(
       Animated.sequence([
         Animated.timing(arrowTranslateX, {
-          toValue: 8,
-          duration: 1200,
+          toValue: 10,
+          duration: 1000,
           useNativeDriver: true,
         }),
         Animated.timing(arrowTranslateX, {
           toValue: 0,
-          duration: 1200,
+          duration: 1000,
           useNativeDriver: true,
         }),
       ])
@@ -232,8 +232,11 @@ export function OnboardingCarousel({ language, onComplete }: OnboardingCarouselP
                       ]}
                     >
                       <View style={styles.slide1TitleContainer}>
-                        <Animated.View style={{ transform: [{ translateX: arrowTranslateX }] }}>
-                          <ChevronRight size={Platform.OS === 'web' ? 48 : 40} color="#2C3E3A" strokeWidth={2} />
+                        <Animated.View style={[
+                          styles.arrowContainer,
+                          { transform: [{ translateX: arrowTranslateX }] }
+                        ]}>
+                          <ChevronRight size={Platform.OS === 'web' ? 48 : 40} color="#2C3E3A" strokeWidth={1.5} />
                         </Animated.View>
                         <Text style={styles.slide1Title}>{slide.title}</Text>
                       </View>
@@ -366,7 +369,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   slide1Content: {
-    justifyContent: 'center',
+    position: 'absolute' as const,
+    bottom: '30%',
+    left: 0,
+    right: 0,
     alignItems: 'center',
     paddingHorizontal: 32,
   },
@@ -375,11 +381,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 16,
   },
+  arrowContainer: {
+    shadowColor: '#2C3E3A',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 2,
+  },
   slide1Title: {
     fontSize: Platform.OS === 'web' ? 48 : 40,
     fontWeight: '700' as const,
     color: '#2C3E3A',
     textAlign: 'center',
+    fontFamily: Platform.select({
+      ios: 'Georgia',
+      android: 'serif',
+      web: 'Georgia, "Times New Roman", serif',
+    }),
   },
   dotsContainer: {
     flexDirection: 'row',
