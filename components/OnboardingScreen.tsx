@@ -8,6 +8,7 @@ import {
   Dimensions,
   Platform,
   ScrollView,
+  Easing,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -53,27 +54,84 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
   
   const greetingOpacity = useRef(new Animated.Value(1)).current;
   const greetingScale = useRef(new Animated.Value(1)).current;
-  const gradientPosition = useRef(new Animated.Value(0)).current;
   const buttonScale = useRef(new Animated.Value(1)).current;
+  
+  const circle1Anim = useRef(new Animated.Value(0)).current;
+  const circle2Anim = useRef(new Animated.Value(0)).current;
+  const circle3Anim = useRef(new Animated.Value(0)).current;
+  const gradientShift = useRef(new Animated.Value(0)).current;
   
   const scrollViewRef = useRef<ScrollView>(null);
 
   useEffect(() => {
     Animated.loop(
       Animated.sequence([
-        Animated.timing(gradientPosition, {
+        Animated.timing(circle1Anim, {
           toValue: 1,
-          duration: 8000,
-          useNativeDriver: false,
+          duration: 6000,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
         }),
-        Animated.timing(gradientPosition, {
+        Animated.timing(circle1Anim, {
           toValue: 0,
-          duration: 8000,
-          useNativeDriver: false,
+          duration: 6000,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
         }),
       ])
     ).start();
-  }, [gradientPosition]);
+
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(circle2Anim, {
+          toValue: 1,
+          duration: 8000,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+        Animated.timing(circle2Anim, {
+          toValue: 0,
+          duration: 8000,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(circle3Anim, {
+          toValue: 1,
+          duration: 5000,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+        Animated.timing(circle3Anim, {
+          toValue: 0,
+          duration: 5000,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(gradientShift, {
+          toValue: 1,
+          duration: 10000,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.timing(gradientShift, {
+          toValue: 0,
+          duration: 10000,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  }, [circle1Anim, circle2Anim, circle3Anim, gradientShift]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -207,6 +265,37 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
     );
   }, [selectedLanguageIndex]);
 
+  const circle1Transform = {
+    transform: [
+      { translateX: circle1Anim.interpolate({ inputRange: [0, 1], outputRange: [0, 30] }) },
+      { translateY: circle1Anim.interpolate({ inputRange: [0, 1], outputRange: [0, 20] }) },
+      { scale: circle1Anim.interpolate({ inputRange: [0, 0.5, 1], outputRange: [1, 1.1, 1] }) },
+    ],
+    opacity: circle1Anim.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0.15, 0.2, 0.15] }),
+  };
+
+  const circle2Transform = {
+    transform: [
+      { translateX: circle2Anim.interpolate({ inputRange: [0, 1], outputRange: [0, -25] }) },
+      { translateY: circle2Anim.interpolate({ inputRange: [0, 1], outputRange: [0, -30] }) },
+      { scale: circle2Anim.interpolate({ inputRange: [0, 0.5, 1], outputRange: [1, 1.15, 1] }) },
+    ],
+    opacity: circle2Anim.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0.1, 0.15, 0.1] }),
+  };
+
+  const circle3Transform = {
+    transform: [
+      { translateX: circle3Anim.interpolate({ inputRange: [0, 1], outputRange: [0, 15] }) },
+      { translateY: circle3Anim.interpolate({ inputRange: [0, 1], outputRange: [0, -20] }) },
+      { scale: circle3Anim.interpolate({ inputRange: [0, 0.5, 1], outputRange: [1, 1.08, 1] }) },
+    ],
+    opacity: circle3Anim.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0.2, 0.28, 0.2] }),
+  };
+
+  const gradientOverlayStyle = {
+    opacity: gradientShift.interpolate({ inputRange: [0, 1], outputRange: [0, 0.3] }),
+  };
+
   return (
     <View style={styles.container}>
       <LinearGradient
@@ -216,9 +305,25 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
         end={{ x: 1, y: 1 }}
       />
       
-      <View style={styles.decorativeCircle1} />
-      <View style={styles.decorativeCircle2} />
-      <View style={styles.decorativeCircle3} />
+      <Animated.View style={[styles.gradientOverlay, gradientOverlayStyle]}>
+        <LinearGradient
+          colors={['#E8DCC8', '#F5F2ED', '#D9C4A5', '#F8F3EB']}
+          style={StyleSheet.absoluteFill}
+          start={{ x: 1, y: 1 }}
+          end={{ x: 0, y: 0 }}
+        />
+      </Animated.View>
+      
+      <Animated.View style={[styles.decorativeCircle1, circle1Transform]} />
+      <Animated.View style={[styles.decorativeCircle2, circle2Transform]} />
+      <Animated.View style={[styles.decorativeCircle3, circle3Transform]} />
+      <Animated.View style={[styles.decorativeCircle4, {
+        transform: [
+          { translateX: circle2Anim.interpolate({ inputRange: [0, 1], outputRange: [0, 20] }) },
+          { translateY: circle1Anim.interpolate({ inputRange: [0, 1], outputRange: [0, 15] }) },
+        ],
+        opacity: circle1Anim.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0.08, 0.12, 0.08] }),
+      }]} />
 
       <View style={[styles.content, { paddingTop: insets.top + 60 }]}>
         <View style={styles.greetingContainer}>
@@ -302,6 +407,9 @@ const styles = StyleSheet.create({
   gradient: {
     ...StyleSheet.absoluteFillObject,
   },
+  gradientOverlay: {
+    ...StyleSheet.absoluteFillObject,
+  },
   decorativeCircle1: {
     position: 'absolute',
     top: -100,
@@ -310,7 +418,6 @@ const styles = StyleSheet.create({
     height: 300,
     borderRadius: 150,
     backgroundColor: '#C5A572',
-    opacity: 0.15,
   },
   decorativeCircle2: {
     position: 'absolute',
@@ -320,7 +427,6 @@ const styles = StyleSheet.create({
     height: 280,
     borderRadius: 140,
     backgroundColor: '#6B8E7F',
-    opacity: 0.1,
   },
   decorativeCircle3: {
     position: 'absolute',
@@ -330,7 +436,15 @@ const styles = StyleSheet.create({
     height: 180,
     borderRadius: 90,
     backgroundColor: '#D9C4A5',
-    opacity: 0.2,
+  },
+  decorativeCircle4: {
+    position: 'absolute',
+    bottom: SCREEN_HEIGHT * 0.25,
+    right: SCREEN_WIDTH * 0.3,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: '#B8A07A',
   },
   content: {
     flex: 1,
