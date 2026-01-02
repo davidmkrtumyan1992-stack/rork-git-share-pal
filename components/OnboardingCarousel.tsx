@@ -269,28 +269,29 @@ export function OnboardingCarousel({ language, onComplete }: OnboardingCarouselP
             return (
               <View key={index} style={styles.slide}>
                 <View style={styles.spotlightContainer}>
-                  <ImageBackground
-                    source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/z395lhjq19ba2xibneocb' }}
-                    style={styles.dashboardImage}
-                    resizeMode="cover"
-                  >
-                    <View style={styles.darkOverlay} />
+                  <View style={styles.screenshotWrapper}>
+                    <ImageBackground
+                      source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/z395lhjq19ba2xibneocb' }}
+                      style={styles.dashboardImage}
+                      resizeMode="cover"
+                      imageStyle={styles.dashboardImageStyle}
+                    >
+                      <View style={styles.darkOverlay} />
 
-                    <View style={styles.spotlightCircle}>
-                      <View style={styles.plusButton}>
-                        <Plus size={32} color="#6B8E7F" strokeWidth={2.5} />
+                      <View style={styles.spotlightCircle}>
+                        <View style={styles.plusButton}>
+                          <Plus size={28} color="#6B8E7F" strokeWidth={2.5} />
+                        </View>
                       </View>
-                    </View>
 
-                    <Text style={[styles.slideTitle, styles.slide2Title]}>{slide.title}</Text>
-
-                    <View style={styles.hintContainer}>
-                      <Animated.View style={{ transform: [{ translateX: arrowTranslateX }] }}>
-                        <ArrowRight size={24} color="#F5F2ED" strokeWidth={2} />
-                      </Animated.View>
-                      <Text style={styles.hintText}>{slide.hint}</Text>
-                    </View>
-                  </ImageBackground>
+                      <View style={styles.hintContainer}>
+                        <Animated.View style={{ transform: [{ translateX: arrowTranslateX }] }}>
+                          <ArrowRight size={22} color="#F5F2ED" strokeWidth={2} />
+                        </Animated.View>
+                        <Text style={styles.hintText}>{slide.hint}</Text>
+                      </View>
+                    </ImageBackground>
+                  </View>
                 </View>
               </View>
             );
@@ -473,36 +474,53 @@ const styles = StyleSheet.create({
   spotlightContainer: {
     flex: 1,
     width: SCREEN_WIDTH,
-    position: 'relative' as const,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 60,
+  },
+  screenshotWrapper: {
+    width: SCREEN_WIDTH * 0.85,
+    height: '85%',
+    borderRadius: 24,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 15,
   },
   dashboardImage: {
     flex: 1,
-    width: SCREEN_WIDTH,
+    width: '100%',
+  },
+  dashboardImageStyle: {
+    borderRadius: 24,
   },
   darkOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: 'rgba(0, 0, 0, 0.35)',
+    borderRadius: 24,
   },
   spotlightCircle: {
     position: 'absolute' as const,
-    top: 60,
-    right: 32,
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    top: 50,
+    right: 24,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     backgroundColor: 'rgba(245, 242, 237, 0)',
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#FFFFFF',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 30,
+    shadowOpacity: 0.9,
+    shadowRadius: 25,
     elevation: 10,
   },
   plusButton: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 54,
+    height: 54,
+    borderRadius: 27,
     backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
@@ -514,23 +532,13 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 5,
   },
-  slide2Title: {
-    position: 'absolute' as const,
-    top: 80,
-    left: 32,
-    right: 32,
-    color: '#F5F2ED',
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
-  },
   hintContainer: {
     position: 'absolute' as const,
-    top: 110,
-    right: 145,
+    top: 90,
+    right: 115,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
   },
   hintText: {
     fontSize: 16,
