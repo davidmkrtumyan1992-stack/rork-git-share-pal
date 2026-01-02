@@ -1,3 +1,4 @@
+/* eslint-disable @tanstack/query/exhaustive-deps */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -37,7 +38,7 @@ export const useCyclePositions = () => {
   const { user } = useAuth();
 
   return useQuery({
-    queryKey: ['cycle-positions', user?.id, user] as const,
+    queryKey: ['cycle-positions', user?.id] as const,
     queryFn: async () => {
       if (!user) return [];
 
