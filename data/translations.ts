@@ -346,7 +346,7 @@ export const onboardingContent = {
     slide2: { 
       title: 'Начни свой путь', 
       text: '',
-      hint: 'Добавить обет'
+      hint: 'Выбрать обет'
     },
     slide3: { 
       title: 'Путь к осознанности', 
@@ -364,7 +364,7 @@ export const onboardingContent = {
     slide2: { 
       title: 'Start your journey', 
       text: '',
-      hint: 'Add a vow'
+      hint: 'Select a vow'
     },
     slide3: { 
       title: 'Path to mindfulness', 
@@ -382,7 +382,7 @@ export const onboardingContent = {
     slide2: { 
       title: 'Սկսեք ձեր ճանապարհը', 
       text: '',
-      hint: 'Ավելացնել ուխտ'
+      hint: 'Ընտրել ուխտ'
     },
     slide3: { 
       title: 'Գիտակցության ուղին', 
@@ -400,7 +400,7 @@ export const onboardingContent = {
     slide2: { 
       title: 'Comienza tu viaje', 
       text: '',
-      hint: 'Añadir voto'
+      hint: 'Seleccionar voto'
     },
     slide3: { 
       title: 'Camino a la conciencia', 
@@ -418,7 +418,7 @@ export const onboardingContent = {
     slide2: { 
       title: 'Beginnen Sie Ihre Reise', 
       text: '',
-      hint: 'Gelübde hinzufügen'
+      hint: 'Gelübde auswählen'
     },
     slide3: { 
       title: 'Pfad zur Achtsamkeit', 
@@ -436,7 +436,7 @@ export const onboardingContent = {
     slide2: { 
       title: '开始你的旅程', 
       text: '',
-      hint: '添加誓言'
+      hint: '选择誓言'
     },
     slide3: { 
       title: '正念之路', 
@@ -454,7 +454,7 @@ export const onboardingContent = {
     slide2: { 
       title: 'Commencez votre voyage', 
       text: '',
-      hint: 'Ajouter un vœu'
+      hint: 'Sélectionner un vœu'
     },
     slide3: { 
       title: 'Chemin vers la pleine conscience', 
@@ -472,7 +472,7 @@ export const onboardingContent = {
     slide2: { 
       title: 'Inizia il tuo viaggio', 
       text: '',
-      hint: 'Aggiungi voto'
+      hint: 'Seleziona voto'
     },
     slide3: { 
       title: 'Sentiero verso la consapevolezza', 

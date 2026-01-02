@@ -269,37 +269,28 @@ export function OnboardingCarousel({ language, onComplete }: OnboardingCarouselP
             return (
               <View key={index} style={styles.slide}>
                 <View style={styles.spotlightContainer}>
-                  <LinearGradient
-                    colors={['#F5F2ED', '#F8F3EB', '#E8DCC8', '#D9C4A5']}
-                    style={styles.mockDashboard}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
+                  <ImageBackground
+                    source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/z395lhjq19ba2xibneocb' }}
+                    style={styles.dashboardImage}
+                    resizeMode="cover"
                   >
-                    <View style={styles.mockHeader}>
-                      <View style={styles.mockHeaderText} />
+                    <View style={styles.darkOverlay} />
+
+                    <View style={styles.spotlightCircle}>
+                      <View style={styles.plusButton}>
+                        <Plus size={32} color="#6B8E7F" strokeWidth={2.5} />
+                      </View>
                     </View>
-                    <View style={styles.mockContent}>
-                      <View style={styles.mockCard} />
-                      <View style={styles.mockCard} />
+
+                    <Text style={[styles.slideTitle, styles.slide2Title]}>{slide.title}</Text>
+
+                    <View style={styles.hintContainer}>
+                      <Animated.View style={{ transform: [{ translateX: arrowTranslateX }] }}>
+                        <ArrowRight size={24} color="#F5F2ED" strokeWidth={2} />
+                      </Animated.View>
+                      <Text style={styles.hintText}>{slide.hint}</Text>
                     </View>
-                  </LinearGradient>
-
-                  <View style={styles.darkOverlay} />
-
-                  <View style={styles.spotlightCircle}>
-                    <View style={styles.plusButton}>
-                      <Plus size={32} color="#6B8E7F" strokeWidth={2.5} />
-                    </View>
-                  </View>
-
-                  <Text style={[styles.slideTitle, styles.slide2Title]}>{slide.title}</Text>
-
-                  <View style={styles.hintContainer}>
-                    <Animated.View style={{ transform: [{ translateX: arrowTranslateX }] }}>
-                      <ArrowRight size={24} color="#2C3E3A" strokeWidth={2} />
-                    </Animated.View>
-                    <Text style={styles.hintText}>{slide.hint}</Text>
-                  </View>
+                  </ImageBackground>
                 </View>
               </View>
             );
@@ -484,29 +475,9 @@ const styles = StyleSheet.create({
     width: SCREEN_WIDTH,
     position: 'relative' as const,
   },
-  mockDashboard: {
+  dashboardImage: {
     flex: 1,
-    padding: 24,
-  },
-  mockHeader: {
-    marginTop: 60,
-    marginBottom: 32,
-  },
-  mockHeaderText: {
-    width: 150,
-    height: 24,
-    backgroundColor: 'rgba(44, 62, 58, 0.2)',
-    borderRadius: 8,
-  },
-  mockContent: {
-    gap: 16,
-  },
-  mockCard: {
-    height: 120,
-    backgroundColor: 'rgba(255, 255, 255, 0.4)',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(44, 62, 58, 0.1)',
+    width: SCREEN_WIDTH,
   },
   darkOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -514,18 +485,18 @@ const styles = StyleSheet.create({
   },
   spotlightCircle: {
     position: 'absolute' as const,
-    bottom: 100,
-    left: SCREEN_WIDTH / 2 - 80,
-    width: 160,
-    height: 160,
-    borderRadius: 80,
-    backgroundColor: 'rgba(245, 242, 237, 0.95)',
+    top: 60,
+    right: 32,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: 'rgba(245, 242, 237, 0)',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#6B8E7F',
+    shadowColor: '#FFFFFF',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.4,
-    shadowRadius: 40,
+    shadowOpacity: 0.8,
+    shadowRadius: 30,
     elevation: 10,
   },
   plusButton: {
@@ -555,8 +526,8 @@ const styles = StyleSheet.create({
   },
   hintContainer: {
     position: 'absolute' as const,
-    bottom: 280,
-    left: SCREEN_WIDTH / 2 - 100,
+    top: 110,
+    right: 145,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
@@ -564,11 +535,14 @@ const styles = StyleSheet.create({
   hintText: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: '#2C3E3A',
+    color: '#F5F2ED',
     fontFamily: Platform.select({
       ios: 'Georgia',
       android: 'serif',
       web: 'Georgia, "Times New Roman", serif',
     }),
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
 });
