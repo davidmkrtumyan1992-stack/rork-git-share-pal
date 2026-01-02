@@ -14,6 +14,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChevronRight } from 'lucide-react-native';
 import { Language } from '@/types/database';
+import { OnboardingCarousel } from '@/components/OnboardingCarousel';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -51,6 +52,8 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
   const insets = useSafeAreaInsets();
   const [currentGreetingIndex, setCurrentGreetingIndex] = useState(0);
   const [selectedLanguageIndex, setSelectedLanguageIndex] = useState(0);
+  const [showCarousel, setShowCarousel] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState<Language>('ru');
   
   const greetingOpacity = useRef(new Animated.Value(1)).current;
   const greetingScale = useRef(new Animated.Value(1)).current;
@@ -207,12 +210,6 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
     }).start();
   }, [buttonScale]);
 
-  const handleContinue = useCallback(() => {
-    const selectedLanguage = LANGUAGES[selectedLanguageIndex].code;
-    console.log('Onboarding complete, selected language:', selectedLanguage);
-    onComplete(selectedLanguage);
-  }, [selectedLanguageIndex, onComplete]);
-
   const getButtonText = useCallback(() => {
     const lang = LANGUAGES[selectedLanguageIndex].code;
     switch (lang) {
@@ -264,6 +261,22 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
       </View>
     );
   }, [selectedLanguageIndex]);
+
+  const handleContinue = useCallback(() => {
+    const language = LANGUAGES[selectedLanguageIndex].code;
+    console.log('Language selected, showing carousel:', language);
+    setSelectedLanguage(language);
+    setShowCarousel(true);
+  }, [selectedLanguageIndex]);
+
+  const handleCarouselComplete = useCallback(() => {
+    console.log('Onboarding complete with language:', selectedLanguage);
+    onComplete(selectedLanguage);
+  }, [selectedLanguage, onComplete]);
+
+  if (showCarousel) {
+    return <OnboardingCarousel language={selectedLanguage} onComplete={handleCarouselComplete} />;
+  }
 
   const circle1Transform = {
     transform: [

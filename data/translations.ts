@@ -335,3 +335,126 @@ export const formatNumber = (num: number): string => {
 export const formatQuotes = (text: string): string => {
   return text.replace(/"/g, '«').replace(/"/g, '»');
 };
+
+export const onboardingContent = {
+  ru: {
+    slide1: { 
+      title: 'Основано на исследованиях', 
+      text: 'Медитация — это тренировка внимания. Фокусируясь на объектах наблюдения, мы останавливаем поток мыслей и даем уму качественный отдых.' 
+    },
+    slide2: { 
+      title: '6 напоминаний в день', 
+      text: 'Приложение присылает по 6 обетов ежедневно. Они чередуются циклично, чтобы вы могли постепенно и глубоко проработать каждое наставление.' 
+    },
+    slide3: { 
+      title: 'Путь к осознанности', 
+      text: 'Если обет был нарушен — не страшно. Просто зафиксируйте это и выполните «антидот». Мы поможем вам не забыть об этом.' 
+    },
+    buttons: { next: 'Далее', skip: 'Пропустить', start: 'Начать' }
+  },
+  en: {
+    slide1: { 
+      title: 'Science-based approach', 
+      text: 'Meditation is attention training. By focusing on objects of observation, we stop the flow of thoughts and give the mind a quality rest.' 
+    },
+    slide2: { 
+      title: '6 reminders a day', 
+      text: 'The app sends 6 vows daily. They rotate cyclically, allowing you to work through each instruction gradually and deeply.' 
+    },
+    slide3: { 
+      title: 'Path to mindfulness', 
+      text: 'If a vow is broken, it\'s okay. Just record it and perform an "antidote". We\'ll help you remember to do it.' 
+    },
+    buttons: { next: 'Next', skip: 'Skip', start: 'Start' }
+  },
+  hy: {
+    slide1: { 
+      title: 'Հիմնված է հետազոտությունների վրա', 
+      text: 'Մեդիտացիան ուշադրության մարզում է: Կենտրոնանալով դիտարկման օբյեկտների վրա՝ մենք կանգնեցնում ենք մտքերի հոսքը և մտքին որակյալ հանգիստ տալիս:' 
+    },
+    slide2: { 
+      title: 'Օրական 6 հիշեցում', 
+      text: 'Հավելվածն ամեն օր ուղարկում է 6 ուխտ: Դրանք հերթագայում են պարբերաբար, որպեսզի դուք կարողանաք աստիճանաբար և խորությամբ աշխատել յուրաքանչյուրի վրա:' 
+    },
+    slide3: { 
+      title: 'Գիտակցության ուղին', 
+      text: 'Եթե ուխտը դրժվել է, դա սարսափելի չէ: Պարզապես արձանագրեք դա և կատարեք «հակաթույնը»: Մենք կօգնենք ձեզ չմոռանալ դրա մասին:' 
+    },
+    buttons: { next: 'Հաջորդը', skip: 'Բաց թողնել', start: 'Սկսել' }
+  },
+  es: {
+    slide1: { 
+      title: 'Basado en la ciencia', 
+      text: 'La meditación es el entrenamiento de la atención. Al enfocarnos en objetos de observación, detenemos el flujo de pensamientos y damos a la mente un descanso de calidad.' 
+    },
+    slide2: { 
+      title: '6 recordatorios al día', 
+      text: 'La aplicación envía 6 votos diarios. Rotan cíclicamente para que puedas trabajar cada instrucción de manera gradual y profunda.' 
+    },
+    slide3: { 
+      title: 'Camino a la conciencia', 
+      text: 'Si se rompe un voto, no pasa nada. Simplemente regístralo y realiza un "antídoto". Te ayudaremos a recordar hacerlo.' 
+    },
+    buttons: { next: 'Siguiente', skip: 'Omitir', start: 'Comenzar' }
+  },
+  de: {
+    slide1: { 
+      title: 'Wissenschaftsbasiert', 
+      text: 'Meditation ist Aufmerksamkeitstraining. Durch die Fokussierung auf Beobachtungsobjekte stoppen wir den Gedankenfluss und gönnen dem Geist eine qualitative Ruhe.' 
+    },
+    slide2: { 
+      title: '6 Erinnerungen am Tag', 
+      text: 'Die App sendet täglich 6 Gelübde. Sie rotieren zyklisch, sodass Sie jede Anweisung schrittweise und tiefgehend bearbeiten können.' 
+    },
+    slide3: { 
+      title: 'Pfad zur Achtsamkeit', 
+      text: 'Wenn ein Gelübde gebrochen wird, ist das nicht schlimm. Registrieren Sie es einfach und führen Sie ein „Gegenmittel" aus. Wir helfen Ihnen, daran zu denken.' 
+    },
+    buttons: { next: 'Weiter', skip: 'Überspringen', start: 'Starten' }
+  },
+  zh: {
+    slide1: { 
+      title: '基于科学研究', 
+      text: '冥想是注意力的训练。通过关注观察对象，我们停止思绪的流动，让心灵得到高质量的休息。' 
+    },
+    slide2: { 
+      title: '每天 6 次提醒', 
+      text: '该应用程序每天发送 6 条誓言。它们循环往复，让您可以逐步深入地完成每项指令。' 
+    },
+    slide3: { 
+      title: '正念之路', 
+      text: '如果违反了誓言，也没关系。只需记录下来并执行「解毒剂」。我们会帮您记住去执行。' 
+    },
+    buttons: { next: '下一步', skip: '跳过', start: '开始' }
+  },
+  fr: {
+    slide1: { 
+      title: 'Basé sur la science', 
+      text: 'La méditation est un entraînement de l\'attention. En nous concentrant sur des objets d\'observation, nous arrêtons le flux de pensées et offrons à l\'esprit un repos de qualité.' 
+    },
+    slide2: { 
+      title: '6 rappels par jour', 
+      text: 'L\'application envoie 6 vœux par jour. Ils tournent de manière cyclique afin que vous puissiez approfondir chaque instruction progressivement.' 
+    },
+    slide3: { 
+      title: 'Chemin vers la pleine conscience', 
+      text: 'Si un vœu est rompu, ce n\'est pas grave. Enregistrez-le simplement et effectuez un « antidote ». Nous vous aiderons à ne pas oublier.' 
+    },
+    buttons: { next: 'Suivant', skip: 'Passer', start: 'Commencer' }
+  },
+  it: {
+    slide1: { 
+      title: 'Basato sulla scienza', 
+      text: 'La meditazione è l\'allenamento dell\'attenzione. Concentrandoci sugli oggetti di osservazione, fermiamo il flusso dei pensieri e diamo alla mente un riposo di qualità.' 
+    },
+    slide2: { 
+      title: '6 promemoria al giorno', 
+      text: 'L\'app invia 6 voti al giorno. Ruotano ciclicamente in modo da poter lavorare su ogni istruzione in modo graduale e profondo.' 
+    },
+    slide3: { 
+      title: 'Sentiero verso la consapevolezza', 
+      text: 'Se un voto viene infranto, non importa. Basta registrarlo ed eseguire un "antidoto". Ti aiuteremo a ricordare di farlo.' 
+    },
+    buttons: { next: 'Avanti', skip: 'Salta', start: 'Inizia' }
+  },
+};
