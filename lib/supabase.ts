@@ -23,6 +23,28 @@ const createSupabaseClient = (): SupabaseClient => {
       persistSession: true,
       detectSessionInUrl: true,
     },
+    global: {
+      fetch: async (url, options = {}) => {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000);
+        
+        try {
+          const response = await fetch(url, {
+            ...options,
+            signal: controller.signal,
+          });
+          clearTimeout(timeoutId);
+          return response;
+        } catch (error) {
+          clearTimeout(timeoutId);
+          if (error instanceof Error && error.name === 'AbortError') {
+            console.error('Request timeout:', url);
+            throw new Error('Превышено время ожидания. Проверьте подключение к интернету.');
+          }
+          throw error;
+        }
+      },
+    },
   });
 };
 
