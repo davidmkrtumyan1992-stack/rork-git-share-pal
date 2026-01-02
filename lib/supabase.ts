@@ -11,6 +11,53 @@ if (!supabaseUrl || !supabaseAnonKey) {
   console.error('EXPO_PUBLIC_SUPABASE_ANON_KEY:', supabaseAnonKey ? 'set' : 'MISSING');
 }
 
+const createSafeStorage = () => {
+  return {
+    getItem: async (key: string): Promise<string | null> => {
+      try {
+        const value = await AsyncStorage.getItem(key);
+        if (value === null || value === undefined) {
+          return null;
+        }
+        if (value === 'undefined' || value === 'null' || value === '[object Object]') {
+          console.warn(`Corrupted AsyncStorage value for key ${key}, clearing...`);
+          await AsyncStorage.removeItem(key);
+          return null;
+        }
+        try {
+          JSON.parse(value);
+          return value;
+        } catch (parseError) {
+          console.error(`Invalid JSON in AsyncStorage for key ${key}, clearing...`, parseError);
+          await AsyncStorage.removeItem(key);
+          return null;
+        }
+      } catch (error) {
+        console.error(`Error reading from AsyncStorage for key ${key}:`, error);
+        return null;
+      }
+    },
+    setItem: async (key: string, value: string): Promise<void> => {
+      try {
+        if (value === null || value === undefined || value === 'undefined' || value === 'null') {
+          console.warn(`Attempting to store invalid value for key ${key}, skipping...`);
+          return;
+        }
+        await AsyncStorage.setItem(key, value);
+      } catch (error) {
+        console.error(`Error writing to AsyncStorage for key ${key}:`, error);
+      }
+    },
+    removeItem: async (key: string): Promise<void> => {
+      try {
+        await AsyncStorage.removeItem(key);
+      } catch (error) {
+        console.error(`Error removing from AsyncStorage for key ${key}:`, error);
+      }
+    },
+  };
+};
+
 const createSupabaseClient = (): SupabaseClient => {
   if (!supabaseUrl || !supabaseAnonKey) {
     console.warn('Supabase client created with missing credentials - requests will fail');
@@ -18,7 +65,7 @@ const createSupabaseClient = (): SupabaseClient => {
   
   return createClient(supabaseUrl, supabaseAnonKey, {
     auth: {
-      storage: AsyncStorage,
+      storage: createSafeStorage(),
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: true,
