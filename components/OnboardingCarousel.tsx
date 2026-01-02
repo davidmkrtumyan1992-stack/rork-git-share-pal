@@ -60,7 +60,7 @@ export function OnboardingCarousel({ language, onComplete }: OnboardingCarouselP
         if (current === 6) {
           clearInterval(interval);
         }
-      }, 80);
+      }, 150);
 
       return () => clearInterval(interval);
     };
