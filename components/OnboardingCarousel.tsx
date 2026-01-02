@@ -268,7 +268,7 @@ export function OnboardingCarousel({ language, onComplete }: OnboardingCarouselP
           if (index === 1) {
             return (
               <View key={index} style={styles.slide}>
-                <View style={[styles.spotlightContainer, { paddingTop: insets.top + 360 }]}>
+                <View style={[styles.spotlightContainer, { paddingTop: insets.top + 60 }]}>
                   <View style={styles.screenshotWrapper}>
                     <ImageBackground
                       source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/z395lhjq19ba2xibneocb' }}
