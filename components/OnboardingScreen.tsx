@@ -325,7 +325,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
         opacity: circle1Anim.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0.08, 0.12, 0.08] }),
       }]} />
 
-      <View style={[styles.content, { paddingTop: insets.top + 60 }]}>
+      <View style={styles.content}>
         <View style={styles.greetingContainer}>
           <Animated.Text
             style={[
@@ -340,9 +340,10 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
           </Animated.Text>
         </View>
 
-        <Text style={styles.subtitleText}>{getSubtitleText()}</Text>
+        <View style={styles.pickerSection}>
+          <Text style={styles.subtitleText}>{getSubtitleText()}</Text>
 
-        <View style={styles.pickerContainer}>
+          <View style={styles.pickerContainer}>
           <View style={styles.pickerHighlight}>
             <View style={styles.pickerHighlightLine} />
             <View style={styles.pickerHighlightLine} />
@@ -365,16 +366,9 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
             {LANGUAGES.map((lang, index) => renderPickerItem(lang, index))}
           </ScrollView>
 
-          <LinearGradient
-            colors={['rgba(245, 242, 237, 1)', 'rgba(245, 242, 237, 0)']}
-            style={styles.pickerFadeTop}
-            pointerEvents="none"
-          />
-          <LinearGradient
-            colors={['rgba(245, 242, 237, 0)', 'rgba(245, 242, 237, 1)']}
-            style={styles.pickerFadeBottom}
-            pointerEvents="none"
-          />
+          <View style={styles.pickerFadeTop} pointerEvents="none" />
+          <View style={styles.pickerFadeBottom} pointerEvents="none" />
+          </View>
         </View>
       </View>
 
@@ -452,13 +446,18 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     alignItems: 'center',
+    justifyContent: 'center',
     paddingHorizontal: 24,
   },
   greetingContainer: {
-    height: 120,
-    justifyContent: 'center',
+    position: 'absolute',
+    top: '35%',
     alignItems: 'center',
-    marginBottom: 16,
+  },
+  pickerSection: {
+    position: 'absolute',
+    bottom: 140,
+    alignItems: 'center',
   },
   greetingText: {
     fontSize: Platform.OS === 'web' ? 64 : 56,
@@ -470,7 +469,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '500' as const,
     color: '#5A6A66',
-    marginBottom: 40,
+    marginBottom: 32,
     textAlign: 'center',
   },
   pickerContainer: {
@@ -479,6 +478,7 @@ const styles = StyleSheet.create({
     maxWidth: 320,
     position: 'relative',
     overflow: 'hidden',
+    backgroundColor: 'transparent',
   },
   pickerHighlight: {
     position: 'absolute',
@@ -492,9 +492,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   pickerHighlightLine: {
-    width: 20,
-    height: 1,
-    backgroundColor: 'rgba(90, 106, 102, 0.2)',
+    width: 24,
+    height: 1.5,
+    backgroundColor: 'rgba(90, 106, 102, 0.25)',
   },
   picker: {
     flex: 1,
@@ -522,14 +522,16 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    height: 60,
+    height: 80,
+    backgroundColor: 'transparent',
   },
   pickerFadeBottom: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    height: 60,
+    height: 80,
+    backgroundColor: 'transparent',
   },
   footer: {
     paddingHorizontal: 24,
