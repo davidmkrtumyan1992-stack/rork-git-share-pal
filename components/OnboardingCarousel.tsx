@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   Dimensions,
   ScrollView,
   Platform,
+  ImageBackground,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -28,9 +29,28 @@ export function OnboardingCarousel({ language, onComplete }: OnboardingCarouselP
   const scrollViewRef = useRef<ScrollView>(null);
   const scrollX = useRef(new Animated.Value(0)).current;
   const buttonScale = useRef(new Animated.Value(1)).current;
+  const slide1Opacity = useRef(new Animated.Value(0)).current;
+  const slide1Scale = useRef(new Animated.Value(0.95)).current;
 
   const content = onboardingContent[language] || onboardingContent.en;
   const slides = [content.slide1, content.slide2, content.slide3];
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(slide1Opacity, {
+        toValue: 1,
+        duration: 800,
+        delay: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slide1Scale, {
+        toValue: 1,
+        duration: 800,
+        delay: 300,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [slide1Opacity, slide1Scale]);
 
   const handleScroll = Animated.event(
     [{ nativeEvent: { contentOffset: { x: scrollX } } }],
@@ -172,6 +192,37 @@ export function OnboardingCarousel({ language, onComplete }: OnboardingCarouselP
             extrapolate: 'clamp',
           });
 
+          if (index === 0) {
+            return (
+              <View key={index} style={styles.slide}>
+                <ImageBackground
+                  source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/blpj92h4o94al4jdb0g2u' }}
+                  style={styles.imageBackground}
+                  resizeMode="cover"
+                >
+                  <LinearGradient
+                    colors={['rgba(245, 242, 237, 0.85)', 'rgba(248, 243, 235, 0.85)', 'rgba(232, 220, 200, 0.9)', 'rgba(217, 196, 165, 0.95)']}
+                    style={styles.imageOverlay}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                  >
+                    <Animated.View
+                      style={[
+                        styles.slide1Content,
+                        {
+                          opacity: slide1Opacity,
+                          transform: [{ scale: slide1Scale }],
+                        },
+                      ]}
+                    >
+                      <Text style={styles.slide1Title}>{slide.title}</Text>
+                    </Animated.View>
+                  </LinearGradient>
+                </ImageBackground>
+              </View>
+            );
+          }
+
           return (
             <Animated.View
               key={index}
@@ -283,6 +334,26 @@ const styles = StyleSheet.create({
     color: '#5A6A66',
     textAlign: 'center',
     lineHeight: 28,
+  },
+  imageBackground: {
+    width: SCREEN_WIDTH,
+    height: '100%',
+  },
+  imageOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  slide1Content: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+  },
+  slide1Title: {
+    fontSize: Platform.OS === 'web' ? 48 : 40,
+    fontWeight: '700' as const,
+    color: '#2C3E3A',
+    textAlign: 'center',
   },
   dotsContainer: {
     flexDirection: 'row',

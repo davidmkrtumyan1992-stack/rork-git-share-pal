@@ -339,8 +339,8 @@ export const formatQuotes = (text: string): string => {
 export const onboardingContent = {
   ru: {
     slide1: { 
-      title: 'Основано на исследованиях', 
-      text: 'Медитация — это тренировка внимания. Фокусируясь на объектах наблюдения, мы останавливаем поток мыслей и даем уму качественный отдых.' 
+      title: '6 разовый дневник', 
+      text: '' 
     },
     slide2: { 
       title: '6 напоминаний в день', 
@@ -354,8 +354,8 @@ export const onboardingContent = {
   },
   en: {
     slide1: { 
-      title: 'Science-based approach', 
-      text: 'Meditation is attention training. By focusing on objects of observation, we stop the flow of thoughts and give the mind a quality rest.' 
+      title: '6 times a day diary', 
+      text: '' 
     },
     slide2: { 
       title: '6 reminders a day', 
@@ -369,8 +369,8 @@ export const onboardingContent = {
   },
   hy: {
     slide1: { 
-      title: 'Հիմնված է հետազոտությունների վրա', 
-      text: 'Մեդիտացիան ուշադրության մարզում է: Կենտրոնանալով դիտարկման օբյեկտների վրա՝ մենք կանգնեցնում ենք մտքերի հոսքը և մտքին որակյալ հանգիստ տալիս:' 
+      title: 'Օրական 6-անգամյա օրագիր', 
+      text: '' 
     },
     slide2: { 
       title: 'Օրական 6 հիշեցում', 
@@ -384,8 +384,8 @@ export const onboardingContent = {
   },
   es: {
     slide1: { 
-      title: 'Basado en la ciencia', 
-      text: 'La meditación es el entrenamiento de la atención. Al enfocarnos en objetos de observación, detenemos el flujo de pensamientos y damos a la mente un descanso de calidad.' 
+      title: 'Diario de 6 veces al día', 
+      text: '' 
     },
     slide2: { 
       title: '6 recordatorios al día', 
@@ -399,8 +399,8 @@ export const onboardingContent = {
   },
   de: {
     slide1: { 
-      title: 'Wissenschaftsbasiert', 
-      text: 'Meditation ist Aufmerksamkeitstraining. Durch die Fokussierung auf Beobachtungsobjekte stoppen wir den Gedankenfluss und gönnen dem Geist eine qualitative Ruhe.' 
+      title: '6-mal am Tag Tagebuch', 
+      text: '' 
     },
     slide2: { 
       title: '6 Erinnerungen am Tag', 
@@ -414,8 +414,8 @@ export const onboardingContent = {
   },
   zh: {
     slide1: { 
-      title: '基于科学研究', 
-      text: '冥想是注意力的训练。通过关注观察对象，我们停止思绪的流动，让心灵得到高质量的休息。' 
+      title: '每日 6 次日记', 
+      text: '' 
     },
     slide2: { 
       title: '每天 6 次提醒', 
@@ -429,8 +429,8 @@ export const onboardingContent = {
   },
   fr: {
     slide1: { 
-      title: 'Basé sur la science', 
-      text: 'La méditation est un entraînement de l\'attention. En nous concentrant sur des objets d\'observation, nous arrêtons le flux de pensées et offrons à l\'esprit un repos de qualité.' 
+      title: 'Journal 6 fois par jour', 
+      text: '' 
     },
     slide2: { 
       title: '6 rappels par jour', 
@@ -444,8 +444,8 @@ export const onboardingContent = {
   },
   it: {
     slide1: { 
-      title: 'Basato sulla scienza', 
-      text: 'La meditazione è l\'allenamento dell\'attenzione. Concentrandoci sugli oggetti di osservazione, fermiamo il flusso dei pensieri e diamo alla mente un riposo di qualità.' 
+      title: 'Diario 6 volte al giorno', 
+      text: '' 
     },
     slide2: { 
       title: '6 promemoria al giorno', 
