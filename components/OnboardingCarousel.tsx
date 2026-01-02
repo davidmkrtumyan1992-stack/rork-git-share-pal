@@ -268,7 +268,7 @@ export function OnboardingCarousel({ language, onComplete }: OnboardingCarouselP
           if (index === 1) {
             return (
               <View key={index} style={styles.slide}>
-                <View style={[styles.spotlightContainer, { paddingTop: insets.top + 60 }]}>
+                <View style={[styles.spotlightContainer, { paddingTop: insets.top + 60, paddingBottom: 100 }]}>
                   <View style={styles.screenshotWrapper}>
                     <ImageBackground
                       source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/z395lhjq19ba2xibneocb' }}
@@ -479,7 +479,7 @@ const styles = StyleSheet.create({
   },
   screenshotWrapper: {
     width: SCREEN_WIDTH * 0.85,
-    height: '75%',
+    flex: 1,
     borderRadius: 24,
     overflow: 'hidden',
     shadowColor: '#000',
