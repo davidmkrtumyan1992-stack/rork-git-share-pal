@@ -273,7 +273,7 @@ export function OnboardingCarousel({ language, onComplete }: OnboardingCarouselP
                     <ImageBackground
                       source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/z395lhjq19ba2xibneocb' }}
                       style={styles.dashboardImage}
-                      resizeMode="cover"
+                      resizeMode="contain"
                       imageStyle={styles.dashboardImageStyle}
                     >
                       <View style={styles.darkOverlay} />
@@ -495,6 +495,8 @@ const styles = StyleSheet.create({
   },
   dashboardImageStyle: {
     borderRadius: 24,
+    resizeMode: 'contain',
+    top: 0,
   },
   darkOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -503,8 +505,8 @@ const styles = StyleSheet.create({
   },
   spotlightCircle: {
     position: 'absolute' as const,
-    top: 50,
-    right: 24,
+    top: 20,
+    right: 30,
     width: 80,
     height: 80,
     borderRadius: 40,
@@ -534,8 +536,8 @@ const styles = StyleSheet.create({
   },
   hintContainer: {
     position: 'absolute' as const,
-    top: 90,
-    right: 115,
+    top: 60,
+    right: 120,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
