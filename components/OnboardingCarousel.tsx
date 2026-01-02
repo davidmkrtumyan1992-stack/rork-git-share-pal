@@ -474,12 +474,13 @@ const styles = StyleSheet.create({
   spotlightContainer: {
     flex: 1,
     width: SCREEN_WIDTH,
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
     alignItems: 'center',
+    paddingTop: 70,
   },
   screenshotWrapper: {
     width: SCREEN_WIDTH * 0.85,
-    height: '85%',
+    height: '75%',
     borderRadius: 24,
     overflow: 'hidden',
     shadowColor: '#000',
