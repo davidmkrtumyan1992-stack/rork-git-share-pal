@@ -339,21 +339,21 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
       }]} />
 
       <View style={[styles.content, { paddingTop: insets.top + 20 }]}>
-        <View style={styles.greetingContainer}>
-          <Animated.Text
-            style={[
-              styles.greetingText,
-              {
-                opacity: greetingOpacity,
-                transform: [{ scale: greetingScale }],
-              },
-            ]}
-          >
-            {GREETINGS[currentGreetingIndex].text}
-          </Animated.Text>
-        </View>
+        <View style={styles.centerContent}>
+          <View style={styles.greetingContainer}>
+            <Animated.Text
+              style={[
+                styles.greetingText,
+                {
+                  opacity: greetingOpacity,
+                  transform: [{ scale: greetingScale }],
+                },
+              ]}
+            >
+              {GREETINGS[currentGreetingIndex].text}
+            </Animated.Text>
+          </View>
 
-        <View style={styles.pickerSection}>
           <Text style={styles.subtitleText}>{getSubtitleText()}</Text>
 
           <View style={styles.pickerContainer}>
@@ -459,18 +459,16 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     paddingHorizontal: 24,
   },
+  centerContent: {
+    alignItems: 'center',
+  },
   greetingContainer: {
-    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    minHeight: 100,
-  },
-  pickerSection: {
-    alignItems: 'center',
-    paddingBottom: 16,
+    marginBottom: 16,
   },
   greetingText: {
     fontSize: Platform.OS === 'web' ? 64 : 56,
