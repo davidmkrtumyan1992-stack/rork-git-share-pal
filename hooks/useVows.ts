@@ -270,16 +270,16 @@ export const useHistoryEntries = () => {
     queryFn: async () => {
       if (!user) return [];
 
-      const twoDaysAgo = new Date();
-      twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
-      const twoDaysAgoStr = twoDaysAgo.toISOString().split('T')[0];
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayStr = yesterday.toISOString().split('T')[0];
 
       const { data, error } = await supabase
         .from('vow_entries')
         .select('*')
         .eq('user_id', user.id)
         .neq('entry_date', today)
-        .or(`entry_date.gte.${twoDaysAgoStr},and(status.eq.broken,antidote_completed.eq.false)`)
+        .or(`and(status.eq.kept,entry_date.gte.${yesterdayStr}),and(status.eq.broken,antidote_completed.eq.false)`)
         .order('entry_date', { ascending: false });
 
       if (error) {

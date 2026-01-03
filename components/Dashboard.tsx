@@ -40,6 +40,7 @@ import { VowSelection } from '@/components/VowSelection';
 
 
 type TabType = 'diary' | 'history' | 'settings' | 'vowSelection';
+type HistorySubTab = 'antidotes' | 'history';
 
 const vowCategoryNames: Record<string, { ru: string; en: string }> = {
   tenPrinciples: { ru: '10 этических принципов', en: '10 Ethical Principles' },
@@ -155,6 +156,7 @@ export function Dashboard({
   const { dailyVows, isLoading: cycleLoading, initializeIfNeeded, advanceCyclePositions, needsUpdate } = useDailyVows(selectedVows);
   
   const [activeTab, setActiveTab] = useState<TabType>('diary');
+  const [historySubTab, setHistorySubTab] = useState<HistorySubTab>('antidotes');
   const [cardStates, setCardStates] = useState<Record<string, VowCardState>>({});
 
   useEffect(() => {
@@ -894,21 +896,76 @@ export function Dashboard({
     );
   };
 
-  const renderHistoryContent = () => {
-    const overdueEntries = historyEntries.filter(e => isOverdue(e));
-    const regularEntries = historyEntries.filter(e => !isOverdue(e));
+  const renderHistoryTabs = () => (
+    <View style={styles.historyTabsContainer}>
+      <Pressable
+        style={[
+          styles.historyTab,
+          styles.historyTabLeft,
+          historySubTab === 'antidotes' && styles.historyTabActive,
+        ]}
+        onPress={() => setHistorySubTab('antidotes')}
+      >
+        <Text
+          style={[
+            styles.historyTabText,
+            historySubTab === 'antidotes' && styles.historyTabTextActive,
+          ]}
+        >
+          {language === 'ru' ? 'антидоты' : 'antidotes'}
+        </Text>
+      </Pressable>
+      <Pressable
+        style={[
+          styles.historyTab,
+          styles.historyTabRight,
+          historySubTab === 'history' && styles.historyTabActive,
+        ]}
+        onPress={() => setHistorySubTab('history')}
+      >
+        <Text
+          style={[
+            styles.historyTabText,
+            historySubTab === 'history' && styles.historyTabTextActive,
+          ]}
+        >
+          {language === 'ru' ? 'история' : 'history'}
+        </Text>
+      </Pressable>
+    </View>
+  );
 
-    if (historyEntries.length === 0) {
+  const renderHistoryContent = () => {
+    const antidoteEntries = historyEntries.filter(
+      e => e.status === 'broken' && !e.antidote_completed
+    );
+    const keptEntries = historyEntries.filter(
+      e => e.status === 'kept'
+    );
+
+    const displayedEntries = historySubTab === 'antidotes' ? antidoteEntries : keptEntries;
+
+    if (displayedEntries.length === 0) {
       return (
         <View style={styles.emptyHistory}>
           <History size={48} color={darkTheme.colors.textMuted} />
           <Text style={styles.emptyHistoryText}>
-            {language === 'ru' ? 'История пуста' : 'History is empty'}
+            {historySubTab === 'antidotes'
+              ? language === 'ru'
+                ? 'Нет невыполненных антидотов'
+                : 'No uncompleted antidotes'
+              : language === 'ru'
+              ? 'Нет записей'
+              : 'No entries'}
           </Text>
           <Text style={styles.emptyHistorySubtext}>
-            {language === 'ru'
-              ? 'Записи появятся после отметки обетов'
-              : 'Entries will appear after marking vows'}
+            {historySubTab === 'antidotes'
+              ? language === 'ru'
+                ? 'Нарушенные обеты появятся здесь'
+                : 'Broken vows will appear here'
+              : language === 'ru'
+              ? 'Соблюдённые обеты появятся здесь'
+              : 'Kept vows will appear here'}
           </Text>
         </View>
       );
@@ -916,28 +973,10 @@ export function Dashboard({
 
     return (
       <View style={styles.historyContainer}>
-        {overdueEntries.length > 0 && (
-          <View style={styles.overdueSection}>
-            <View style={styles.overdueSectionHeader}>
-              <AlertTriangle size={18} color="#C5A572" />
-              <Text style={styles.overdueSectionTitle}>
-                {language === 'ru' ? 'Незавершённые антидоты' : 'Uncompleted antidotes'}
-              </Text>
-            </View>
-            {overdueEntries.map(entry => renderHistoryCard(entry, true))}
-          </View>
-        )}
-
-        {regularEntries.length > 0 && (
-          <View style={styles.regularHistorySection}>
-            {overdueEntries.length > 0 && (
-              <Text style={styles.regularHistorySectionTitle}>
-                {language === 'ru' ? 'Недавние записи' : 'Recent entries'}
-              </Text>
-            )}
-            {regularEntries.map(entry => renderHistoryCard(entry, false))}
-          </View>
-        )}
+        {displayedEntries.map(entry => {
+          const isOverdueEntry = isOverdue(entry);
+          return renderHistoryCard(entry, isOverdueEntry);
+        })}
       </View>
     );
   };
@@ -1016,7 +1055,12 @@ export function Dashboard({
           </>
         )}
 
-        {activeTab === 'history' && renderHistoryContent()}
+        {activeTab === 'history' && (
+          <>
+            {renderHistoryTabs()}
+            {renderHistoryContent()}
+          </>
+        )}
 
         {activeTab === 'settings' && (
           <SettingsPanel onSelectVow={() => setActiveTab('vowSelection')} />
@@ -1710,5 +1754,38 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: darkTheme.colors.textMuted,
     marginTop: 16,
+  },
+  historyTabsContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#E8E1D5',
+    borderRadius: 16,
+    padding: 4,
+    marginBottom: 24,
+  },
+  historyTab: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  historyTabLeft: {
+    borderTopLeftRadius: 12,
+    borderBottomLeftRadius: 12,
+  },
+  historyTabRight: {
+    borderTopRightRadius: 12,
+    borderBottomRightRadius: 12,
+  },
+  historyTabActive: {
+    backgroundColor: darkTheme.colors.primary,
+  },
+  historyTabText: {
+    fontSize: 15,
+    fontWeight: '600' as const,
+    color: '#5A6A66',
+  },
+  historyTabTextActive: {
+    color: '#FFFFFF',
   },
 });
