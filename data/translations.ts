@@ -341,17 +341,23 @@ export const onboardingContent = {
     slide1: { 
       title: '6 разовый дневник', 
       text: '',
-      hint: ''
+      hint: '',
+      hintAntidote: '',
+      hintHistory: ''
     },
     slide2: { 
       title: 'Начни свой путь', 
       text: '',
-      hint: 'Выбрать обет'
+      hint: 'Выбрать обет',
+      hintAntidote: '',
+      hintHistory: ''
     },
     slide3: { 
       title: 'Путь к осознанности', 
       text: 'Если обет был нарушен — не страшно. Просто зафиксируйте это и выполните «антидот». Мы поможем вам не забыть об этом.',
-      hint: ''
+      hint: '',
+      hintAntidote: 'антидоты',
+      hintHistory: 'история'
     },
     buttons: { next: 'Далее', skip: 'Пропустить', start: 'Начать' }
   },
@@ -359,17 +365,23 @@ export const onboardingContent = {
     slide1: { 
       title: '6 times a day diary', 
       text: '',
-      hint: ''
+      hint: '',
+      hintAntidote: '',
+      hintHistory: ''
     },
     slide2: { 
       title: 'Start your journey', 
       text: '',
-      hint: 'Select a vow'
+      hint: 'Select a vow',
+      hintAntidote: '',
+      hintHistory: ''
     },
     slide3: { 
       title: 'Path to mindfulness', 
       text: 'If a vow is broken, it\'s okay. Just record it and perform an "antidote". We\'ll help you remember to do it.',
-      hint: ''
+      hint: '',
+      hintAntidote: 'antidotes',
+      hintHistory: 'history'
     },
     buttons: { next: 'Next', skip: 'Skip', start: 'Start' }
   },
@@ -377,17 +389,23 @@ export const onboardingContent = {
     slide1: { 
       title: 'Օրական 6-անգամյա օրագիր', 
       text: '',
-      hint: ''
+      hint: '',
+      hintAntidote: '',
+      hintHistory: ''
     },
     slide2: { 
       title: 'Սկսեք ձեր ճանապարհը', 
       text: '',
-      hint: 'Ընտրել ուխտ'
+      hint: 'Ընտրել ուխտ',
+      hintAntidote: '',
+      hintHistory: ''
     },
     slide3: { 
       title: 'Գիտակցության ուղին', 
       text: 'Եթե ուխտը դրժվել է, դա սարսափելի չէ: Պարզապես արձանագրեք դա և կատարեք «հակաթույնը»: Մենք կօգնենք ձեզ չմոռանալ դրա մասին:',
-      hint: ''
+      hint: '',
+      hintAntidote: 'հակաթույններ',
+      hintHistory: 'պատմություն'
     },
     buttons: { next: 'Հաջորդը', skip: 'Բաց թողնել', start: 'Սկսել' }
   },
@@ -395,17 +413,23 @@ export const onboardingContent = {
     slide1: { 
       title: 'Diario de 6 veces al día', 
       text: '',
-      hint: ''
+      hint: '',
+      hintAntidote: '',
+      hintHistory: ''
     },
     slide2: { 
       title: 'Comienza tu viaje', 
       text: '',
-      hint: 'Seleccionar voto'
+      hint: 'Seleccionar voto',
+      hintAntidote: '',
+      hintHistory: ''
     },
     slide3: { 
       title: 'Camino a la conciencia', 
       text: 'Si se rompe un voto, no pasa nada. Simplemente regístralo y realiza un "antídoto". Te ayudaremos a recordar hacerlo.',
-      hint: ''
+      hint: '',
+      hintAntidote: 'antídotos',
+      hintHistory: 'historia'
     },
     buttons: { next: 'Siguiente', skip: 'Omitir', start: 'Comenzar' }
   },
@@ -413,17 +437,23 @@ export const onboardingContent = {
     slide1: { 
       title: '6-mal am Tag Tagebuch', 
       text: '',
-      hint: ''
+      hint: '',
+      hintAntidote: '',
+      hintHistory: ''
     },
     slide2: { 
       title: 'Beginnen Sie Ihre Reise', 
       text: '',
-      hint: 'Gelübde auswählen'
+      hint: 'Gelübde auswählen',
+      hintAntidote: '',
+      hintHistory: ''
     },
     slide3: { 
       title: 'Pfad zur Achtsamkeit', 
       text: 'Wenn ein Gelübde gebrochen wird, ist das nicht schlimm. Registrieren Sie es einfach und führen Sie ein „Gegenmittel" aus. Wir helfen Ihnen, daran zu denken.',
-      hint: ''
+      hint: '',
+      hintAntidote: 'Gegenmittel',
+      hintHistory: 'Geschichte'
     },
     buttons: { next: 'Weiter', skip: 'Überspringen', start: 'Starten' }
   },
@@ -431,17 +461,23 @@ export const onboardingContent = {
     slide1: { 
       title: '每日 6 次日记', 
       text: '',
-      hint: ''
+      hint: '',
+      hintAntidote: '',
+      hintHistory: ''
     },
     slide2: { 
       title: '开始你的旅程', 
       text: '',
-      hint: '选择誓言'
+      hint: '选择誓言',
+      hintAntidote: '',
+      hintHistory: ''
     },
     slide3: { 
       title: '正念之路', 
       text: '如果违反了誓言，也没关系。只需记录下来并执行「解毒剂」。我们会帮您记住去执行。',
-      hint: ''
+      hint: '',
+      hintAntidote: '解毒剂',
+      hintHistory: '历史'
     },
     buttons: { next: '下一步', skip: '跳过', start: '开始' }
   },
@@ -449,17 +485,23 @@ export const onboardingContent = {
     slide1: { 
       title: 'Journal 6 fois par jour', 
       text: '',
-      hint: ''
+      hint: '',
+      hintAntidote: '',
+      hintHistory: ''
     },
     slide2: { 
       title: 'Commencez votre voyage', 
       text: '',
-      hint: 'Sélectionner un vœu'
+      hint: 'Sélectionner un vœu',
+      hintAntidote: '',
+      hintHistory: ''
     },
     slide3: { 
       title: 'Chemin vers la pleine conscience', 
       text: 'Si un vœu est rompu, ce n\'est pas grave. Enregistrez-le simplement et effectuez un « antidote ». Nous vous aiderons à ne pas oublier.',
-      hint: ''
+      hint: '',
+      hintAntidote: 'antidotes',
+      hintHistory: 'histoire'
     },
     buttons: { next: 'Suivant', skip: 'Passer', start: 'Commencer' }
   },
@@ -467,17 +509,23 @@ export const onboardingContent = {
     slide1: { 
       title: 'Diario 6 volte al giorno', 
       text: '',
-      hint: ''
+      hint: '',
+      hintAntidote: '',
+      hintHistory: ''
     },
     slide2: { 
       title: 'Inizia il tuo viaggio', 
       text: '',
-      hint: 'Seleziona voto'
+      hint: 'Seleziona voto',
+      hintAntidote: '',
+      hintHistory: ''
     },
     slide3: { 
       title: 'Sentiero verso la consapevolezza', 
       text: 'Se un voto viene infranto, non importa. Basta registrarlo ed eseguire un "antidoto". Ti aiuteremo a ricordare di farlo.',
-      hint: ''
+      hint: '',
+      hintAntidote: 'antidoti',
+      hintHistory: 'storia'
     },
     buttons: { next: 'Avanti', skip: 'Salta', start: 'Inizia' }
   },
