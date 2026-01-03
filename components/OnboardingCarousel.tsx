@@ -329,7 +329,7 @@ export function OnboardingCarousel({ language, onComplete }: OnboardingCarouselP
 
                       <View style={[styles.slide3HintLeft, { top: isSmallScreen ? 8 : 12 }]}>
                         <Animated.View style={{ transform: [{ translateY: arrowTranslateY }] }}>
-                          <ArrowDown size={isSmallScreen ? 18 : 22} color="#FFD700" strokeWidth={2.5} />
+                          <ArrowDown size={isSmallScreen ? 18 : 22} color="#FFFFFF" strokeWidth={2.5} />
                         </Animated.View>
                         <Text style={[styles.hintTextBright, isSmallScreen && styles.hintTextSmall]}>{slide.hintAntidote || 'антидоты'}</Text>
                       </View>
@@ -337,7 +337,7 @@ export function OnboardingCarousel({ language, onComplete }: OnboardingCarouselP
                       <View style={[styles.slide3HintBottom, { bottom: isSmallScreen ? 55 : 65 }]}>
                         <Text style={[styles.hintTextBright, isSmallScreen && styles.hintTextSmall]}>{slide.hintHistory || 'история'}</Text>
                         <Animated.View style={{ transform: [{ translateY: arrowTranslateY }] }}>
-                          <ArrowDown size={isSmallScreen ? 18 : 22} color="#FFD700" strokeWidth={2.5} />
+                          <ArrowDown size={isSmallScreen ? 18 : 22} color="#FFFFFF" strokeWidth={2.5} />
                         </Animated.View>
                       </View>
                     </ImageBackground>
@@ -604,14 +604,16 @@ const styles = StyleSheet.create({
   },
   slide3HintBottom: {
     position: 'absolute' as const,
-    right: isSmallScreen ? 70 : 90,
+    left: 0,
+    right: 0,
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 4,
   },
   hintTextBright: {
     fontSize: 18,
     fontWeight: '700' as const,
-    color: '#FFD700',
+    color: '#FFFFFF',
     fontFamily: Platform.select({
       ios: 'Georgia',
       android: 'serif',
