@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ChevronRight, ArrowRight, Plus } from 'lucide-react-native';
+import { ChevronRight, ArrowRight, Plus, ArrowDown } from 'lucide-react-native';
 import { Language } from '@/types/database';
 import { onboardingContent } from '@/data/translations';
 
@@ -34,6 +34,7 @@ export function OnboardingCarousel({ language, onComplete }: OnboardingCarouselP
   const slide1Opacity = useRef(new Animated.Value(0)).current;
   const slide1Scale = useRef(new Animated.Value(0.95)).current;
   const arrowTranslateX = useRef(new Animated.Value(0)).current;
+  const arrowTranslateY = useRef(new Animated.Value(0)).current;
 
   const content = onboardingContent[language] || onboardingContent.en;
   const slides = [content.slide1, content.slide2, content.slide3];
@@ -93,7 +94,23 @@ export function OnboardingCarousel({ language, onComplete }: OnboardingCarouselP
         ])
       ).start();
     }
-  }, [currentSlide, arrowTranslateX]);
+    if (currentSlide === 2) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(arrowTranslateY, {
+            toValue: 6,
+            duration: 700,
+            useNativeDriver: true,
+          }),
+          Animated.timing(arrowTranslateY, {
+            toValue: 0,
+            duration: 700,
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+    }
+  }, [currentSlide, arrowTranslateX, arrowTranslateY]);
 
   const handleScroll = Animated.event(
     [{ nativeEvent: { contentOffset: { x: scrollX } } }],
@@ -299,22 +316,35 @@ export function OnboardingCarousel({ language, onComplete }: OnboardingCarouselP
           }
 
           return (
-            <Animated.View
-              key={index}
-              style={[
-                styles.slide,
-                {
-                  transform: [{ translateY }],
-                  opacity,
-                },
-              ]}
-            >
-              <View style={styles.slideContent}>
-                <Text style={styles.slideTitle}>{slide.title}</Text>
-                <Text style={styles.slideText}>{slide.text}</Text>
+              <View key={index} style={styles.slide}>
+                <View style={[styles.spotlightContainer, { paddingTop: insets.top + (isSmallScreen ? 50 : 60) }]}>
+                  <View style={styles.screenshotWrapper}>
+                    <ImageBackground
+                      source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/il56ewosd6ziblhil3n1d' }}
+                      style={styles.dashboardImage}
+                      resizeMode="contain"
+                      imageStyle={styles.dashboardImageStyle}
+                    >
+                      <View style={styles.darkOverlay} />
+
+                      <View style={[styles.slide3HintLeft, { top: isSmallScreen ? 8 : 12 }]}>
+                        <Animated.View style={{ transform: [{ translateY: arrowTranslateY }] }}>
+                          <ArrowDown size={isSmallScreen ? 18 : 22} color="#F5F2ED" strokeWidth={2} />
+                        </Animated.View>
+                        <Text style={[styles.hintText, isSmallScreen && styles.hintTextSmall]}>{slide.hintAntidote || 'антидоты'}</Text>
+                      </View>
+
+                      <View style={[styles.slide3HintRight, { top: isSmallScreen ? 8 : 12 }]}>
+                        <Animated.View style={{ transform: [{ translateY: arrowTranslateY }] }}>
+                          <ArrowDown size={isSmallScreen ? 18 : 22} color="#F5F2ED" strokeWidth={2} />
+                        </Animated.View>
+                        <Text style={[styles.hintText, isSmallScreen && styles.hintTextSmall]}>{slide.hintHistory || 'история'}</Text>
+                      </View>
+                    </ImageBackground>
+                  </View>
+                </View>
               </View>
-            </Animated.View>
-          );
+            );
         })}
       </ScrollView>
 
@@ -559,5 +589,17 @@ const styles = StyleSheet.create({
   },
   hintTextSmall: {
     fontSize: 14,
+  },
+  slide3HintLeft: {
+    position: 'absolute' as const,
+    left: isSmallScreen ? 30 : 45,
+    alignItems: 'center',
+    gap: 4,
+  },
+  slide3HintRight: {
+    position: 'absolute' as const,
+    right: isSmallScreen ? 30 : 45,
+    alignItems: 'center',
+    gap: 4,
   },
 });
