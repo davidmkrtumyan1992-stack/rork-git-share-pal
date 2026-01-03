@@ -377,7 +377,7 @@ export function Dashboard({
           strokeWidth={activeTab === 'diary' ? 2.5 : 2}
         />
         <Text style={[styles.bottomTabLabel, activeTab === 'diary' && styles.bottomTabLabelActive]}>
-          {language === 'ru' ? 'дневник' : 'diary'}
+          {t.dashboard.title.toLowerCase()}
         </Text>
       </Pressable>
 
@@ -391,7 +391,7 @@ export function Dashboard({
           strokeWidth={activeTab === 'history' ? 2.5 : 2}
         />
         <Text style={[styles.bottomTabLabel, activeTab === 'history' && styles.bottomTabLabelActive]}>
-          {language === 'ru' ? 'история' : 'history'}
+          {t.dashboard.historyTab}
         </Text>
       </Pressable>
 
@@ -507,7 +507,7 @@ export function Dashboard({
               <View style={styles.infoBoxKept}>
                 <Check size={20} color="#7FA88F" />
                 <Text style={styles.infoBoxKeptText}>
-                  {language === 'ru' ? 'Вы соблюдали этот обет' : 'You kept this vow'}
+                  {t.dashboard.keptVow}
                 </Text>
               </View>
             )}
@@ -516,13 +516,13 @@ export function Dashboard({
                 <View style={styles.infoBoxBroken}>
                   <X size={20} color="#B85C4F" />
                   <Text style={styles.infoBoxBrokenText}>
-                    {language === 'ru' ? 'Обет был нарушен' : 'Vow was broken'}
+                    {t.dashboard.vowWasBroken}
                   </Text>
                 </View>
                 {todayEntry.antidote_text && (
                   <View style={styles.infoBoxAntidote}>
                     <Text style={styles.antidoteLabelSmall}>
-                      {language === 'ru' ? 'Антидот:' : 'Antidote:'}
+                      {t.dashboard.antidoteLabel}
                     </Text>
                     <Text style={styles.antidoteValueText}>
                       {todayEntry.antidote_text}
@@ -553,7 +553,7 @@ export function Dashboard({
                   >
                     <Check size={18} color="#FFFFFF" />
                     <Text style={styles.actionButtonText}>
-                      {language === 'ru' ? 'Соблюдал' : 'Kept'}
+                      {t.dashboard.kept}
                     </Text>
                   </LinearGradient>
                 </TouchableOpacity>
@@ -570,7 +570,7 @@ export function Dashboard({
                   >
                     <X size={18} color="#FFFFFF" />
                     <Text style={styles.actionButtonText}>
-                      {language === 'ru' ? 'Нарушил' : 'Broken'}
+                      {t.dashboard.broken}
                     </Text>
                   </LinearGradient>
                 </TouchableOpacity>
@@ -582,17 +582,13 @@ export function Dashboard({
                 <View style={styles.keepInfoBlock}>
                   <Check size={20} color="#7FA88F" />
                   <Text style={styles.keepInfoText}>
-                    {language === 'ru' 
-                      ? 'Расскажите, что вы сделали, чтобы соблюсти этот обет'
-                      : 'Tell us what you did to keep this vow'}
+                    {t.dashboard.tellWhatYouDid}
                   </Text>
                 </View>
 
                 <TextInput
                   style={styles.noteInput}
-                  placeholder={language === 'ru' 
-                    ? 'например: помолился, попросил прощения...'
-                    : 'e.g.: prayed, asked for forgiveness...'}
+                  placeholder={t.dashboard.notePlaceholder}
                   placeholderTextColor={darkTheme.colors.textMuted}
                   value={state?.noteText || ''}
                   onChangeText={(text) => updateNoteText(cardKey, text)}
@@ -606,7 +602,7 @@ export function Dashboard({
                     onPress={() => handleCollapseCard(cardKey)}
                   >
                     <Text style={styles.cancelButtonText}>
-                      {language === 'ru' ? 'Отмена' : 'Cancel'}
+                      {t.common.cancel}
                     </Text>
                   </TouchableOpacity>
 
@@ -627,7 +623,7 @@ export function Dashboard({
                         <>
                           <Sparkles size={18} color="#FFFFFF" />
                           <Text style={styles.saveButtonText}>
-                            {language === 'ru' ? 'Сохранить' : 'Save'}
+                            {t.common.save}
                           </Text>
                         </>
                       )}
@@ -642,14 +638,12 @@ export function Dashboard({
                 <View style={styles.brokenInfoBlock}>
                   <AlertCircle size={20} color="#C5A572" />
                   <Text style={styles.brokenInfoText}>
-                    {language === 'ru' 
-                      ? 'Что вы собираетесь сделать, чтобы исправить это?'
-                      : 'What will you do to make amends?'}
+                    {t.dashboard.whatWillYouDo}
                   </Text>
                 </View>
 
                 <Text style={styles.antidoteLabel}>
-                  {language === 'ru' ? 'Антидот' : 'Antidote'}
+                  {t.dashboard.antidote}
                 </Text>
 
                 <View style={styles.antidoteTagsWrapper}>
@@ -681,9 +675,7 @@ export function Dashboard({
 
                 <TextInput
                   style={styles.noteInput}
-                  placeholder={language === 'ru' 
-                    ? 'или введите свой вариант...'
-                    : 'or enter your own...'}
+                  placeholder={t.dashboard.antidotePlaceholder}
                   placeholderTextColor={darkTheme.colors.textMuted}
                   value={state?.antidoteText || ''}
                   onChangeText={(text) => updateAntidoteText(cardKey, text)}
@@ -697,7 +689,7 @@ export function Dashboard({
                     onPress={() => handleCollapseCard(cardKey)}
                   >
                     <Text style={styles.cancelButtonText}>
-                      {language === 'ru' ? 'Отмена' : 'Cancel'}
+                      {t.common.cancel}
                     </Text>
                   </TouchableOpacity>
 
@@ -718,7 +710,7 @@ export function Dashboard({
                         <>
                           <Sparkles size={18} color="#FFFFFF" />
                           <Text style={styles.saveButtonText}>
-                            {language === 'ru' ? 'Сохранить' : 'Save'}
+                            {t.common.save}
                           </Text>
                         </>
                       )}
@@ -739,7 +731,7 @@ export function Dashboard({
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={darkTheme.colors.primary} />
           <Text style={styles.loadingText}>
-            {language === 'ru' ? 'Загрузка обетов...' : 'Loading vows...'}
+            {t.dashboard.loadingVows}
           </Text>
         </View>
       );
@@ -784,7 +776,7 @@ export function Dashboard({
           <View style={styles.overdueLabel}>
             <AlertTriangle size={14} color="#C5A572" />
             <Text style={styles.overdueLabelText}>
-              {language === 'ru' ? 'Просроченный долг' : 'Overdue debt'}
+              {t.dashboard.overdueDeb}
             </Text>
           </View>
         )}
@@ -822,7 +814,7 @@ export function Dashboard({
           <View style={styles.historyInfoBoxKept}>
             <Check size={18} color="#7FA88F" />
             <Text style={styles.historyInfoBoxKeptText}>
-              {language === 'ru' ? 'Обет соблюдён' : 'Vow kept'}
+              {t.dashboard.vowKept}
             </Text>
           </View>
         )}
@@ -832,13 +824,13 @@ export function Dashboard({
             <View style={styles.historyInfoBoxBroken}>
               <X size={18} color="#B85C4F" />
               <Text style={styles.historyInfoBoxBrokenText}>
-                {language === 'ru' ? 'Обет нарушен' : 'Vow broken'}
+                {t.dashboard.vowBroken}
               </Text>
             </View>
             {entry.antidote_text && (
               <View style={styles.historyInfoBoxAntidote}>
                 <Text style={styles.antidoteLabelSmall}>
-                  {language === 'ru' ? 'Антидот:' : 'Antidote:'}
+                  {t.dashboard.antidoteLabel}
                 </Text>
                 <Text style={styles.antidoteValueText}>{entry.antidote_text}</Text>
               </View>
@@ -847,7 +839,7 @@ export function Dashboard({
               <View style={styles.antidoteCompletedBadge}>
                 <Check size={14} color="#6B8E7F" />
                 <Text style={styles.antidoteCompletedText}>
-                  {language === 'ru' ? 'Антидот выполнен' : 'Antidote completed'}
+                  {t.dashboard.antidoteCompleted}
                 </Text>
               </View>
             )}
@@ -875,7 +867,7 @@ export function Dashboard({
               >
                 <Check size={16} color="#FFFFFF" />
                 <Text style={styles.historyActionText}>
-                  {language === 'ru' ? 'Выполнил' : 'Completed'}
+                  {t.dashboard.completed}
                 </Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -887,7 +879,7 @@ export function Dashboard({
             >
               <Calendar size={16} color={darkTheme.colors.textSecondary} />
               <Text style={styles.historyPostponeText}>
-                {language === 'ru' ? 'Перенести' : 'Postpone'}
+                {t.dashboard.postpone}
               </Text>
             </TouchableOpacity>
           </View>
@@ -912,7 +904,7 @@ export function Dashboard({
             historySubTab === 'antidotes' && styles.historyTabTextActive,
           ]}
         >
-          {language === 'ru' ? 'антидоты' : 'antidotes'}
+          {t.dashboard.antidotesTab}
         </Text>
       </Pressable>
       <Pressable
@@ -929,7 +921,7 @@ export function Dashboard({
             historySubTab === 'history' && styles.historyTabTextActive,
           ]}
         >
-          {language === 'ru' ? 'история' : 'history'}
+          {t.dashboard.historyTab}
         </Text>
       </Pressable>
     </View>
