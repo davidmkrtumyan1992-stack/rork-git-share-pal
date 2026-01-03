@@ -329,16 +329,16 @@ export function OnboardingCarousel({ language, onComplete }: OnboardingCarouselP
 
                       <View style={[styles.slide3HintLeft, { top: isSmallScreen ? 8 : 12 }]}>
                         <Animated.View style={{ transform: [{ translateY: arrowTranslateY }] }}>
-                          <ArrowDown size={isSmallScreen ? 18 : 22} color="#F5F2ED" strokeWidth={2} />
+                          <ArrowDown size={isSmallScreen ? 18 : 22} color="#FFD700" strokeWidth={2.5} />
                         </Animated.View>
-                        <Text style={[styles.hintText, isSmallScreen && styles.hintTextSmall]}>{slide.hintAntidote || 'антидоты'}</Text>
+                        <Text style={[styles.hintTextBright, isSmallScreen && styles.hintTextSmall]}>{slide.hintAntidote || 'антидоты'}</Text>
                       </View>
 
-                      <View style={[styles.slide3HintRight, { top: isSmallScreen ? 8 : 12 }]}>
+                      <View style={[styles.slide3HintBottom, { bottom: isSmallScreen ? 55 : 65 }]}>
+                        <Text style={[styles.hintTextBright, isSmallScreen && styles.hintTextSmall]}>{slide.hintHistory || 'история'}</Text>
                         <Animated.View style={{ transform: [{ translateY: arrowTranslateY }] }}>
-                          <ArrowDown size={isSmallScreen ? 18 : 22} color="#F5F2ED" strokeWidth={2} />
+                          <ArrowDown size={isSmallScreen ? 18 : 22} color="#FFD700" strokeWidth={2.5} />
                         </Animated.View>
-                        <Text style={[styles.hintText, isSmallScreen && styles.hintTextSmall]}>{slide.hintHistory || 'история'}</Text>
                       </View>
                     </ImageBackground>
                   </View>
@@ -601,5 +601,24 @@ const styles = StyleSheet.create({
     right: isSmallScreen ? 30 : 45,
     alignItems: 'center',
     gap: 4,
+  },
+  slide3HintBottom: {
+    position: 'absolute' as const,
+    right: isSmallScreen ? 70 : 90,
+    alignItems: 'center',
+    gap: 4,
+  },
+  hintTextBright: {
+    fontSize: 18,
+    fontWeight: '700' as const,
+    color: '#FFD700',
+    fontFamily: Platform.select({
+      ios: 'Georgia',
+      android: 'serif',
+      web: 'Georgia, "Times New Roman", serif',
+    }),
+    textShadowColor: 'rgba(0, 0, 0, 0.8)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 6,
   },
 });
