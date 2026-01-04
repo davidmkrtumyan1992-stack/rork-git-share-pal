@@ -33,6 +33,17 @@ interface SettingsPanelProps {
   onSelectVow?: () => void;
 }
 
+const LANGUAGES = [
+  { label: 'Русский', value: 'ru' as const },
+  { label: 'English', value: 'en' as const },
+  { label: 'Italiano', value: 'it' as const },
+  { label: 'Français', value: 'fr' as const },
+  { label: 'Deutsch', value: 'de' as const },
+  { label: 'Español', value: 'es' as const },
+  { label: '中文', value: 'zh' as const },
+  { label: 'Հայերեն', value: 'hy' as const },
+];
+
 const TIMEZONES = [
   { label: 'UTC-12:00 — Бейкер, Хауленд', value: 'Pacific/Kwajalein' },
   { label: 'UTC-11:00 — Мидуэй, Самоа', value: 'Pacific/Midway' },
@@ -81,6 +92,7 @@ export function SettingsPanel({ onSelectVow }: SettingsPanelProps) {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showTimezoneList, setShowTimezoneList] = useState(false);
+  const [showLanguageList, setShowLanguageList] = useState(false);
   const [notificationInterval, setNotificationInterval] = useState(2);
   const [selectedVowTypes, setSelectedVowTypes] = useState<string[]>([]);
 
@@ -105,9 +117,9 @@ export function SettingsPanel({ onSelectVow }: SettingsPanelProps) {
     },
   });
 
-  const handleLanguageChange = () => {
-    const newLang: Language = language === 'ru' ? 'en' : 'ru';
-    setLanguage(newLang);
+  const handleLanguageChange = (lang: Language) => {
+    setLanguage(lang);
+    setShowLanguageList(false);
   };
 
   const handleNotificationsToggle = (value: boolean) => {
@@ -363,15 +375,40 @@ export function SettingsPanel({ onSelectVow }: SettingsPanelProps) {
           <Text style={styles.cardTitle}>{t.settings.localization}</Text>
         </View>
 
-        <TouchableOpacity style={styles.settingRow} onPress={handleLanguageChange}>
-          <Text style={styles.settingLabelFlex}>{t.common.language}</Text>
-          <View style={styles.settingRight}>
-            <Text style={styles.settingValue}>
-              {language === 'ru' ? 'Русский' : 'English'}
-            </Text>
+        <TouchableOpacity 
+          style={styles.settingRowVertical} 
+          onPress={() => setShowLanguageList(!showLanguageList)}
+        >
+          <View style={styles.settingRowHeader}>
+            <View style={styles.settingLeft}>
+              <Globe size={18} color={darkTheme.colors.primary} />
+              <Text style={styles.settingLabel}>{t.common.language}</Text>
+            </View>
             <ChevronRight size={16} color={darkTheme.colors.textMuted} />
           </View>
+          <Text style={styles.settingValueTimezone} numberOfLines={1}>
+            {LANGUAGES.find(l => l.value === language)?.label || 'Русский'}
+          </Text>
         </TouchableOpacity>
+
+        {showLanguageList && (
+          <View style={styles.languageList}>
+            {LANGUAGES.map((lang) => (
+              <TouchableOpacity
+                key={lang.value}
+                style={styles.languageItem}
+                onPress={() => handleLanguageChange(lang.value)}
+              >
+                <Text style={[
+                  styles.languageText,
+                  lang.value === language && styles.languageTextActive
+                ]}>
+                  {lang.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
 
         <TouchableOpacity 
           style={styles.settingRowVertical} 
@@ -749,6 +786,26 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   timezoneTextActive: {
+    color: darkTheme.colors.primary,
+    fontWeight: darkTheme.fontWeight.semibold,
+  },
+  languageList: {
+    backgroundColor: darkTheme.colors.backgroundTertiary,
+    borderTopWidth: 1,
+    borderTopColor: darkTheme.colors.border,
+  },
+  languageItem: {
+    paddingVertical: darkTheme.spacing.md,
+    paddingHorizontal: darkTheme.spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: darkTheme.colors.border,
+  },
+  languageText: {
+    fontSize: darkTheme.fontSize.md,
+    color: darkTheme.colors.text,
+    lineHeight: 20,
+  },
+  languageTextActive: {
     color: darkTheme.colors.primary,
     fontWeight: darkTheme.fontWeight.semibold,
   },
