@@ -2,6 +2,12 @@ export interface VowItem {
   id: number;
   textRu: string;
   textEn: string;
+  textIt?: string;
+  textFr?: string;
+  textDe?: string;
+  textEs?: string;
+  textZh?: string;
+  textHy?: string;
 }
 
 export interface VowCategory {
@@ -822,11 +828,22 @@ export const getVowById = (vowId: number): VowItem | undefined => {
   return undefined;
 };
 
-export const getVowText = (categoryKey: string, vowId: number, language: 'ru' | 'en'): string => {
+export const getVowText = (categoryKey: string, vowId: number, language: 'ru' | 'en' | 'it' | 'fr' | 'de' | 'es' | 'zh' | 'hy'): string => {
   const vows = getVowsByCategory(categoryKey);
   const vow = vows.find((v) => v.id === vowId);
   if (!vow) return '';
-  return language === 'ru' ? vow.textRu : vow.textEn;
+  
+  switch (language) {
+    case 'ru': return vow.textRu;
+    case 'en': return vow.textEn;
+    case 'it': return vow.textIt || vow.textEn;
+    case 'fr': return vow.textFr || vow.textEn;
+    case 'de': return vow.textDe || vow.textEn;
+    case 'es': return vow.textEs || vow.textEn;
+    case 'zh': return vow.textZh || vow.textEn;
+    case 'hy': return vow.textHy || vow.textEn;
+    default: return vow.textEn;
+  }
 };
 
 export const getAllVows = (): VowItem[] => {
