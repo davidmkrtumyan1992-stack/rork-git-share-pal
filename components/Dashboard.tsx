@@ -278,9 +278,11 @@ export function Dashboard({
       {
         onError: () => {
           Alert.alert(
-            language === 'ru' ? 'Ошибка' : 'Error',
+            language === 'ru' ? 'Ошибка' : language === 'zh' ? '错误' : 'Error',
             language === 'ru' 
               ? '«Не удалось сохранить запись. Попробуйте ещё раз»' 
+              : language === 'zh'
+              ? '保存失败，请重试'
               : '"Failed to save entry. Please try again"'
           );
         },
@@ -301,9 +303,11 @@ export function Dashboard({
       {
         onError: () => {
           Alert.alert(
-            language === 'ru' ? 'Ошибка' : 'Error',
+            language === 'ru' ? 'Ошибка' : language === 'zh' ? '错误' : 'Error',
             language === 'ru' 
               ? '«Не удалось сохранить запись. Попробуйте ещё раз»' 
+              : language === 'zh'
+              ? '保存失败，请重试'
               : '"Failed to save entry. Please try again"'
           );
         },
@@ -363,7 +367,7 @@ export function Dashboard({
     yesterday.setDate(yesterday.getDate() - 1);
 
     if (date.toDateString() === yesterday.toDateString()) {
-      return language === 'ru' ? 'Вчера' : 'Yesterday';
+      return language === 'ru' ? 'Вчера' : language === 'zh' ? '昨天' : 'Yesterday';
     }
 
     const options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short' };
@@ -381,9 +385,11 @@ export function Dashboard({
     markAntidoteCompleted.mutate(entryId, {
       onError: () => {
         Alert.alert(
-          language === 'ru' ? 'Ошибка' : 'Error',
+          language === 'ru' ? 'Ошибка' : language === 'zh' ? '错误' : 'Error',
           language === 'ru'
             ? '«Не удалось отметить антидот выполненным»'
+            : language === 'zh'
+            ? '无法标记解毒剂为已完成'
             : '"Failed to mark antidote as completed"'
         );
       },
@@ -394,9 +400,11 @@ export function Dashboard({
     postponeAntidote.mutate(entryId, {
       onError: () => {
         Alert.alert(
-          language === 'ru' ? 'Ошибка' : 'Error',
+          language === 'ru' ? 'Ошибка' : language === 'zh' ? '错误' : 'Error',
           language === 'ru'
             ? '«Не удалось перенести антидот»'
+            : language === 'zh'
+            ? '无法推迟解毒剂'
             : '"Failed to postpone antidote"'
         );
       },
@@ -466,7 +474,7 @@ export function Dashboard({
           strokeWidth={activeTab === 'settings' ? 2.5 : 2}
         />
         <Text style={[styles.bottomTabLabel, activeTab === 'settings' && styles.bottomTabLabelActive]}>
-          {language === 'ru' ? 'настройки' : 'settings'}
+          {t.common.settings.toLowerCase()}
         </Text>
       </Pressable>
     </View>
@@ -476,7 +484,7 @@ export function Dashboard({
     <View style={[styles.chipsSection, isLargeScreen && styles.chipsSectionLarge]}>
       <View style={styles.chipsSectionHeader}>
         <Text style={[styles.chipsSectionTitle, isLargeScreen && styles.chipsSectionTitleLarge]}>
-          {language === 'ru' ? 'Выбранные обеты' : 'Selected Vows'}
+          {language === 'ru' ? 'Выбранные обеты' : language === 'zh' ? '已选择的誓言' : 'Selected Vows'}
         </Text>
         <TouchableOpacity style={styles.addButton} onPress={() => setActiveTab('vowSelection')}>
           <Plus size={isSmallScreen ? 18 : 20} color={darkTheme.colors.primary} />
@@ -1012,18 +1020,26 @@ export function Dashboard({
             {historySubTab === 'antidotes'
               ? language === 'ru'
                 ? 'Нет невыполненных антидотов'
+                : language === 'zh'
+                ? '没有未完成的解毒剂'
                 : 'No uncompleted antidotes'
               : language === 'ru'
               ? 'Нет записей'
+              : language === 'zh'
+              ? '没有记录'
               : 'No entries'}
           </Text>
           <Text style={styles.emptyHistorySubtext}>
             {historySubTab === 'antidotes'
               ? language === 'ru'
                 ? 'Нарушенные обеты появятся здесь'
+                : language === 'zh'
+                ? '违反的誓言将显示在这里'
                 : 'Broken vows will appear here'
               : language === 'ru'
               ? 'Соблюдённые обеты появятся здесь'
+              : language === 'zh'
+              ? '遵守的誓言将显示在这里'
               : 'Kept vows will appear here'}
           </Text>
         </View>
@@ -1076,7 +1092,7 @@ export function Dashboard({
       >
         <View style={styles.header}>
           <Text style={[styles.greeting, { fontSize: responsiveStyles.greeting.fontSize }]}>
-            {language === 'ru' ? 'привет,' : 'hello,'}{' '}
+            {language === 'ru' ? 'привет,' : language === 'zh' ? '你好，' : 'hello,'}{' '}
             <Text style={styles.username}>
               {profile?.username || profile?.full_name || 'user'}
             </Text>
@@ -1100,6 +1116,8 @@ export function Dashboard({
                 <Text style={[styles.emptyStateText, isSmallScreen && styles.emptyStateTextSmall]}>
                   {language === 'ru' 
                     ? 'Нажмите, чтобы выбрать обеты'
+                    : language === 'zh'
+                    ? '点击选择誓言'
                     : 'Tap to select vows'}
                 </Text>
               </TouchableOpacity>
