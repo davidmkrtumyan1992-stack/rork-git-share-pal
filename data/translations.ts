@@ -366,6 +366,20 @@ export const getTranslation = (lang: Language) => {
   return translations['en'];
 };
 
+export const getLanguageName = (code: Language): string => {
+  const names: Record<Language, string> = {
+    en: 'English',
+    ru: 'Русский',
+    es: 'Español',
+    zh: '中文',
+    de: 'Deutsch',
+    fr: 'Français',
+    hy: 'Հայերեն',
+    it: 'Italiano',
+  };
+  return names[code];
+};
+
 export const formatNumber = (num: number): string => {
   return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
 };

@@ -284,6 +284,9 @@ export const vowsData: VowCategory[] = [
         textIt: 'Lodare se stessi per guadagno personale.',
         textEs: 'Alabarse a sí mismo por beneficio personal.',
         textZh: '为了个人利益而自我赞叹。',
+        textFr: 'Se louer soi-même par intérêt personnel.',
+        textDe: 'Sich selbst loben aus Eigennutz.',
+        textHy: 'Գովաբանել սեփական անձը անձնական օգուտի համար:',
       },
       {
         id: 29,
@@ -292,6 +295,9 @@ export const vowsData: VowCategory[] = [
         textIt: 'Denigrare o criticare gli altri per guadagno personale.',
         textEs: 'Menospreciar o criticar a los demás por beneficio personal.',
         textZh: '为了个人利益而轻蔑或批评他人。',
+        textFr: 'Rabaisser ou critiquer autrui par intérêt personnel.',
+        textDe: 'Andere herabsetzen oder kritisieren aus Eigennutz.',
+        textHy: 'Նսեմացնել կամ քննադատել ուրիշներին անձնական օգուտի համար:',
       },
       {
         id: 30,
@@ -300,6 +306,9 @@ export const vowsData: VowCategory[] = [
         textIt: 'Non condividere il Dharma per attaccamento e possesso.',
         textEs: 'Retener el Dharma por apego y posesividad.',
         textZh: '因悭吝而不施法（舍法）。',
+        textFr: 'Retenir le Dharma par attachement et esprit de possession.',
+        textDe: 'Den Dharma aus Anhaftung und Besitzdenken zurückhalten.',
+        textHy: 'Չկիսվել Դհարմայով կապվածության և սեփականատիրական զգացումի պատճառով:',
       },
       {
         id: 31,
@@ -308,6 +317,9 @@ export const vowsData: VowCategory[] = [
         textIt: 'Non condividere aiuto materiale per attaccamento e possesso.',
         textEs: 'Retener ayuda material por apego y posesividad.',
         textZh: '因悭吝而不施财。',
+        textFr: 'Retenir l\'aide matérielle par attachement et esprit de possession.',
+        textDe: 'Materielle Hilfe aus Anhaftung und Besitzdenken zurückhalten.',
+        textHy: 'Չցուցաբերել նյութական օգնություն կապվածության և սեփականատիրական զգացումի պատճառով:',
       },
       {
         id: 32,
@@ -316,6 +328,9 @@ export const vowsData: VowCategory[] = [
         textIt: 'Rifiutare di accettare le scuse di qualcuno.',
         textEs: 'Negarse a aceptar las disculpas de alguien.',
         textZh: '拒绝接受他人的悔过或道歉。',
+        textFr: 'Refuser d\'accepter les excuses de quelqu\'un.',
+        textDe: 'Sich weigern, die Entschuldigung von jemandem anzunehmen.',
+        textHy: 'Հրաժարվել ընդունել որևէ մեկի ներողությունը:',
       },
       {
         id: 33,
@@ -324,6 +339,9 @@ export const vowsData: VowCategory[] = [
         textIt: 'Percuotere un\'altra persona.',
         textEs: 'Golpear a otra persona.',
         textZh: '殴打他人。',
+        textFr: 'Frapper une autre personne.',
+        textDe: 'Eine andere Person schlagen.',
+        textHy: 'Հարվածել մեկ այլ մարդու:',
       },
       {
         id: 34,
@@ -332,6 +350,9 @@ export const vowsData: VowCategory[] = [
         textIt: 'Negare che gli insegnamenti Mahayana siano la parola del Buddha e farsi coinvolgere in un falso dharma.',
         textEs: 'Negar que las enseñanzas Mahayana sean la palabra del Buda e involucrarse en un falso dharma.',
         textZh: '诽谤大乘教法非佛所说，并参与伪法。',
+        textFr: 'Nier que les enseignements du Mahayana soient la parole du Bouddha et s\'impliquer dans un faux dharma.',
+        textDe: 'Leugnen, dass die Mahayana-Lehren das Wort Buddhas sind, und sich auf falschen Dharma einlassen.',
+        textHy: 'Հերքել, որ Մահայանայի ուսմունքները Բուդդայի խոսքն են, և ներգրավվել կեղծ դհարմայի մեջ:',
       },
       {
         id: 35,
@@ -340,6 +361,9 @@ export const vowsData: VowCategory[] = [
         textIt: 'Insegnare un falso Dharma.',
         textEs: 'Enseñar un falso Dharma.',
         textZh: '宣说伪法。',
+        textFr: 'Enseñar un faux Dharma.',
+        textDe: 'Falschen Dharma lehren.',
+        textHy: 'Ուսուցանել կեղծ Դհարմա:',
       },
       {
         id: 36,

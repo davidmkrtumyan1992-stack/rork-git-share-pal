@@ -42,24 +42,85 @@ import { VowSelection } from '@/components/VowSelection';
 type TabType = 'diary' | 'history' | 'settings' | 'vowSelection';
 type HistorySubTab = 'antidotes' | 'history';
 
-const vowCategoryNames: Record<string, { ru: string; en: string }> = {
-  tenPrinciples: { ru: '10 этических принципов', en: '10 Ethical Principles' },
-  freedom: { ru: 'Обеты свободы', en: 'Freedom Vows' },
-  bodhisattva: { ru: 'Обеты Бодхисаттвы', en: 'Bodhisattva Vows' },
-  tantric: { ru: 'Тантрические обеты', en: 'Tantric Vows' },
-  nuns: { ru: 'Обеты монахинь', en: 'Nun Vows' },
-  monks: { ru: 'Обеты монахов', en: 'Monk Vows' },
+const vowCategoryNames: Record<string, Record<string, string>> = {
+  tenPrinciples: { 
+    ru: '10 этических принципов', 
+    en: '10 Ethical Principles',
+    fr: '10 Principes éthiques',
+    de: '10 Ethische Prinzipien',
+    es: '10 Principios éticos',
+    zh: '10 条伦理原则',
+    hy: '10 էթիկական սկզբունքներ',
+    it: '10 Principi etici'
+  },
+  freedom: { 
+    ru: 'Обеты свободы', 
+    en: 'Freedom Vows',
+    fr: 'Vœux de liberté',
+    de: 'Freiheitsgelübde',
+    es: 'Votos de libertad',
+    zh: '自由誓言',
+    hy: 'Ազատության ուխտեր',
+    it: 'Voti di libertà'
+  },
+  bodhisattva: { 
+    ru: 'Обеты Бодхисаттвы', 
+    en: 'Bodhisattva Vows',
+    fr: 'Vœux de Bodhisattva',
+    de: 'Bodhisattva-Gelübde',
+    es: 'Votos de Bodhisattva',
+    zh: '菩萨戒',
+    hy: 'Բոդհիսատվայի ուխտեր',
+    it: 'Voti di Bodhisattva'
+  },
+  tantric: { 
+    ru: 'Тантрические обеты', 
+    en: 'Tantric Vows',
+    fr: 'Vœux tantriques',
+    de: 'Tantrische Gelübde',
+    es: 'Votos tántricos',
+    zh: '密宗誓言',
+    hy: 'Տանտրական ուխտեր',
+    it: 'Voti tantrici'
+  },
+  nuns: { 
+    ru: 'Обеты монахинь', 
+    en: 'Nun Vows',
+    fr: 'Vœux de religieuses',
+    de: 'Nonnengelübde',
+    es: 'Votos de monjas',
+    zh: '尼众戒',
+    hy: 'Կրոնավոր կանանց ուխտեր',
+    it: 'Voti di monache'
+  },
+  monks: { 
+    ru: 'Обеты монахов', 
+    en: 'Monk Vows',
+    fr: 'Vœux de moines',
+    de: 'Mönchsgelübde',
+    es: 'Votos de monjes',
+    zh: '僧众戒',
+    hy: 'Կրոնավոր տղամարդկանց ուխտեր',
+    it: 'Voti di monaci'
+  },
 };
 
-const getLocalizedText = (lang: string): 'ru' | 'en' => {
-  return lang === 'ru' ? 'ru' : 'en';
+const getLocalizedText = (lang: string): 'ru' | 'en' | 'it' | 'fr' | 'de' | 'es' | 'zh' | 'hy' => {
+  const supportedLangs = ['ru', 'en', 'it', 'fr', 'de', 'es', 'zh', 'hy'];
+  return supportedLangs.includes(lang) ? lang as any : 'en';
 };
 
 
 
-const antidoteTags = {
+const antidoteTags: Record<string, string[]> = {
   ru: ['практиковать щедрость', 'попросить прощения', 'медитировать на сострадание', 'сделать подношение', 'прочитать мантру'],
   en: ['practice generosity', 'ask for forgiveness', 'meditate on compassion', 'make an offering', 'recite a mantra'],
+  fr: ['pratiquer la générosité', 'demander pardon', 'méditer sur la compassion', 'faire une offrande', 'réciter un mantra'],
+  de: ['Großzügigkeit üben', 'um Vergebung bitten', 'über Mitgefühl meditieren', 'ein Opfer darbringen', 'ein Mantra rezitieren'],
+  es: ['practicar generosidad', 'pedir perdón', 'meditar sobre compasión', 'hacer una ofrenda', 'recitar un mantra'],
+  zh: ['修习慷慨', '请求原谅', '慈悲冥想', '供养', '诵咒'],
+  hy: ['առատաձեռնություն պրակտիկել', 'ներողություն խնդրել', 'կարեկցանք մեդիտացնել', 'ընծա մատուցել', 'մանտրա կարդալ'],
+  it: ['praticare la generosità', 'chiedere perdono', 'meditare sulla compassione', 'fare un\'offerta', 'recitare un mantra'],
 };
 
 const BREAKPOINTS = {
@@ -457,7 +518,7 @@ export function Dashboard({
     </View>
   );
 
-  const renderVowCard = (vowKey: string, vowItem: { ru: string; en: string }, index: number, categoryName: string, globalIdx: number) => {
+  const renderVowCard = (vowKey: string, vowItem: Record<string, string>, index: number, categoryName: string, globalIdx: number) => {
     const cardKey = `${vowKey}-${index}`;
     const state = cardStates[cardKey];
     const isKeepExpanded = state?.expanded === 'keep';
@@ -742,9 +803,15 @@ export function Dashboard({
     }
 
     return dailyVows.map((dailyVow: DailyVowItem, index: number) => {
-      const vowItem = {
+      const vowItem: Record<string, string> = {
         ru: dailyVow.vowItem.textRu,
         en: dailyVow.vowItem.textEn,
+        fr: dailyVow.vowItem.textFr || dailyVow.vowItem.textEn,
+        de: dailyVow.vowItem.textDe || dailyVow.vowItem.textEn,
+        es: dailyVow.vowItem.textEs || dailyVow.vowItem.textEn,
+        zh: dailyVow.vowItem.textZh || dailyVow.vowItem.textEn,
+        hy: dailyVow.vowItem.textHy || dailyVow.vowItem.textEn,
+        it: dailyVow.vowItem.textIt || dailyVow.vowItem.textEn,
       };
       const categoryName = getVowCategoryName(dailyVow.vowType);
       return renderVowCard(
