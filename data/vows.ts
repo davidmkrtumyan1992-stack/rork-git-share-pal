@@ -26,6 +26,7 @@ export const vowsData: VowCategory[] = [
         textIt: 'Dopo aver preso rifugio nel Buddha, non cercare rifugio in oggetti o divinità mondane.',
         textEs: 'Tras tomar refugio en el Buda, no buscar refugio en objetos o deidades mundanas.',
         textZh: '皈依佛以后，不皈依世俗对象及神灵。',
+        textHy: 'Բուդդային ապաստանելուց հետո այլևս ապաստան չփնտրել աշխարհիկ առարկաների կամ աստվածությունների մոտ:',
       },
       {
         id: 2,
@@ -34,6 +35,7 @@ export const vowsData: VowCategory[] = [
         textIt: 'Dopo aver preso rifugio nel Dharma, non recare danno ad alcun essere vivente.',
         textEs: 'Tras tomar refugio en el Dharma, no infligir daño a ningún ser vivo.',
         textZh: '皈依法以后，不伤害任何众生。',
+        textHy: 'Դհարմային ապաստանելուց հետո վնաս չպատճառել որևէ կենդանի էակի:',
       },
       {
         id: 3,
@@ -42,6 +44,7 @@ export const vowsData: VowCategory[] = [
         textIt: 'Dopo aver preso rifugio nel Sangha, evitare la stretta associazione con persone che non condividono la fede nel Cammino.',
         textEs: 'Tras tomar refugio en la Sangha, evitar la asociación cercana con personas que no comparten la fe en el Camino.',
         textZh: '皈依僧以后，避免与不信仰正道的人亲密交往。',
+        textHy: 'Սանգհային ապաստանելուց հետո խուսափել մտերիմ կապերից այն մարդկանց հետ, ովքեր չեն կիսում հավատը Ուղու հանդեպ:',
       },
       {
         id: 4,
@@ -50,6 +53,7 @@ export const vowsData: VowCategory[] = [
         textIt: 'Dopo aver preso rifugio nel Buddha, venerare ogni sua immagine come il Buddha stesso, indipendentemente dal materiale o dalla qualità artistica.',
         textEs: 'Tras tomar refugio en el Buda, venerar cualquier imagen suya como al Buda mismo, independientemente del material o la calidad artística.',
         textZh: '皈依佛以后，应将佛陀的任何画像或塑像视为佛陀本人，无论其材质或艺术水平如何。',
+        textHy: 'Բուդդային ապաստանելուց հետո Նրա ցանկացած պատկեր հարգել որպես հենց Բուդդային՝ անկախ նյութից կամ գեղարվեստական որակից:',
       },
       {
         id: 5,
@@ -58,6 +62,7 @@ export const vowsData: VowCategory[] = [
         textIt: 'Dopo aver preso rifugio nel Dharma, venerare ogni testo scritto o anche una singola lettera come il Dharma stesso.',
         textEs: 'Tras tomar refugio en el Dharma, venerar cualquier texto escrito o incluso una sola letra como al Dharma mismo.',
         textZh: '皈依法以后，应将任何文字佛经甚至一个字母视为法宝本身。',
+        textHy: 'Դհարմային ապաստանելուց հետո հարգել յուրաքանչյուր գրված տեքստ կամ նույնիսկ մեկ տառը որպես հենց Դհարման:',
       },
       {
         id: 6,
@@ -66,6 +71,7 @@ export const vowsData: VowCategory[] = [
         textIt: 'Dopo aver preso rifugio nel Sangha, venerare anche un frammento di veste zafferano come il Sangha stesso.',
         textEs: 'Tras tomar refugio en la Sangha, venerar incluso un fragmento de túnica azafrán como a la Sangha misma.',
         textZh: '皈依僧以后，应将哪怕是一块藏红色僧袍碎片视为僧宝本身。',
+        textHy: 'Սանգհային ապաստանելուց հետո հարգել նույնիսկ զաֆրանագույն հագուստի մի կտորը որպես հենց Սանգհան:',
       },
       {
         id: 7,
@@ -74,6 +80,7 @@ export const vowsData: VowCategory[] = [
         textIt: 'Prendere rifugio ancora e ancora, ricordando le sublimi qualità degli Oggetti del Rifugio.',
         textEs: 'Tomar refugio una y otra vez, recordando las sublimes cualidades de los Objetos de Refugio.',
         textZh: '一次又一次地皈依，铭记皈依对象的殊胜品质。',
+        textHy: 'Կրկին ու կրկին ապաստանել՝ հիշելով Ապաստանի Օբյեկտների վեհ հատկությունները:',
       },
       {
         id: 8,
@@ -82,6 +89,7 @@ export const vowsData: VowCategory[] = [
         textIt: 'Offrire la prima parte di ogni cibo o bevanda agli Oggetti del Rifugio, ricordando la loro gentilezza.',
         textEs: 'Ofrecer la primera parte de cualquier comida o bebida a los Objetos de Refugio, recordando su bondad.',
         textZh: '在饮食前，先将首份饮食供养皈依对象，铭记其恩德。',
+        textHy: 'Յուրաքանչյուր սննդի կամ խմիչքի առաջին մասը մատուցել Ապաստանի Օբյեկտներին՝ հիշելով նրանց բարությունը:',
       },
       {
         id: 9,
@@ -90,6 +98,7 @@ export const vowsData: VowCategory[] = [
         textIt: 'Incoraggiare gli altri a prendere rifugio.',
         textEs: 'Alentar a otros a tomar refugio.',
         textZh: '鼓励他人皈依。',
+        textHy: 'Խրախուսել ուրիշներին ապաստանել:',
       },
       {
         id: 10,
@@ -98,6 +107,7 @@ export const vowsData: VowCategory[] = [
         textIt: 'Prendere rifugio tre volte al mattino e tre volte alla sera, meditando sul suo benefico influsso.',
         textEs: 'Tomar refugio tres veces por la mañana y tres veces por la noche, reflexionando sobre su influencia benéfica.',
         textZh: '每日晨昏各三次行皈依礼，思惟其利益。',
+        textHy: 'Ապաստանել օրական երեք անգամ առավոտյան և երեք անգամ երեկոյան՝ խորհելով դրա բարերար ազդեցության մասին:',
       },
       {
         id: 11,
@@ -106,6 +116,7 @@ export const vowsData: VowCategory[] = [
         textIt: 'Affidarsi completamente agli Oggetti del Rifugio in ogni azione intrapresa.',
         textEs: 'Confiar plenamente en los Objetos de Refugio en cada acción emprendida.',
         textZh: '在从事任何活动时，完全依靠皈依对象。',
+        textHy: 'Ցանկացած գործողություն կատարելիս լիովին վստահել Ապաստանի Օբյեկտներին:',
       },
       {
         id: 12,
@@ -114,6 +125,7 @@ export const vowsData: VowCategory[] = [
         textIt: 'Dal momento della presa del rifugio, non rinunciare ai Tre Gioielli, neanche a costo della vita o nei propri pensieri.',
         textEs: 'Desde el momento de tomar refugio, no renunciar a las Tres Joyas, ni siquiera a costa de la vida o en los pensamientos.',
         textZh: '自皈依之日起，纵遇生命危险也不舍弃三宝，亦不在心中生起舍离之念。',
+        textHy: 'Ապաստանելու պահից սկսած՝ երբեք չհրաժարվել Երեք Թանկարժեքություններից, նույնիսկ սեփական կյանքի գնով կամ մտքերում:',
       },
     ],
   },
@@ -127,6 +139,7 @@ export const vowsData: VowCategory[] = [
         textIt: 'Uccidere.',
         textEs: 'Matar.',
         textZh: '杀生。',
+        textHy: 'Սպանություն:',
       },
       {
         id: 14,
@@ -135,6 +148,7 @@ export const vowsData: VowCategory[] = [
         textIt: 'Rubare.',
         textEs: 'Robar.',
         textZh: '不与取（偷窃）。',
+        textHy: 'Գողություն:',
       },
       {
         id: 15,
@@ -143,6 +157,7 @@ export const vowsData: VowCategory[] = [
         textIt: 'Condotta sessuale scorretta.',
         textEs: 'Conducta sexual incorrecta.',
         textZh: '邪淫。',
+        textHy: 'Սխալ սեռական վարքագիծ:',
       },
       {
         id: 16,
@@ -151,6 +166,7 @@ export const vowsData: VowCategory[] = [
         textIt: 'Mentire.',
         textEs: 'Mentir.',
         textZh: '妄语（撒谎）。',
+        textHy: 'Ստախոսություն:',
       },
       {
         id: 17,
@@ -159,6 +175,7 @@ export const vowsData: VowCategory[] = [
         textIt: 'Parola che divide (calunnia).',
         textEs: 'Habla divisiva (calunnia).',
         textZh: '离间语（挑拨离间）。',
+        textHy: 'Երկպառակություն սերմանող խոսք (զրպարտություն):',
       },
       {
         id: 18,
@@ -167,6 +184,7 @@ export const vowsData: VowCategory[] = [
         textIt: 'Parola aspra (insulto).',
         textEs: 'Habla ruda (insulto).',
         textZh: '恶口（辱骂）。',
+        textHy: 'Կոպիտ խոսք (վիրավորանք):',
       },
       {
         id: 19,
@@ -175,6 +193,7 @@ export const vowsData: VowCategory[] = [
         textIt: 'Chiacchiere oziose (parole inutili).',
         textEs: 'Charla vana (palabras inútiles).',
         textZh: '绮语（花言巧语或无意义的话）。',
+        textHy: 'Դատարկախոսություն (անօգուտ խոսքեր):',
       },
       {
         id: 20,
@@ -183,6 +202,7 @@ export const vowsData: VowCategory[] = [
         textIt: 'Avidità e invidia.',
         textEs: 'Codicia y envidia.',
         textZh: '贪欲和嫉妒。',
+        textHy: 'Ագահություն և նախանձ:',
       },
       {
         id: 21,
@@ -191,6 +211,7 @@ export const vowsData: VowCategory[] = [
         textIt: 'Malevolenza (cattiveria).',
         textEs: 'Malicia (mala voluntad).',
         textZh: '嗔恚（害心）。',
+        textHy: 'Չարակամություն:',
       },
       {
         id: 22,
@@ -199,6 +220,7 @@ export const vowsData: VowCategory[] = [
         textIt: 'Visioni errate.',
         textEs: 'Visiones erróneas.',
         textZh: '邪见。',
+        textHy: 'Սխալ հայացքներ:',
       },
     ],
   },
@@ -212,6 +234,7 @@ export const vowsData: VowCategory[] = [
         textIt: 'Non uccidere un essere umano o un feto umano.',
         textEs: 'No matar a un ser humano ni a un feto humano.',
         textZh: '不杀害人或胎儿。',
+        textHy: 'Չսպանել մարդուն կամ մարդկային սաղմը:',
       },
       {
         id: 24,
@@ -220,6 +243,7 @@ export const vowsData: VowCategory[] = [
         textIt: 'Non rubare nulla di valore.',
         textEs: 'No robar nada de valor.',
         textZh: '不偷窃任何有价值的物品。',
+        textHy: 'Չգողանալ արժեքավոր որևէ բան:',
       },
       {
         id: 25,
@@ -228,6 +252,7 @@ export const vowsData: VowCategory[] = [
         textIt: 'Non mentire sulle proprie realizzazioni spirituali.',
         textEs: 'No mentir sobre los propios logros espirituales.',
         textZh: '不在自己的修行成就上撒谎（妄说上人法）。',
+        textHy: 'Չստել սեփական հոգևոր ձեռքբերումների մասին:',
       },
       {
         id: 26,
@@ -236,6 +261,7 @@ export const vowsData: VowCategory[] = [
         textIt: 'Non commettere adulterio ed evitare condotte sessuali scorrette.',
         textEs: 'No cometer adulterio y evitar conductas sexuales incorrectas.',
         textZh: '不奸淫，避免邪淫行为。',
+        textHy: 'Չդրժել հավատարմությունը և խուսափել սխալ սեռական վարքագծից:',
       },
       {
         id: 27,
@@ -244,6 +270,7 @@ export const vowsData: VowCategory[] = [
         textIt: 'Non consumare alcol o droghe, e non offrirli ad altri.',
         textEs: 'No consumir alcohol ni drogas, ni ofrecerlos a otros.',
         textZh: '不饮酒或吸食毒品，亦不以此提供给他人。',
+        textHy: 'Չօգտագործել ալկոհոլ կամ թմրանյութեր և չառաջարկել դրանք ուրիշներին:',
       },
     ],
   },
