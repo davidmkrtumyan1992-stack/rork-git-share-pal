@@ -171,7 +171,7 @@ export function SettingsPanel({ onSelectVow }: SettingsPanelProps) {
     );
   };
 
-  const toggleVowType = (vowKey: string) => {
+  const toggleVowType = async (vowKey: string) => {
     console.log('[SettingsPanel] toggleVowType called');
     console.log('[SettingsPanel] Vow key:', vowKey);
     console.log('[SettingsPanel] Current selectedVowTypes:', selectedVowTypes);
@@ -194,12 +194,25 @@ export function SettingsPanel({ onSelectVow }: SettingsPanelProps) {
     
     console.log('[SettingsPanel] New selection:', newSelection);
     console.log('[SettingsPanel] Calling updateProfile');
+    
     try {
-      updateProfile({ selected_vow_types: newSelection });
-      console.log('[SettingsPanel] updateProfile called');
+      const result = await updateProfile({ selected_vow_types: newSelection });
+      console.log('[SettingsPanel] updateProfile successful');
+      console.log('[SettingsPanel] Result:', result);
     } catch (error) {
       console.error('[SettingsPanel] Error updating selected_vow_types:', error);
-      console.log('Please run the SQL migration in your Supabase database');
+      console.error('[SettingsPanel] Error details:', JSON.stringify(error, null, 2));
+      
+      let errorMessage = t.common.error;
+      if (error && typeof error === 'object' && 'message' in error) {
+        errorMessage = (error as any).message;
+      }
+      
+      Alert.alert(
+        t.common.error,
+        `${errorMessage}\n\nPlease run the SQL migration from APPLY_THIS_MIGRATION.sql`,
+        [{ text: t.common.cancel }]
+      );
     }
   };
 

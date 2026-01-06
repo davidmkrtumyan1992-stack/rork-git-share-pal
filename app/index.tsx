@@ -4,6 +4,7 @@ import {
   StyleSheet,
   ActivityIndicator,
   Modal,
+  Alert,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -70,21 +71,39 @@ export default function HomeScreen() {
   };
 
   const handleToggleVow = async (vowType: string) => {
+    console.log('[HomeScreen] handleToggleVow called for:', vowType);
+    console.log('[HomeScreen] Current selectedVows:', selectedVows);
+    
     const newVows = selectedVows.includes(vowType)
       ? selectedVows.filter(v => v !== vowType)
       : [...selectedVows, vowType];
     
-    console.log('Toggling vow:', vowType, 'New vows:', newVows);
+    console.log('[HomeScreen] New vows to save:', newVows);
+    
+    setIsSaving(true);
     
     try {
-      await updateProfile({ selected_vow_types: newVows });
-      console.log('Successfully toggled vow:', vowType);
+      const result = await updateProfile({ selected_vow_types: newVows });
+      console.log('[HomeScreen] Successfully toggled vow:', vowType);
+      console.log('[HomeScreen] Update result:', result);
     } catch (error) {
-      console.error('Error toggling vow:', error);
-      console.error('Error details:', JSON.stringify(error, null, 2));
+      console.error('[HomeScreen] Error toggling vow:', error);
+      console.error('[HomeScreen] Error type:', typeof error);
+      console.error('[HomeScreen] Error details:', JSON.stringify(error, null, 2));
+      
+      let errorMessage = 'Failed to update vow selection';
       if (error && typeof error === 'object' && 'message' in error) {
-        console.error('Error message:', (error as any).message);
+        errorMessage = (error as any).message;
+        console.error('[HomeScreen] Error message:', errorMessage);
       }
+      
+      Alert.alert(
+        'Error',
+        `${errorMessage}\n\nPlease run the SQL migration from APPLY_THIS_MIGRATION.sql in your Supabase SQL Editor.`,
+        [{ text: 'OK' }]
+      );
+    } finally {
+      setIsSaving(false);
     }
   };
 

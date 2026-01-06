@@ -28,7 +28,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
   });
 
   const fetchProfile = useCallback(async (userId: string) => {
-    console.log('Fetching profile for user:', userId);
+    console.log('[AuthContext] Fetching profile for user:', userId);
     
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
@@ -37,25 +37,36 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       .maybeSingle();
 
     if (profileError) {
-      console.log('Profile fetch error:', profileError.message);
+      console.error('[AuthContext] Profile fetch error:', profileError.message);
+      console.error('[AuthContext] Profile fetch error details:', JSON.stringify(profileError, null, 2));
     }
 
-    if (profile && profile.selected_vow_types) {
-      if (typeof profile.selected_vow_types === 'string') {
-        console.warn('selected_vow_types is a string, clearing corrupted data');
-        try {
-          await supabase
-            .from('profiles')
-            .update({ selected_vow_types: null })
-            .eq('user_id', userId);
-          profile.selected_vow_types = null;
-        } catch (e) {
-          console.error('Failed to clear corrupted selected_vow_types:', e);
+    if (profile) {
+      console.log('[AuthContext] Profile fetched:', {
+        userId: profile.user_id,
+        hasSelectedVows: !!profile.selected_vow_types,
+        vowsType: typeof profile.selected_vow_types,
+        vowsIsArray: Array.isArray(profile.selected_vow_types),
+        vowsValue: profile.selected_vow_types
+      });
+
+      if (profile.selected_vow_types) {
+        if (typeof profile.selected_vow_types === 'string') {
+          console.warn('[AuthContext] selected_vow_types is a string, clearing corrupted data');
+          try {
+            await supabase
+              .from('profiles')
+              .update({ selected_vow_types: null })
+              .eq('user_id', userId);
+            profile.selected_vow_types = null;
+          } catch (e) {
+            console.error('[AuthContext] Failed to clear corrupted selected_vow_types:', e);
+            profile.selected_vow_types = null;
+          }
+        } else if (!Array.isArray(profile.selected_vow_types)) {
+          console.warn('[AuthContext] selected_vow_types is not an array, clearing:', profile.selected_vow_types);
           profile.selected_vow_types = null;
         }
-      } else if (!Array.isArray(profile.selected_vow_types)) {
-        console.warn('selected_vow_types is not an array, clearing:', profile.selected_vow_types);
-        profile.selected_vow_types = null;
       }
     }
 
@@ -209,15 +220,17 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
 
   const updateProfile = useCallback(async (updates: Partial<Profile>) => {
     if (!state.user) {
-      console.log('updateProfile: No user, returning');
+      console.log('[AuthContext] updateProfile: No user, returning');
       return;
     }
     
-    console.log('Updating profile for user:', state.user.id, updates);
+    console.log('[AuthContext] Updating profile for user:', state.user.id);
+    console.log('[AuthContext] Updates:', JSON.stringify(updates, null, 2));
     
     const processedUpdates = { ...updates };
     if ('selected_vow_types' in processedUpdates && processedUpdates.selected_vow_types !== null) {
-      console.log('Processing selected_vow_types:', processedUpdates.selected_vow_types);
+      console.log('[AuthContext] Processing selected_vow_types:', processedUpdates.selected_vow_types);
+      console.log('[AuthContext] Is array?:', Array.isArray(processedUpdates.selected_vow_types));
     }
     
     const { data: existingProfile } = await supabase
@@ -256,11 +269,15 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     }
     
     if (error) {
-      console.log('Profile update/create error:', error.message);
+      console.error('[AuthContext] Profile update/create error:', error.message);
+      console.error('[AuthContext] Error code:', error.code);
+      console.error('[AuthContext] Error details:', JSON.stringify(error, null, 2));
+      console.error('[AuthContext] Attempted updates:', JSON.stringify(processedUpdates, null, 2));
       throw error;
     }
     
-    console.log('Profile saved successfully:', data);
+    console.log('[AuthContext] Profile saved successfully');
+    console.log('[AuthContext] Saved data:', JSON.stringify(data, null, 2));
     
     setState((prev) => ({
       ...prev,
