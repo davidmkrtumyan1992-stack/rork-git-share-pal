@@ -40,6 +40,25 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       console.log('Profile fetch error:', profileError.message);
     }
 
+    if (profile && profile.selected_vow_types) {
+      if (typeof profile.selected_vow_types === 'string') {
+        console.warn('selected_vow_types is a string, clearing corrupted data');
+        try {
+          await supabase
+            .from('profiles')
+            .update({ selected_vow_types: null })
+            .eq('user_id', userId);
+          profile.selected_vow_types = null;
+        } catch (e) {
+          console.error('Failed to clear corrupted selected_vow_types:', e);
+          profile.selected_vow_types = null;
+        }
+      } else if (!Array.isArray(profile.selected_vow_types)) {
+        console.warn('selected_vow_types is not an array, clearing:', profile.selected_vow_types);
+        profile.selected_vow_types = null;
+      }
+    }
+
     const { data: roles, error: rolesError } = await supabase
       .from('user_roles')
       .select('*')
@@ -196,6 +215,11 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     
     console.log('Updating profile for user:', state.user.id, updates);
     
+    const processedUpdates = { ...updates };
+    if ('selected_vow_types' in processedUpdates && processedUpdates.selected_vow_types !== null) {
+      console.log('Processing selected_vow_types:', processedUpdates.selected_vow_types);
+    }
+    
     const { data: existingProfile } = await supabase
       .from('profiles')
       .select('id')
@@ -209,7 +233,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       console.log('Profile exists, updating...');
       const result = await supabase
         .from('profiles')
-        .update(updates)
+        .update(processedUpdates)
         .eq('user_id', state.user.id)
         .select()
         .single();
@@ -223,7 +247,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
           user_id: state.user.id,
           username: state.user.email?.split('@')[0] || 'user',
           language: 'ru',
-          ...updates,
+          ...processedUpdates,
         })
         .select()
         .single();
