@@ -78,9 +78,13 @@ export default function HomeScreen() {
     
     try {
       await updateProfile({ selected_vow_types: newVows });
+      console.log('Successfully toggled vow:', vowType);
     } catch (error) {
       console.error('Error toggling vow:', error);
-      console.log('Please run the SQL migration in your Supabase database');
+      console.error('Error details:', JSON.stringify(error, null, 2));
+      if (error && typeof error === 'object' && 'message' in error) {
+        console.error('Error message:', (error as any).message);
+      }
     }
   };
 
@@ -95,9 +99,13 @@ export default function HomeScreen() {
     
     try {
       await updateProfile({ selected_vow_types: newVows });
+      console.log('Successfully removed vow:', vowType);
     } catch (error) {
       console.error('Error removing vow:', error);
-      console.log('Please run the SQL migration in your Supabase database');
+      console.error('Error details:', JSON.stringify(error, null, 2));
+      if (error && typeof error === 'object' && 'message' in error) {
+        console.error('Error message:', (error as any).message);
+      }
     }
   };
 
