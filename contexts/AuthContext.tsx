@@ -50,23 +50,9 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         vowsValue: profile.selected_vow_types
       });
 
-      if (profile.selected_vow_types) {
-        if (typeof profile.selected_vow_types === 'string') {
-          console.warn('[AuthContext] selected_vow_types is a string, clearing corrupted data');
-          try {
-            await supabase
-              .from('profiles')
-              .update({ selected_vow_types: null })
-              .eq('user_id', userId);
-            profile.selected_vow_types = null;
-          } catch (e) {
-            console.error('[AuthContext] Failed to clear corrupted selected_vow_types:', e);
-            profile.selected_vow_types = null;
-          }
-        } else if (!Array.isArray(profile.selected_vow_types)) {
-          console.warn('[AuthContext] selected_vow_types is not an array, clearing:', profile.selected_vow_types);
-          profile.selected_vow_types = null;
-        }
+      if (profile.selected_vow_types && !Array.isArray(profile.selected_vow_types)) {
+        console.warn('[AuthContext] selected_vow_types is not an array, normalizing:', profile.selected_vow_types);
+        profile.selected_vow_types = null;
       }
     }
 
