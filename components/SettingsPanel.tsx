@@ -165,8 +165,15 @@ export function SettingsPanel({ onSelectVow }: SettingsPanelProps) {
   };
 
   const toggleVowType = (vowKey: string) => {
+    console.log('[SettingsPanel] toggleVowType called');
+    console.log('[SettingsPanel] Vow key:', vowKey);
+    console.log('[SettingsPanel] Current selectedVowTypes:', selectedVowTypes);
+    
     const isLocked = VOW_TYPES.find(v => v.key === vowKey)?.locked;
+    console.log('[SettingsPanel] Is locked:', isLocked);
+    
     if (isLocked) {
+      console.log('[SettingsPanel] Showing locked alert');
       Alert.alert(
         t.vows.lockedTitle,
         `${t.vows.lockedDesc}\nsupport@keepmyvow.com`
@@ -178,8 +185,10 @@ export function SettingsPanel({ onSelectVow }: SettingsPanelProps) {
       ? selectedVowTypes.filter(k => k !== vowKey)
       : [...selectedVowTypes, vowKey];
     
-    console.log('SettingsPanel: Toggling vow type:', vowKey, 'New selection:', newSelection);
+    console.log('[SettingsPanel] New selection:', newSelection);
+    console.log('[SettingsPanel] Calling updateProfile');
     updateProfile({ selected_vow_types: newSelection });
+    console.log('[SettingsPanel] updateProfile called');
   };
 
   const getInitials = () => {
@@ -323,8 +332,13 @@ export function SettingsPanel({ onSelectVow }: SettingsPanelProps) {
                 isSelected && styles.vowTypeItemSelected,
                 vowType.locked && styles.vowTypeItemLocked,
               ]}
-              onPress={() => toggleVowType(vowType.key)}
+              onPress={() => {
+                console.log('[SettingsPanel] TouchableOpacity pressed:', vowType.key);
+                toggleVowType(vowType.key);
+              }}
               activeOpacity={0.7}
+              disabled={false}
+              testID={`settings-vow-${vowType.key}`}
             >
               <View style={styles.vowTypeContent}>
                 <Text style={[
