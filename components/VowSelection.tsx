@@ -118,10 +118,11 @@ export function VowSelection({
   const isMediumScreen = screenWidth >= BREAKPOINTS.md && screenWidth < BREAKPOINTS.lg;
 
   const handleVowPress = (vow: VowType) => {
-    console.log('Vow pressed:', vow.key, 'isLocked:', vow.isLocked);
+    console.log('VowSelection: Vow pressed:', vow.key, 'isLocked:', vow.isLocked, 'currently selected:', selectedVows.includes(vow.key));
     if (vow.isLocked) {
       setShowLockedDialog(true);
     } else {
+      console.log('VowSelection: Calling onToggleVow for:', vow.key);
       onToggleVow(vow.key);
     }
   };

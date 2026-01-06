@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -22,23 +22,22 @@ export default function HomeScreen() {
   const { user, profile, isLoading, updateProfile, setLanguage } = useAuth();
   
   const [currentScreen, setCurrentScreen] = useState<Screen>('dashboard');
-  const [selectedVows, setSelectedVows] = useState<string[]>([]);
   const [activeVow, setActiveVow] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const hasShownOnboarding = useRef(false);
 
+  const selectedVows = useMemo(() => {
+    return Array.isArray(profile?.selected_vow_types) 
+      ? profile.selected_vow_types 
+      : [];
+  }, [profile?.selected_vow_types]);
+
   useEffect(() => {
-    if (profile?.selected_vow_types) {
-      const vows = Array.isArray(profile.selected_vow_types) 
-        ? profile.selected_vow_types 
-        : [];
-      setSelectedVows(vows);
-      if (vows.length > 0 && !activeVow) {
-        setActiveVow(vows[0]);
-      }
+    if (selectedVows.length > 0 && !activeVow) {
+      setActiveVow(selectedVows[0]);
     }
-  }, [profile?.selected_vow_types, activeVow]);
+  }, [selectedVows, activeVow]);
 
   useEffect(() => {
     if (user && profile) {
@@ -65,21 +64,29 @@ export default function HomeScreen() {
     }
   };
 
-  const handleToggleVow = (vowType: string) => {
-    setSelectedVows(prev => {
-      if (prev.includes(vowType)) {
-        return prev.filter(v => v !== vowType);
-      }
-      return [...prev, vowType];
-    });
+  const handleToggleVow = async (vowType: string) => {
+    const newVows = selectedVows.includes(vowType)
+      ? selectedVows.filter(v => v !== vowType)
+      : [...selectedVows, vowType];
+    
+    console.log('Toggling vow:', vowType, 'New vows:', newVows);
+    
+    try {
+      await updateProfile({ selected_vow_types: newVows });
+    } catch (error) {
+      console.log('Error toggling vow:', error);
+    }
   };
 
   const handleRemoveVow = async (vowType: string) => {
     const newVows = selectedVows.filter(v => v !== vowType);
-    setSelectedVows(newVows);
+    
     if (activeVow === vowType) {
       setActiveVow(newVows.length > 0 ? newVows[0] : null);
     }
+    
+    console.log('Removing vow:', vowType, 'New vows:', newVows);
+    
     try {
       await updateProfile({ selected_vow_types: newVows });
     } catch (error) {
@@ -88,17 +95,10 @@ export default function HomeScreen() {
   };
 
   const handleConfirmVows = async () => {
-    console.log('Confirming vows:', selectedVows);
-    setIsSaving(true);
-    try {
-      await updateProfile({ selected_vow_types: selectedVows });
-      if (selectedVows.length > 0 && !selectedVows.includes(activeVow || '')) {
-        setActiveVow(selectedVows[0]);
-      }
-    } catch (error) {
-      console.log('Error saving vows:', error);
-    } finally {
-      setIsSaving(false);
+    console.log('Vows already saved via toggleVow');
+    setIsSaving(false);
+    if (selectedVows.length > 0 && !selectedVows.includes(activeVow || '')) {
+      setActiveVow(selectedVows[0]);
     }
   };
 

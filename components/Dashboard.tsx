@@ -1146,8 +1146,12 @@ export function Dashboard({
         {activeTab === 'vowSelection' && onToggleVow && onConfirmVows && (
           <VowSelection
             selectedVows={selectedVows}
-            onToggleVow={onToggleVow}
+            onToggleVow={(vowKey) => {
+              console.log('Dashboard: VowSelection onToggleVow called:', vowKey);
+              onToggleVow(vowKey);
+            }}
             onConfirm={() => {
+              console.log('Dashboard: VowSelection onConfirm called');
               onConfirmVows();
               setActiveTab('diary');
             }}

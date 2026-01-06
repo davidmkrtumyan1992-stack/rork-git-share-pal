@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -94,21 +94,10 @@ export function SettingsPanel({ onSelectVow }: SettingsPanelProps) {
   const [showTimezoneList, setShowTimezoneList] = useState(false);
   const [showLanguageList, setShowLanguageList] = useState(false);
   const [notificationInterval, setNotificationInterval] = useState(2);
-  const [selectedVowTypes, setSelectedVowTypes] = useState<string[]>([]);
 
-  useEffect(() => {
-    if (profile?.selected_vow_types) {
-      try {
-        const types = Array.isArray(profile.selected_vow_types) 
-          ? profile.selected_vow_types 
-          : [];
-        setSelectedVowTypes(types);
-      } catch (error) {
-        console.log('Error parsing selected_vow_types:', error);
-        setSelectedVowTypes([]);
-      }
-    }
-  }, [profile?.selected_vow_types]);
+  const selectedVowTypes = Array.isArray(profile?.selected_vow_types) 
+    ? profile.selected_vow_types 
+    : [];
 
   const signOutMutation = useMutation({
     mutationFn: signOut,
@@ -189,7 +178,7 @@ export function SettingsPanel({ onSelectVow }: SettingsPanelProps) {
       ? selectedVowTypes.filter(k => k !== vowKey)
       : [...selectedVowTypes, vowKey];
     
-    setSelectedVowTypes(newSelection);
+    console.log('SettingsPanel: Toggling vow type:', vowKey, 'New selection:', newSelection);
     updateProfile({ selected_vow_types: newSelection });
   };
 
