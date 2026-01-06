@@ -29,14 +29,16 @@ export default function HomeScreen() {
   const hasShownOnboarding = useRef(false);
 
   useEffect(() => {
-    if (profile?.selected_vow) {
-      const vows = profile.selected_vow.split(',').filter(Boolean);
+    if (profile?.selected_vow_types) {
+      const vows = Array.isArray(profile.selected_vow_types) 
+        ? profile.selected_vow_types 
+        : [];
       setSelectedVows(vows);
       if (vows.length > 0 && !activeVow) {
         setActiveVow(vows[0]);
       }
     }
-  }, [profile?.selected_vow, activeVow]);
+  }, [profile?.selected_vow_types, activeVow]);
 
   useEffect(() => {
     if (user && profile) {
@@ -79,7 +81,7 @@ export default function HomeScreen() {
       setActiveVow(newVows.length > 0 ? newVows[0] : null);
     }
     try {
-      await updateProfile({ selected_vow: newVows.join(',') });
+      await updateProfile({ selected_vow_types: newVows });
     } catch (error) {
       console.log('Error removing vow:', error);
     }
@@ -89,7 +91,7 @@ export default function HomeScreen() {
     console.log('Confirming vows:', selectedVows);
     setIsSaving(true);
     try {
-      await updateProfile({ selected_vow: selectedVows.join(',') });
+      await updateProfile({ selected_vow_types: selectedVows });
       if (selectedVows.length > 0 && !selectedVows.includes(activeVow || '')) {
         setActiveVow(selectedVows[0]);
       }
