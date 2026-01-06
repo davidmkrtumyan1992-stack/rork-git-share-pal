@@ -28,9 +28,14 @@ export default function HomeScreen() {
   const hasShownOnboarding = useRef(false);
 
   const selectedVows = useMemo(() => {
-    return Array.isArray(profile?.selected_vow_types) 
-      ? profile.selected_vow_types 
-      : [];
+    try {
+      return Array.isArray(profile?.selected_vow_types) 
+        ? profile.selected_vow_types 
+        : [];
+    } catch (e) {
+      console.log('Error accessing selected_vow_types:', e);
+      return [];
+    }
   }, [profile?.selected_vow_types]);
 
   useEffect(() => {
@@ -74,7 +79,8 @@ export default function HomeScreen() {
     try {
       await updateProfile({ selected_vow_types: newVows });
     } catch (error) {
-      console.log('Error toggling vow:', error);
+      console.error('Error toggling vow:', error);
+      console.log('Please run the SQL migration in your Supabase database');
     }
   };
 
@@ -90,7 +96,8 @@ export default function HomeScreen() {
     try {
       await updateProfile({ selected_vow_types: newVows });
     } catch (error) {
-      console.log('Error removing vow:', error);
+      console.error('Error removing vow:', error);
+      console.log('Please run the SQL migration in your Supabase database');
     }
   };
 

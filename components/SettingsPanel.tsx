@@ -95,9 +95,16 @@ export function SettingsPanel({ onSelectVow }: SettingsPanelProps) {
   const [showLanguageList, setShowLanguageList] = useState(false);
   const [notificationInterval, setNotificationInterval] = useState(2);
 
-  const selectedVowTypes = Array.isArray(profile?.selected_vow_types) 
-    ? profile.selected_vow_types 
-    : [];
+  const selectedVowTypes = (() => {
+    try {
+      return Array.isArray(profile?.selected_vow_types) 
+        ? profile.selected_vow_types 
+        : [];
+    } catch (e) {
+      console.log('Error accessing selected_vow_types:', e);
+      return [];
+    }
+  })();
 
   const signOutMutation = useMutation({
     mutationFn: signOut,
@@ -187,8 +194,13 @@ export function SettingsPanel({ onSelectVow }: SettingsPanelProps) {
     
     console.log('[SettingsPanel] New selection:', newSelection);
     console.log('[SettingsPanel] Calling updateProfile');
-    updateProfile({ selected_vow_types: newSelection });
-    console.log('[SettingsPanel] updateProfile called');
+    try {
+      updateProfile({ selected_vow_types: newSelection });
+      console.log('[SettingsPanel] updateProfile called');
+    } catch (error) {
+      console.error('[SettingsPanel] Error updating selected_vow_types:', error);
+      console.log('Please run the SQL migration in your Supabase database');
+    }
   };
 
   const getInitials = () => {
