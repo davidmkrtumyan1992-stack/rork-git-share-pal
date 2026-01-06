@@ -19,7 +19,6 @@ import {
   Lock,
   Users,
   Shield,
-  Check,
   X,
 } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
@@ -202,21 +201,8 @@ export function VowSelection({
                     <Text style={[styles.vowDesc, vow.isLocked && styles.textLocked, isSmallScreen && styles.vowDescSmall]}>
                       {desc}
                     </Text>
-                    {isSelected && !vow.isLocked && (
-                      <View style={styles.selectedBadge}>
-                        <Check size={12} color="#6B8E7F" />
-                        <Text style={styles.selectedText}>• {t.vows.selected}</Text>
-                      </View>
-                    )}
                   </View>
                 </View>
-                
-                <LinearGradient
-                  colors={vow.gradientColors}
-                  style={styles.cardAccent}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                />
               </TouchableOpacity>
             );
           })}
@@ -390,21 +376,8 @@ export function VowSelection({
                     <Text style={[styles.vowDesc, vow.isLocked && styles.textLocked, isSmallScreen && styles.vowDescSmall]}>
                       {desc}
                     </Text>
-                    {isSelected && !vow.isLocked && (
-                      <View style={styles.selectedBadge}>
-                        <Check size={12} color="#6B8E7F" />
-                        <Text style={styles.selectedText}>• {t.vows.selected}</Text>
-                      </View>
-                    )}
                   </View>
                 </View>
-                
-                <LinearGradient
-                  colors={vow.gradientColors}
-                  style={styles.cardAccent}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                />
               </TouchableOpacity>
             );
           })}
@@ -610,8 +583,9 @@ const styles = StyleSheet.create({
   },
   vowCardSelected: {
     borderColor: '#6B8E7F',
+    borderWidth: 3,
     shadowColor: '#6B8E7F',
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.25,
     shadowRadius: 20,
     elevation: 8,
   },
@@ -670,24 +644,7 @@ const styles = StyleSheet.create({
   textLocked: {
     color: '#8A9A95',
   },
-  selectedBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 10,
-    gap: 4,
-  },
-  selectedText: {
-    fontSize: 14,
-    fontWeight: '600' as const,
-    color: '#6B8E7F',
-  },
-  cardAccent: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 4,
-  },
+
   footer: {
     paddingTop: 16,
   },
