@@ -15,7 +15,6 @@ export interface Profile {
   notification_timezone: string;
   selected_vow: string | null;
   selected_vow_types: string[] | null;
-  is_first_login: boolean;
   created_at: string;
   updated_at: string;
 }

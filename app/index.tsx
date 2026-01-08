@@ -46,24 +46,21 @@ export default function HomeScreen() {
   }, [selectedVows, activeVow]);
 
   useEffect(() => {
-    if (user && profile) {
-      if (profile.is_first_login !== false && !hasShownOnboarding.current) {
-        console.log('First login detected, showing onboarding');
+    if (user && profile && !hasShownOnboarding.current) {
+      if (selectedVows.length === 0) {
+        console.log('No vows selected, showing onboarding');
         setShowOnboarding(true);
         hasShownOnboarding.current = true;
-      } else if (profile.is_first_login === false && showOnboarding) {
-        console.log('Onboarding already completed, hiding screen');
-        setShowOnboarding(false);
       }
     }
-  }, [user, profile, showOnboarding]);
+  }, [user, profile, selectedVows]);
 
   const handleOnboardingComplete = async (language: Language) => {
     console.log('Onboarding complete, setting language:', language);
     try {
       await setLanguage(language);
-      await updateProfile({ is_first_login: false });
-      console.log('Onboarding completed successfully, profile updated');
+      setShowOnboarding(false);
+      console.log('Onboarding completed successfully');
     } catch (error) {
       console.log('Error completing onboarding:', error);
       setShowOnboarding(false);
