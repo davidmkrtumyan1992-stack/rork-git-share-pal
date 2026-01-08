@@ -40,11 +40,11 @@ export default function HomeScreen() {
   }, [profile?.selected_vow_types]);
 
   const [localSelectedVows, setLocalSelectedVows] = useState<string[]>([]);
-  const pendingSaveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isInitializedRef = useRef(false);
+  const isSavingRef = useRef(false);
 
   useEffect(() => {
-    if (serverSelectedVows.length > 0 || (profile && !isInitializedRef.current)) {
+    if (!isSavingRef.current && (serverSelectedVows.length > 0 || (profile && !isInitializedRef.current))) {
       setLocalSelectedVows(serverSelectedVows);
       isInitializedRef.current = true;
     }
@@ -81,6 +81,7 @@ export default function HomeScreen() {
   };
 
   const saveVowsToServer = useCallback(async (vows: string[]) => {
+    isSavingRef.current = true;
     try {
       await updateProfile({ selected_vow_types: vows });
       console.log('[HomeScreen] Successfully saved vows to server');
@@ -88,6 +89,10 @@ export default function HomeScreen() {
       console.error('[HomeScreen] Error saving vows:', error);
       setLocalSelectedVows(serverSelectedVows);
       Alert.alert('Error', 'Failed to save vow selection. Please try again.');
+    } finally {
+      setTimeout(() => {
+        isSavingRef.current = false;
+      }, 500);
     }
   }, [updateProfile, serverSelectedVows]);
 
@@ -100,15 +105,7 @@ export default function HomeScreen() {
         : [...prev, vowType];
       
       console.log('[HomeScreen] New vows (optimistic):', newVows);
-      
-      if (pendingSaveRef.current) {
-        clearTimeout(pendingSaveRef.current);
-      }
-      
-      pendingSaveRef.current = setTimeout(() => {
-        saveVowsToServer(newVows);
-        pendingSaveRef.current = null;
-      }, 300);
+      saveVowsToServer(newVows);
       
       return newVows;
     });
@@ -124,14 +121,7 @@ export default function HomeScreen() {
         setActiveVow(newVows.length > 0 ? newVows[0] : null);
       }
       
-      if (pendingSaveRef.current) {
-        clearTimeout(pendingSaveRef.current);
-      }
-      
-      pendingSaveRef.current = setTimeout(() => {
-        saveVowsToServer(newVows);
-        pendingSaveRef.current = null;
-      }, 300);
+      saveVowsToServer(newVows);
       
       return newVows;
     });

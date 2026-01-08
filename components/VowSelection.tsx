@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -117,12 +117,22 @@ export function VowSelection({
   const isLargeScreen = screenWidth >= BREAKPOINTS.lg;
   const isMediumScreen = screenWidth >= BREAKPOINTS.md && screenWidth < BREAKPOINTS.lg;
 
+  const lastPressTime = useRef<Record<string, number>>({});
+
   const handleVowPress = useCallback((vow: VowType) => {
     if (vow.isLocked) {
       setShowLockedDialog(true);
-    } else {
-      onToggleVow(vow.key);
+      return;
     }
+    
+    const now = Date.now();
+    const lastPress = lastPressTime.current[vow.key] || 0;
+    if (now - lastPress < 500) {
+      return;
+    }
+    lastPressTime.current[vow.key] = now;
+    
+    onToggleVow(vow.key);
   }, [onToggleVow]);
 
   const handleCloseDialog = useCallback(() => {
@@ -167,7 +177,7 @@ export function VowSelection({
             const desc = t.vows[vow.descKey] as string;
 
             return (
-              <TouchableOpacity
+              <Pressable
                 key={vow.key}
                 style={[
                   styles.vowCard,
@@ -177,8 +187,6 @@ export function VowSelection({
                   (isMediumScreen || isLargeScreen) && styles.vowCardGrid,
                 ]}
                 onPress={() => handleVowPress(vow)}
-                activeOpacity={0.7}
-                disabled={false}
                 testID={`vow-inline-${vow.key}`}
               >
                 <View style={styles.cardContent}>
@@ -207,7 +215,7 @@ export function VowSelection({
                     </Text>
                   </View>
                 </View>
-              </TouchableOpacity>
+              </Pressable>
             );
           })}
         </View>
@@ -343,7 +351,7 @@ export function VowSelection({
             const desc = t.vows[vow.descKey] as string;
 
             return (
-              <TouchableOpacity
+              <Pressable
                 key={vow.key}
                 style={[
                   styles.vowCard,
@@ -353,8 +361,6 @@ export function VowSelection({
                   (isMediumScreen || isLargeScreen) && styles.vowCardGrid,
                 ]}
                 onPress={() => handleVowPress(vow)}
-                activeOpacity={0.7}
-                disabled={false}
                 testID={`vow-modal-${vow.key}`}
               >
                 <View style={styles.cardContent}>
@@ -383,7 +389,7 @@ export function VowSelection({
                     </Text>
                   </View>
                 </View>
-              </TouchableOpacity>
+              </Pressable>
             );
           })}
         </ScrollView>
