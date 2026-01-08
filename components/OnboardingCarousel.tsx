@@ -234,24 +234,6 @@ export function OnboardingCarousel({ language, onComplete }: OnboardingCarouselP
         decelerationRate="fast"
       >
         {slides.map((slide, index) => {
-          const inputRange = [
-            (index - 1) * SCREEN_WIDTH,
-            index * SCREEN_WIDTH,
-            (index + 1) * SCREEN_WIDTH,
-          ];
-
-          const translateY = scrollX.interpolate({
-            inputRange,
-            outputRange: [50, 0, 50],
-            extrapolate: 'clamp',
-          });
-
-          const opacity = scrollX.interpolate({
-            inputRange,
-            outputRange: [0.3, 1, 0.3],
-            extrapolate: 'clamp',
-          });
-
           if (index === 0) {
             return (
               <View key={index} style={styles.slide}>
