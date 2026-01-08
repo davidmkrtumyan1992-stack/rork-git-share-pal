@@ -444,11 +444,6 @@ const styles = StyleSheet.create({
     fontWeight: '700' as const,
     color: '#2C3E3A',
     textAlign: 'center',
-    fontFamily: Platform.select({
-      ios: 'Georgia',
-      android: 'serif',
-      web: 'Georgia, "Times New Roman", serif',
-    }),
   },
   dotsContainer: {
     flexDirection: 'row',
@@ -560,11 +555,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600' as const,
     color: '#F5F2ED',
-    fontFamily: Platform.select({
-      ios: 'Georgia',
-      android: 'serif',
-      web: 'Georgia, "Times New Roman", serif',
-    }),
     textShadowColor: 'rgba(0, 0, 0, 0.5)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 3,
@@ -596,11 +586,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700' as const,
     color: '#FFFFFF',
-    fontFamily: Platform.select({
-      ios: 'Georgia',
-      android: 'serif',
-      web: 'Georgia, "Times New Roman", serif',
-    }),
     textShadowColor: 'rgba(0, 0, 0, 0.8)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 6,

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -117,22 +117,13 @@ export function VowSelection({
   const isLargeScreen = screenWidth >= BREAKPOINTS.lg;
   const isMediumScreen = screenWidth >= BREAKPOINTS.md && screenWidth < BREAKPOINTS.lg;
 
-  const handleVowPress = (vow: VowType) => {
-    console.log('[VowSelection] handleVowPress called');
-    console.log('[VowSelection] Vow key:', vow.key);
-    console.log('[VowSelection] Is locked:', vow.isLocked);
-    console.log('[VowSelection] Currently selected:', selectedVows.includes(vow.key));
-    console.log('[VowSelection] Selected vows array:', selectedVows);
-    
+  const handleVowPress = useCallback((vow: VowType) => {
     if (vow.isLocked) {
-      console.log('[VowSelection] Showing locked dialog');
       setShowLockedDialog(true);
     } else {
-      console.log('[VowSelection] Calling onToggleVow with key:', vow.key);
       onToggleVow(vow.key);
-      console.log('[VowSelection] onToggleVow called');
     }
-  };
+  }, [onToggleVow]);
 
   const responsiveStyles = {
     content: {
@@ -181,10 +172,7 @@ export function VowSelection({
                   vow.isLocked && styles.vowCardLocked,
                   (isMediumScreen || isLargeScreen) && styles.vowCardGrid,
                 ]}
-                onPress={() => {
-                  console.log('[VowSelection INLINE] TouchableOpacity pressed:', vow.key);
-                  handleVowPress(vow);
-                }}
+                onPress={() => handleVowPress(vow)}
                 activeOpacity={0.7}
                 disabled={false}
                 testID={`vow-inline-${vow.key}`}
@@ -360,10 +348,7 @@ export function VowSelection({
                   vow.isLocked && styles.vowCardLocked,
                   (isMediumScreen || isLargeScreen) && styles.vowCardGrid,
                 ]}
-                onPress={() => {
-                  console.log('[VowSelection MODAL] TouchableOpacity pressed:', vow.key);
-                  handleVowPress(vow);
-                }}
+                onPress={() => handleVowPress(vow)}
                 activeOpacity={0.7}
                 disabled={false}
                 testID={`vow-modal-${vow.key}`}
