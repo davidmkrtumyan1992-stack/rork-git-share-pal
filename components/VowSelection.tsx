@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -125,7 +125,11 @@ export function VowSelection({
     }
   }, [onToggleVow]);
 
-  const responsiveStyles = {
+  const handleCloseDialog = useCallback(() => {
+    setShowLockedDialog(false);
+  }, []);
+
+  const responsiveStyles = useMemo(() => ({
     content: {
       paddingHorizontal: isSmallScreen ? 16 : isLargeScreen ? 40 : 24,
       maxWidth: isLargeScreen ? 1200 : undefined,
@@ -138,7 +142,7 @@ export function VowSelection({
     },
     cardPadding: isSmallScreen ? 16 : 24,
     iconSize: isSmallScreen ? 56 : 64,
-  };
+  }), [isSmallScreen, isLargeScreen]);
 
   if (isInline) {
     return (
@@ -423,7 +427,7 @@ export function VowSelection({
       >
         <Pressable 
           style={styles.modalOverlay}
-          onPress={() => setShowLockedDialog(false)}
+          onPress={handleCloseDialog}
         >
           <Pressable style={[
             styles.modalContent,
@@ -458,7 +462,7 @@ export function VowSelection({
 
             <TouchableOpacity
               style={styles.modalCloseButton}
-              onPress={() => setShowLockedDialog(false)}
+              onPress={handleCloseDialog}
             >
               <Text style={styles.modalCloseText}>{t.common.cancel}</Text>
             </TouchableOpacity>

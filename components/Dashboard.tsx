@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect, memo } from 'react';
 import {
   View,
   Text,
@@ -109,6 +109,294 @@ const getLocalizedText = (lang: string): 'ru' | 'en' | 'it' | 'fr' | 'de' | 'es'
   const supportedLangs = ['ru', 'en', 'it', 'fr', 'de', 'es', 'zh', 'hy'];
   return supportedLangs.includes(lang) ? lang as any : 'en';
 };
+
+const VowCardComponent = memo(({ 
+  vowKey,
+  vowItem,
+  index,
+  categoryName,
+  globalIdx,
+  cardKey,
+  state,
+  isSubmitted,
+  todayEntry,
+  isSmallScreen,
+  responsiveStyles,
+  language,
+  t,
+  handleExpandCard,
+  handleCollapseCard,
+  handleSaveKeep,
+  handleSaveBreak,
+  updateNoteText,
+  updateAntidoteText,
+  selectAntidoteTag,
+  formatTime,
+  createEntryPending,
+}: any) => {
+  const isKeepExpanded = state?.expanded === 'keep';
+  const isBrokenExpanded = state?.expanded === 'break';
+  const isKept = todayEntry?.status === 'kept';
+  const isBroken = todayEntry?.status === 'broken';
+
+  return (
+    <View key={cardKey} style={[styles.vowCard, isSubmitted && styles.vowCardSubmitted]}>
+      <View style={styles.vowCardHeader}>
+        <View style={styles.vowNumberContainer}>
+          {isBroken ? (
+            <LinearGradient
+              colors={['#B85C4F', '#A04A3E']}
+              style={styles.vowNumber}
+            >
+              <Text style={styles.vowNumberText}>{globalIdx + 1}</Text>
+            </LinearGradient>
+          ) : (
+            <LinearGradient
+              colors={['#6B8E7F', '#5A7A6D']}
+              style={styles.vowNumber}
+            >
+              <Text style={styles.vowNumberText}>{globalIdx + 1}</Text>
+            </LinearGradient>
+          )}
+        </View>
+        <View style={styles.vowCategoryBadge}>
+          <Text style={styles.vowCategoryText}>{categoryName}</Text>
+        </View>
+        {isSubmitted && todayEntry && (
+          <View style={styles.timeBadge}>
+            <Clock size={12} color={darkTheme.colors.textMuted} />
+            <Text style={styles.timeBadgeText}>{formatTime(todayEntry.updated_at)}</Text>
+          </View>
+        )}
+      </View>
+
+      <Text style={styles.vowText}>{vowItem[getLocalizedText(language)]}</Text>
+
+      {isSubmitted ? (
+        <View style={styles.submittedView}>
+          {isKept && (
+            <View style={styles.infoBoxKept}>
+              <Check size={20} color="#7FA88F" />
+              <Text style={styles.infoBoxKeptText}>
+                {t.dashboard.keptVow}
+              </Text>
+            </View>
+          )}
+          {isBroken && (
+            <>
+              <View style={styles.infoBoxBroken}>
+                <X size={20} color="#B85C4F" />
+                <Text style={styles.infoBoxBrokenText}>
+                  {t.dashboard.vowWasBroken}
+                </Text>
+              </View>
+              {todayEntry.antidote_text && (
+                <View style={styles.infoBoxAntidote}>
+                  <Text style={styles.antidoteLabelSmall}>
+                    {t.dashboard.antidoteLabel}
+                  </Text>
+                  <Text style={styles.antidoteValueText}>
+                    {todayEntry.antidote_text}
+                  </Text>
+                </View>
+              )}
+            </>
+          )}
+          {todayEntry.note_text && isKept && (
+            <View style={styles.noteDisplay}>
+              <Text style={styles.noteDisplayText}>«{todayEntry.note_text}»</Text>
+            </View>
+          )}
+        </View>
+      ) : (
+        <>
+          {!isKeepExpanded && !isBrokenExpanded && (
+            <View style={styles.vowActions}>
+              <TouchableOpacity
+                style={styles.keepButton}
+                onPress={() => handleExpandCard(cardKey, 'keep')}
+              >
+                <LinearGradient
+                  colors={['#7FA88F', '#6B9E7D']}
+                  style={styles.actionButtonGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                >
+                  <Check size={18} color="#FFFFFF" />
+                  <Text style={styles.actionButtonText}>
+                    {t.dashboard.kept}
+                  </Text>
+                </LinearGradient>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.brokenButton}
+                onPress={() => handleExpandCard(cardKey, 'break')}
+              >
+                <LinearGradient
+                  colors={['#B85C4F', '#A04A3E']}
+                  style={styles.actionButtonGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                >
+                  <X size={18} color="#FFFFFF" />
+                  <Text style={styles.actionButtonText}>
+                    {t.dashboard.broken}
+                  </Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {isKeepExpanded && (
+            <View style={styles.expandedForm}>
+              <View style={styles.keepInfoBlock}>
+                <Check size={20} color="#7FA88F" />
+                <Text style={styles.keepInfoText}>
+                  {t.dashboard.tellWhatYouDid}
+                </Text>
+              </View>
+
+              <TextInput
+                style={styles.noteInput}
+                placeholder={t.dashboard.notePlaceholder}
+                placeholderTextColor={darkTheme.colors.textMuted}
+                value={state?.noteText || ''}
+                onChangeText={(text) => updateNoteText(cardKey, text)}
+                multiline
+                numberOfLines={3}
+              />
+
+              <View style={styles.formActions}>
+                <TouchableOpacity
+                  style={styles.cancelButton}
+                  onPress={() => handleCollapseCard(cardKey)}
+                >
+                  <Text style={styles.cancelButtonText}>
+                    {t.common.cancel}
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.saveButton}
+                  onPress={() => handleSaveKeep(vowKey, cardKey, globalIdx)}
+                  disabled={createEntryPending}
+                >
+                  <LinearGradient
+                    colors={['#7FA88F', '#6B9E7D']}
+                    style={styles.saveButtonGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                  >
+                    {createEntryPending ? (
+                      <ActivityIndicator size="small" color="#FFFFFF" />
+                    ) : (
+                      <>
+                        <Sparkles size={18} color="#FFFFFF" />
+                        <Text style={styles.saveButtonText}>
+                          {t.common.save}
+                        </Text>
+                      </>
+                    )}
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+
+          {isBrokenExpanded && (
+            <View style={styles.expandedForm}>
+              <View style={styles.brokenInfoBlock}>
+                <AlertCircle size={20} color="#C5A572" />
+                <Text style={styles.brokenInfoText}>
+                  {t.dashboard.whatWillYouDo}
+                </Text>
+              </View>
+
+              <Text style={styles.antidoteLabel}>
+                {t.dashboard.antidote}
+              </Text>
+
+              <View style={styles.antidoteTagsWrapper}>
+                <ScrollView 
+                  horizontal 
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.antidoteTagsScroll}
+                  contentContainerStyle={styles.antidoteTagsContent}
+                  decelerationRate="fast"
+                  snapToAlignment="start"
+                >
+                  {antidoteTags[getLocalizedText(language)].map((tag: string) => (
+                    <AntidoteTagButton
+                      key={tag}
+                      tag={tag}
+                      onPress={() => selectAntidoteTag(cardKey, tag)}
+                    />
+                  ))}
+                  <View style={styles.antidoteTagsSpacer} />
+                </ScrollView>
+                <LinearGradient
+                  colors={['rgba(255, 255, 255, 0)', 'rgba(255, 255, 255, 0.95)']}
+                  style={styles.antidoteFadeRight}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  pointerEvents="none"
+                />
+              </View>
+
+              <TextInput
+                style={styles.noteInput}
+                placeholder={t.dashboard.antidotePlaceholder}
+                placeholderTextColor={darkTheme.colors.textMuted}
+                value={state?.antidoteText || ''}
+                onChangeText={(text) => updateAntidoteText(cardKey, text)}
+                multiline
+                numberOfLines={3}
+              />
+
+              <View style={styles.formActions}>
+                <TouchableOpacity
+                  style={styles.cancelButton}
+                  onPress={() => handleCollapseCard(cardKey)}
+                >
+                  <Text style={styles.cancelButtonText}>
+                    {t.common.cancel}
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.saveButton}
+                  onPress={() => handleSaveBreak(vowKey, cardKey, globalIdx)}
+                  disabled={createEntryPending}
+                >
+                  <LinearGradient
+                    colors={['#C5A572', '#B09562']}
+                    style={styles.saveButtonGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                  >
+                    {createEntryPending ? (
+                      <ActivityIndicator size="small" color="#FFFFFF" />
+                    ) : (
+                      <>
+                        <Sparkles size={18} color="#FFFFFF" />
+                        <Text style={styles.saveButtonText}>
+                          {t.common.save}
+                        </Text>
+                      </>
+                    )}
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+        </>
+      )}
+    </View>
+  );
+});
+
+VowCardComponent.displayName = 'VowCard';
 
 
 
