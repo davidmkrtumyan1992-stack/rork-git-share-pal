@@ -23,6 +23,7 @@ import {
 } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { getTranslation } from '@/data/translations';
+import { useUnlockedVows } from '@/hooks/useUnlockedVows';
 
 type VowType = {
   key: string;
@@ -30,7 +31,7 @@ type VowType = {
   descKey: keyof ReturnType<typeof getTranslation>['vows'];
   icon: React.ComponentType<{ size: number; color: string }>;
   gradientColors: [string, string];
-  isLocked: boolean;
+  defaultLocked: boolean;
 };
 
 const BREAKPOINTS = {
@@ -46,7 +47,7 @@ const vowTypes: VowType[] = [
     descKey: 'tenPrinciplesDesc',
     icon: BookOpen,
     gradientColors: ['#6B8E7F', '#5A7A6D'],
-    isLocked: false,
+    defaultLocked: false,
   },
   {
     key: 'freedom',
@@ -54,7 +55,7 @@ const vowTypes: VowType[] = [
     descKey: 'freedomDesc',
     icon: Bird,
     gradientColors: ['#8FA89E', '#7FA88F'],
-    isLocked: false,
+    defaultLocked: false,
   },
   {
     key: 'bodhisattva',
@@ -62,7 +63,15 @@ const vowTypes: VowType[] = [
     descKey: 'bodhisattvaDesc',
     icon: Gem,
     gradientColors: ['#A67C5C', '#8B6A4E'],
-    isLocked: false,
+    defaultLocked: false,
+  },
+  {
+    key: 'pratimoksha',
+    titleKey: 'pratimoksha' as keyof ReturnType<typeof getTranslation>['vows'],
+    descKey: 'pratimokshaDesc' as keyof ReturnType<typeof getTranslation>['vows'],
+    icon: Shield,
+    gradientColors: ['#7B6B8E', '#6B5B7E'],
+    defaultLocked: true,
   },
   {
     key: 'tantric',
@@ -70,7 +79,7 @@ const vowTypes: VowType[] = [
     descKey: 'tantricDesc',
     icon: Lock,
     gradientColors: ['#4A6B5E', '#3A5B4E'],
-    isLocked: true,
+    defaultLocked: true,
   },
   {
     key: 'nuns',
@@ -78,7 +87,7 @@ const vowTypes: VowType[] = [
     descKey: 'nunsDesc',
     icon: Users,
     gradientColors: ['#C5A572', '#B09562'],
-    isLocked: true,
+    defaultLocked: true,
   },
   {
     key: 'monks',
@@ -86,7 +95,7 @@ const vowTypes: VowType[] = [
     descKey: 'monksDesc',
     icon: Shield,
     gradientColors: ['#8B7355', '#7B6345'],
-    isLocked: true,
+    defaultLocked: true,
   },
 ];
 
@@ -112,6 +121,7 @@ export function VowSelection({
   const insets = useSafeAreaInsets();
   const { width: screenWidth } = useWindowDimensions();
   const [showLockedDialog, setShowLockedDialog] = useState(false);
+  const { isVowLocked } = useUnlockedVows();
   
   const isSmallScreen = screenWidth < BREAKPOINTS.md;
   const isLargeScreen = screenWidth >= BREAKPOINTS.lg;
@@ -119,8 +129,13 @@ export function VowSelection({
 
   const lastPressTime = useRef<Record<string, number>>({});
 
+  const checkIsLocked = useCallback((vow: VowType): boolean => {
+    if (!vow.defaultLocked) return false;
+    return isVowLocked(vow.key);
+  }, [isVowLocked]);
+
   const handleVowPress = useCallback((vow: VowType) => {
-    if (vow.isLocked) {
+    if (checkIsLocked(vow)) {
       setShowLockedDialog(true);
       return;
     }
@@ -133,7 +148,7 @@ export function VowSelection({
     lastPressTime.current[vow.key] = now;
     
     onToggleVow(vow.key);
-  }, [onToggleVow]);
+  }, [onToggleVow, checkIsLocked]);
 
   const handleCloseDialog = useCallback(() => {
     setShowLockedDialog(false);
@@ -173,8 +188,9 @@ export function VowSelection({
           {vowTypes.map((vow) => {
             const IconComponent = vow.icon;
             const isSelected = selectedVows.includes(vow.key);
-            const title = t.vows[vow.titleKey] as string;
-            const desc = t.vows[vow.descKey] as string;
+            const isLocked = checkIsLocked(vow);
+            const title = t.vows[vow.titleKey] as string || vow.titleKey;
+            const desc = t.vows[vow.descKey] as string || vow.descKey;
 
             return (
               <Pressable
@@ -183,7 +199,7 @@ export function VowSelection({
                   styles.vowCard,
                   { padding: responsiveStyles.cardPadding },
                   isSelected && styles.vowCardSelected,
-                  vow.isLocked && styles.vowCardLocked,
+                  isLocked && styles.vowCardLocked,
                   (isMediumScreen || isLargeScreen) && styles.vowCardGrid,
                 ]}
                 onPress={() => handleVowPress(vow)}
@@ -199,7 +215,7 @@ export function VowSelection({
                     >
                       <IconComponent size={isSmallScreen ? 28 : 32} color="#FFFFFF" />
                     </LinearGradient>
-                    {vow.isLocked && (
+                    {isLocked && (
                       <View style={styles.lockOverlay}>
                         <Lock size={isSmallScreen ? 14 : 16} color="#FFFFFF" />
                       </View>
@@ -207,10 +223,10 @@ export function VowSelection({
                   </View>
                   
                   <View style={styles.textContainer}>
-                    <Text style={[styles.vowTitle, vow.isLocked && styles.textLocked, isSmallScreen && styles.vowTitleSmall]}>
+                    <Text style={[styles.vowTitle, isLocked && styles.textLocked, isSmallScreen && styles.vowTitleSmall]}>
                       {title}
                     </Text>
-                    <Text style={[styles.vowDesc, vow.isLocked && styles.textLocked, isSmallScreen && styles.vowDescSmall]}>
+                    <Text style={[styles.vowDesc, isLocked && styles.textLocked, isSmallScreen && styles.vowDescSmall]}>
                       {desc}
                     </Text>
                   </View>
@@ -347,8 +363,9 @@ export function VowSelection({
           {vowTypes.map((vow) => {
             const IconComponent = vow.icon;
             const isSelected = selectedVows.includes(vow.key);
-            const title = t.vows[vow.titleKey] as string;
-            const desc = t.vows[vow.descKey] as string;
+            const isLocked = checkIsLocked(vow);
+            const title = t.vows[vow.titleKey] as string || vow.titleKey;
+            const desc = t.vows[vow.descKey] as string || vow.descKey;
 
             return (
               <Pressable
@@ -357,7 +374,7 @@ export function VowSelection({
                   styles.vowCard,
                   { padding: responsiveStyles.cardPadding },
                   isSelected && styles.vowCardSelected,
-                  vow.isLocked && styles.vowCardLocked,
+                  isLocked && styles.vowCardLocked,
                   (isMediumScreen || isLargeScreen) && styles.vowCardGrid,
                 ]}
                 onPress={() => handleVowPress(vow)}
@@ -373,7 +390,7 @@ export function VowSelection({
                     >
                       <IconComponent size={isSmallScreen ? 28 : 32} color="#FFFFFF" />
                     </LinearGradient>
-                    {vow.isLocked && (
+                    {isLocked && (
                       <View style={styles.lockOverlay}>
                         <Lock size={isSmallScreen ? 14 : 16} color="#FFFFFF" />
                       </View>
@@ -381,10 +398,10 @@ export function VowSelection({
                   </View>
                   
                   <View style={styles.textContainer}>
-                    <Text style={[styles.vowTitle, vow.isLocked && styles.textLocked, isSmallScreen && styles.vowTitleSmall]}>
+                    <Text style={[styles.vowTitle, isLocked && styles.textLocked, isSmallScreen && styles.vowTitleSmall]}>
                       {title}
                     </Text>
-                    <Text style={[styles.vowDesc, vow.isLocked && styles.textLocked, isSmallScreen && styles.vowDescSmall]}>
+                    <Text style={[styles.vowDesc, isLocked && styles.textLocked, isSmallScreen && styles.vowDescSmall]}>
                       {desc}
                     </Text>
                   </View>

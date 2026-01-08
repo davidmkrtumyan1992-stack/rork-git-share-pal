@@ -1,5 +1,7 @@
 export type AppRole = 'admin' | 'owner' | 'user';
 
+export type LockedVowType = 'tantric' | 'nuns' | 'monks' | 'pratimoksha';
+
 export type Language = 'en' | 'ru' | 'es' | 'zh' | 'de' | 'fr' | 'hy' | 'it';
 
 export type VowStatus = 'kept' | 'broken' | 'postponed';
@@ -54,4 +56,17 @@ export interface User {
   email: string;
   profile?: Profile;
   roles?: UserRole[];
+}
+
+export interface UserUnlockedVow {
+  id: string;
+  user_id: string;
+  vow_type: string;
+  unlocked_by: string | null;
+  unlocked_at: string;
+  created_at: string;
+}
+
+export interface ProfileWithRole extends Profile {
+  role: AppRole;
 }

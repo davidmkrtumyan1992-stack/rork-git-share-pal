@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -12,12 +12,26 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Search, Users, Activity, Trash2, ArrowLeft, CheckCircle } from 'lucide-react-native';
+import { 
+  Search, 
+  Users, 
+  Activity, 
+  Trash2, 
+  ArrowLeft, 
+  CheckCircle, 
+  Lock, 
+  Unlock,
+  Mail,
+  Shield,
+  ChevronDown,
+  ChevronUp,
+  X,
+} from 'lucide-react-native';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { getTranslation, formatNumber } from '@/data/translations';
 import { darkTheme } from '@/constants/theme';
-import { Profile, AppRole } from '@/types/database';
+import { Profile, AppRole, UserUnlockedVow } from '@/types/database';
 
 interface AdminUser {
   id: string;
@@ -31,6 +45,13 @@ interface AdminPanelProps {
   onClose: () => void;
 }
 
+const LOCKED_VOW_TYPES = [
+  { key: 'tantric', labelRu: 'Тантрические обеты', labelEn: 'Tantric Vows' },
+  { key: 'nuns', labelRu: 'Обеты монахинь', labelEn: 'Nun Vows' },
+  { key: 'monks', labelRu: 'Обеты монахов', labelEn: 'Monk Vows' },
+  { key: 'pratimoksha', labelRu: 'Пратимокша', labelEn: 'Pratimoksha' },
+];
+
 const BREAKPOINTS = {
   sm: 320,
   md: 768,
@@ -38,19 +59,22 @@ const BREAKPOINTS = {
 };
 
 export function AdminPanel({ onClose }: AdminPanelProps) {
-  const { language } = useAuth();
+  const { language, user: currentUser } = useAuth();
   const t = getTranslation(language);
   const queryClient = useQueryClient();
   const { width: screenWidth } = useWindowDimensions();
   
   const [searchQuery, setSearchQuery] = useState('');
+  const [emailSearch, setEmailSearch] = useState('');
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
   const isSmallScreen = screenWidth < BREAKPOINTS.md;
   const isLargeScreen = screenWidth >= BREAKPOINTS.lg;
 
   const { data: users, isLoading } = useQuery({
     queryKey: ['admin-users'] as const,
     queryFn: async () => {
-      console.log('Fetching admin users list...');
+      console.log('[AdminPanel] Fetching admin users list...');
       
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
@@ -115,10 +139,33 @@ export function AdminPanel({ onClose }: AdminPanelProps) {
     },
   });
 
+  const { data: userUnlockedVows, refetch: refetchUnlockedVows } = useQuery({
+    queryKey: ['admin-user-unlocked-vows', selectedUserId] as const,
+    queryFn: async () => {
+      if (!selectedUserId) return [];
+      
+      console.log('[AdminPanel] Fetching unlocked vows for user:', selectedUserId);
+      
+      const { data, error } = await supabase
+        .from('user_unlocked_vows')
+        .select('*')
+        .eq('user_id', selectedUserId);
+
+      if (error) {
+        console.error('[AdminPanel] Error fetching unlocked vows:', error);
+        return [];
+      }
+
+      return data as UserUnlockedVow[];
+    },
+    enabled: !!selectedUserId,
+  });
+
   const deleteUserMutation = useMutation({
     mutationFn: async (userId: string) => {
-      console.log('Deleting user:', userId);
+      console.log('[AdminPanel] Deleting user:', userId);
       
+      await supabase.from('user_unlocked_vows').delete().eq('user_id', userId);
       await supabase.from('vow_entries').delete().eq('user_id', userId);
       await supabase.from('vow_cycle_positions').delete().eq('user_id', userId);
       await supabase.from('user_roles').delete().eq('user_id', userId);
@@ -127,6 +174,62 @@ export function AdminPanel({ onClose }: AdminPanelProps) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
       queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
+    },
+  });
+
+  const { mutate: unlockVow, isPending: isUnlockPending } = useMutation({
+    mutationFn: async ({ userId, vowType }: { userId: string; vowType: string }) => {
+      console.log('[AdminPanel] Unlocking vow:', vowType, 'for user:', userId);
+      
+      const { data, error } = await supabase
+        .from('user_unlocked_vows')
+        .insert({
+          user_id: userId,
+          vow_type: vowType,
+          unlocked_by: currentUser?.id,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        if (error.code === '23505') {
+          console.log('[AdminPanel] Vow already unlocked');
+          return null;
+        }
+        throw error;
+      }
+
+      return data;
+    },
+    onSuccess: () => {
+      refetchUnlockedVows();
+      queryClient.invalidateQueries({ queryKey: ['unlocked-vows', selectedUserId] });
+    },
+    onError: (error) => {
+      console.error('[AdminPanel] Error unlocking vow:', error);
+      Alert.alert(t.common.error, language === 'ru' ? 'Не удалось разблокировать обет' : 'Failed to unlock vow');
+    },
+  });
+
+  const { mutate: revokeVow, isPending: isRevokePending } = useMutation({
+    mutationFn: async ({ userId, vowType }: { userId: string; vowType: string }) => {
+      console.log('[AdminPanel] Revoking vow:', vowType, 'from user:', userId);
+      
+      const { error } = await supabase
+        .from('user_unlocked_vows')
+        .delete()
+        .eq('user_id', userId)
+        .eq('vow_type', vowType);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      refetchUnlockedVows();
+      queryClient.invalidateQueries({ queryKey: ['unlocked-vows', selectedUserId] });
+    },
+    onError: (error) => {
+      console.error('[AdminPanel] Error revoking vow:', error);
+      Alert.alert(t.common.error, language === 'ru' ? 'Не удалось закрыть доступ' : 'Failed to revoke access');
     },
   });
 
@@ -145,12 +248,46 @@ export function AdminPanel({ onClose }: AdminPanelProps) {
     );
   };
 
+  const handleSelectUser = useCallback((userId: string) => {
+    setSelectedUserId(userId);
+    setExpandedUserId(userId);
+  }, []);
+
+  const handleToggleVowAccess = useCallback((userId: string, vowType: string, isUnlocked: boolean) => {
+    if (isUnlocked) {
+      Alert.alert(
+        language === 'ru' ? 'Закрыть доступ' : 'Revoke Access',
+        language === 'ru' ? 'Вы уверены, что хотите закрыть доступ к этому обету?' : 'Are you sure you want to revoke access to this vow?',
+        [
+          { text: t.common.cancel, style: 'cancel' },
+          {
+            text: t.common.confirm,
+            style: 'destructive',
+            onPress: () => revokeVow({ userId, vowType }),
+          },
+        ]
+      );
+    } else {
+      unlockVow({ userId, vowType });
+    }
+  }, [language, t, unlockVow, revokeVow]);
+
+  const isVowUnlocked = useCallback((vowType: string): boolean => {
+    return userUnlockedVows?.some((uv) => uv.vow_type === vowType) || false;
+  }, [userUnlockedVows]);
+
   const filteredUsers = users?.filter((user) => {
     const query = searchQuery.toLowerCase();
-    return (
+    const emailQuery = emailSearch.toLowerCase();
+    
+    const matchesSearch = !searchQuery || 
       user.profile?.username?.toLowerCase().includes(query) ||
-      user.profile?.full_name?.toLowerCase().includes(query)
-    );
+      user.profile?.full_name?.toLowerCase().includes(query);
+    
+    const matchesEmail = !emailSearch ||
+      user.profile?.username?.toLowerCase().includes(emailQuery);
+    
+    return matchesSearch && matchesEmail;
   });
 
   const getRoleBadgeColor = (role: AppRole) => {
@@ -233,6 +370,124 @@ export function AdminPanel({ onClose }: AdminPanelProps) {
           { maxWidth: responsiveStyles.content.maxWidth },
           isLargeScreen && styles.cardLarge
         ]}>
+          <View style={styles.cardHeader}>
+            <View style={[styles.cardHeaderIcon, { backgroundColor: darkTheme.colors.warning + '20' }]}>
+              <Shield size={20} color={darkTheme.colors.warning} />
+            </View>
+            <Text style={styles.cardTitle}>
+              {language === 'ru' ? 'Управление доступом к обетам' : 'Vow Access Management'}
+            </Text>
+          </View>
+          
+          <View style={styles.emailSearchContainer}>
+            <Mail size={20} color={darkTheme.colors.textMuted} />
+            <TextInput
+              style={styles.emailSearchInput}
+              placeholder={language === 'ru' ? 'Введите email или имя пользователя...' : 'Enter email or username...'}
+              placeholderTextColor={darkTheme.colors.textMuted}
+              value={emailSearch}
+              onChangeText={setEmailSearch}
+              autoCapitalize="none"
+              keyboardType="email-address"
+            />
+            {emailSearch.length > 0 && (
+              <TouchableOpacity onPress={() => setEmailSearch('')}>
+                <X size={20} color={darkTheme.colors.textMuted} />
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {emailSearch.length > 0 && filteredUsers && filteredUsers.length > 0 && (
+            <View style={styles.userSearchResults}>
+              {filteredUsers.slice(0, 5).map((user) => (
+                <TouchableOpacity
+                  key={user.id}
+                  style={[
+                    styles.userSearchItem,
+                    selectedUserId === user.id && styles.userSearchItemSelected,
+                  ]}
+                  onPress={() => handleSelectUser(user.id)}
+                >
+                  <View style={styles.userSearchAvatar}>
+                    <Text style={styles.userSearchAvatarText}>
+                      {user.profile?.username?.charAt(0).toUpperCase() || '?'}
+                    </Text>
+                  </View>
+                  <View style={styles.userSearchInfo}>
+                    <Text style={styles.userSearchName}>{user.profile?.username || 'Unknown'}</Text>
+                    {user.profile?.full_name && (
+                      <Text style={styles.userSearchFullName}>{user.profile.full_name}</Text>
+                    )}
+                  </View>
+                  {selectedUserId === user.id && (
+                    <CheckCircle size={20} color={darkTheme.colors.success} />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+
+          {selectedUserId && (
+            <View style={styles.vowAccessSection}>
+              <Text style={styles.vowAccessTitle}>
+                {language === 'ru' ? 'Секретные обеты' : 'Secret Vows'}
+              </Text>
+              <Text style={styles.vowAccessDesc}>
+                {language === 'ru' 
+                  ? 'Выберите обеты для разблокировки пользователю' 
+                  : 'Select vows to unlock for this user'}
+              </Text>
+              
+              {LOCKED_VOW_TYPES.map((vow) => {
+                const isUnlocked = isVowUnlocked(vow.key);
+                return (
+                  <TouchableOpacity
+                    key={vow.key}
+                    style={[
+                      styles.vowAccessItem,
+                      isUnlocked && styles.vowAccessItemUnlocked,
+                    ]}
+                    onPress={() => handleToggleVowAccess(selectedUserId, vow.key, isUnlocked)}
+                    disabled={isUnlockPending || isRevokePending}
+                  >
+                    <View style={styles.vowAccessItemContent}>
+                      {isUnlocked ? (
+                        <Unlock size={20} color={darkTheme.colors.success} />
+                      ) : (
+                        <Lock size={20} color={darkTheme.colors.textMuted} />
+                      )}
+                      <Text style={[
+                        styles.vowAccessItemLabel,
+                        isUnlocked && styles.vowAccessItemLabelUnlocked,
+                      ]}>
+                        {language === 'ru' ? vow.labelRu : vow.labelEn}
+                      </Text>
+                    </View>
+                    <View style={[
+                      styles.vowAccessToggle,
+                      isUnlocked && styles.vowAccessToggleActive,
+                    ]}>
+                      <Text style={[
+                        styles.vowAccessToggleText,
+                        isUnlocked && styles.vowAccessToggleTextActive,
+                      ]}>
+                        {isUnlocked 
+                          ? (language === 'ru' ? 'Открыт' : 'Unlocked')
+                          : (language === 'ru' ? 'Закрыт' : 'Locked')}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
+        </View>
+
+        <View style={[
+          styles.card,
+          { maxWidth: responsiveStyles.content.maxWidth },
+          isLargeScreen && styles.cardLarge
+        ]}>
           <View style={styles.searchContainer}>
             <Search size={20} color={darkTheme.colors.textMuted} />
             <TextInput
@@ -258,64 +513,94 @@ export function AdminPanel({ onClose }: AdminPanelProps) {
             </View>
           ) : (
             <View style={styles.usersList}>
-              {filteredUsers?.map((user) => (
-                <View key={user.id} style={styles.userCard}>
-                  <View style={styles.userHeader}>
-                    <View style={styles.userInfo}>
-                      <View style={styles.avatar}>
-                        <Text style={styles.avatarText}>
-                          {user.profile?.username?.charAt(0).toUpperCase() || '?'}
-                        </Text>
-                      </View>
-                      <View style={styles.userDetails}>
-                        <Text style={styles.userName}>
-                          {user.profile?.username || 'Unknown'}
-                        </Text>
-                        {user.profile?.full_name && (
-                          <Text style={styles.userFullName}>
-                            {user.profile.full_name}
+              {filteredUsers?.map((user) => {
+                const isExpanded = expandedUserId === user.id;
+                return (
+                  <View key={user.id} style={styles.userCard}>
+                    <TouchableOpacity 
+                      style={styles.userHeader}
+                      onPress={() => setExpandedUserId(isExpanded ? null : user.id)}
+                    >
+                      <View style={styles.userInfo}>
+                        <View style={styles.avatar}>
+                          <Text style={styles.avatarText}>
+                            {user.profile?.username?.charAt(0).toUpperCase() || '?'}
                           </Text>
-                        )}
-                        <View style={styles.rolesContainer}>
-                          {user.roles.map((r, index) => (
-                            <View
-                              key={index}
-                              style={[
-                                styles.roleBadge,
-                                { backgroundColor: getRoleBadgeColor(r.role) + '30' },
-                              ]}
-                            >
-                              <Text
+                        </View>
+                        <View style={styles.userDetails}>
+                          <Text style={styles.userName}>
+                            {user.profile?.username || 'Unknown'}
+                          </Text>
+                          {user.profile?.full_name && (
+                            <Text style={styles.userFullName}>
+                              {user.profile.full_name}
+                            </Text>
+                          )}
+                          <View style={styles.rolesContainer}>
+                            {user.roles.map((r, index) => (
+                              <View
+                                key={index}
                                 style={[
-                                  styles.roleText,
-                                  { color: getRoleBadgeColor(r.role) },
+                                  styles.roleBadge,
+                                  { backgroundColor: getRoleBadgeColor(r.role) + '30' },
                                 ]}
                               >
-                                {r.role}
-                              </Text>
-                            </View>
-                          ))}
+                                <Text
+                                  style={[
+                                    styles.roleText,
+                                    { color: getRoleBadgeColor(r.role) },
+                                  ]}
+                                >
+                                  {r.role}
+                                </Text>
+                              </View>
+                            ))}
+                          </View>
                         </View>
                       </View>
-                    </View>
-                    <TouchableOpacity
-                      style={styles.deleteButton}
-                      onPress={() => handleDeleteUser(user)}
-                      disabled={deleteUserMutation.isPending}
-                    >
-                      <Trash2 size={18} color={darkTheme.colors.error} />
+                      <View style={styles.userActions}>
+                        {isExpanded ? (
+                          <ChevronUp size={20} color={darkTheme.colors.textMuted} />
+                        ) : (
+                          <ChevronDown size={20} color={darkTheme.colors.textMuted} />
+                        )}
+                      </View>
                     </TouchableOpacity>
-                  </View>
 
-                  <View style={styles.userFooter}>
-                    {user.lastEntry && (
-                      <Text style={styles.lastActive}>
-                        {t.admin.lastActive}: {user.lastEntry}
-                      </Text>
+                    {isExpanded && (
+                      <View style={styles.userExpandedContent}>
+                        <View style={styles.userFooter}>
+                          {user.lastEntry && (
+                            <Text style={styles.lastActive}>
+                              {t.admin.lastActive}: {user.lastEntry}
+                            </Text>
+                          )}
+                        </View>
+                        
+                        <View style={styles.userActionsRow}>
+                          <TouchableOpacity
+                            style={styles.manageAccessButton}
+                            onPress={() => handleSelectUser(user.id)}
+                          >
+                            <Shield size={16} color={darkTheme.colors.warning} />
+                            <Text style={styles.manageAccessButtonText}>
+                              {language === 'ru' ? 'Управление доступом' : 'Manage Access'}
+                            </Text>
+                          </TouchableOpacity>
+                          
+                          <TouchableOpacity
+                            style={styles.deleteButton}
+                            onPress={() => handleDeleteUser(user)}
+                            disabled={deleteUserMutation.isPending}
+                          >
+                            <Trash2 size={18} color={darkTheme.colors.error} />
+                          </TouchableOpacity>
+                        </View>
+                      </View>
                     )}
                   </View>
-                </View>
-              ))}
+                );
+              })}
             </View>
           )}
         </View>
@@ -425,6 +710,143 @@ const styles = StyleSheet.create({
   cardLarge: {
     alignSelf: 'center',
   },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: darkTheme.spacing.md,
+    padding: darkTheme.spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: darkTheme.colors.border,
+  },
+  cardHeaderIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cardTitle: {
+    fontSize: darkTheme.fontSize.md,
+    fontWeight: darkTheme.fontWeight.semibold,
+    color: darkTheme.colors.text,
+    flex: 1,
+  },
+  emailSearchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: darkTheme.spacing.md,
+    paddingVertical: darkTheme.spacing.sm,
+    gap: darkTheme.spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: darkTheme.colors.border,
+  },
+  emailSearchInput: {
+    flex: 1,
+    paddingVertical: darkTheme.spacing.md,
+    color: darkTheme.colors.text,
+    fontSize: darkTheme.fontSize.md,
+  },
+  userSearchResults: {
+    borderBottomWidth: 1,
+    borderBottomColor: darkTheme.colors.border,
+  },
+  userSearchItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: darkTheme.spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: darkTheme.colors.border,
+    gap: darkTheme.spacing.md,
+  },
+  userSearchItemSelected: {
+    backgroundColor: darkTheme.colors.success + '10',
+  },
+  userSearchAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: darkTheme.colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  userSearchAvatarText: {
+    fontSize: darkTheme.fontSize.md,
+    fontWeight: darkTheme.fontWeight.bold,
+    color: '#FFFFFF',
+  },
+  userSearchInfo: {
+    flex: 1,
+  },
+  userSearchName: {
+    fontSize: darkTheme.fontSize.md,
+    fontWeight: darkTheme.fontWeight.medium,
+    color: darkTheme.colors.text,
+  },
+  userSearchFullName: {
+    fontSize: darkTheme.fontSize.sm,
+    color: darkTheme.colors.textSecondary,
+    marginTop: 2,
+  },
+  vowAccessSection: {
+    padding: darkTheme.spacing.md,
+  },
+  vowAccessTitle: {
+    fontSize: darkTheme.fontSize.md,
+    fontWeight: darkTheme.fontWeight.semibold,
+    color: darkTheme.colors.text,
+    marginBottom: darkTheme.spacing.xs,
+  },
+  vowAccessDesc: {
+    fontSize: darkTheme.fontSize.sm,
+    color: darkTheme.colors.textSecondary,
+    marginBottom: darkTheme.spacing.md,
+  },
+  vowAccessItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: darkTheme.spacing.md,
+    backgroundColor: darkTheme.colors.surface,
+    borderRadius: darkTheme.borderRadius.md,
+    marginBottom: darkTheme.spacing.sm,
+    borderWidth: 1,
+    borderColor: darkTheme.colors.border,
+  },
+  vowAccessItemUnlocked: {
+    backgroundColor: darkTheme.colors.success + '10',
+    borderColor: darkTheme.colors.success + '30',
+  },
+  vowAccessItemContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: darkTheme.spacing.md,
+    flex: 1,
+  },
+  vowAccessItemLabel: {
+    fontSize: darkTheme.fontSize.md,
+    color: darkTheme.colors.text,
+  },
+  vowAccessItemLabelUnlocked: {
+    color: darkTheme.colors.success,
+    fontWeight: darkTheme.fontWeight.medium,
+  },
+  vowAccessToggle: {
+    paddingHorizontal: darkTheme.spacing.md,
+    paddingVertical: darkTheme.spacing.xs,
+    borderRadius: darkTheme.borderRadius.sm,
+    backgroundColor: darkTheme.colors.textMuted + '20',
+  },
+  vowAccessToggleActive: {
+    backgroundColor: darkTheme.colors.success + '20',
+  },
+  vowAccessToggleText: {
+    fontSize: darkTheme.fontSize.xs,
+    color: darkTheme.colors.textMuted,
+    fontWeight: darkTheme.fontWeight.semibold,
+  },
+  vowAccessToggleTextActive: {
+    color: darkTheme.colors.success,
+  },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -457,15 +879,15 @@ const styles = StyleSheet.create({
   userCard: {
     backgroundColor: darkTheme.colors.surface,
     borderRadius: darkTheme.borderRadius.lg,
-    padding: darkTheme.spacing.md,
     borderWidth: 1,
     borderColor: darkTheme.colors.border,
+    overflow: 'hidden',
   },
   userHeader: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: darkTheme.spacing.sm,
+    padding: darkTheme.spacing.md,
   },
   userInfo: {
     flexDirection: 'row',
@@ -514,14 +936,41 @@ const styles = StyleSheet.create({
     fontWeight: darkTheme.fontWeight.semibold,
     textTransform: 'uppercase',
   },
-  userFooter: {
-    paddingTop: darkTheme.spacing.sm,
+  userActions: {
+    padding: darkTheme.spacing.sm,
+  },
+  userExpandedContent: {
     borderTopWidth: 1,
     borderTopColor: darkTheme.colors.border,
+    padding: darkTheme.spacing.md,
+  },
+  userFooter: {
+    marginBottom: darkTheme.spacing.md,
   },
   lastActive: {
     fontSize: darkTheme.fontSize.xs,
     color: darkTheme.colors.textMuted,
+  },
+  userActionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: darkTheme.spacing.md,
+  },
+  manageAccessButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: darkTheme.spacing.sm,
+    paddingHorizontal: darkTheme.spacing.md,
+    paddingVertical: darkTheme.spacing.sm,
+    backgroundColor: darkTheme.colors.warning + '20',
+    borderRadius: darkTheme.borderRadius.md,
+    flex: 1,
+  },
+  manageAccessButtonText: {
+    fontSize: darkTheme.fontSize.sm,
+    color: darkTheme.colors.warning,
+    fontWeight: darkTheme.fontWeight.medium,
   },
   deleteButton: {
     width: 36,

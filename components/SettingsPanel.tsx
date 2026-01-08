@@ -28,6 +28,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { getTranslation } from '@/data/translations';
 import { darkTheme } from '@/constants/theme';
 import { Language } from '@/types/database';
+import { useUnlockedVows } from '@/hooks/useUnlockedVows';
 
 interface SettingsPanelProps {
   onSelectVow?: () => void;
@@ -73,17 +74,19 @@ const TIMEZONES = [
 ];
 
 const VOW_TYPES = [
-  { key: 'tenPrinciples', labelKey: 'tenPrinciples', descKey: 'tenPrinciplesDesc', locked: false },
-  { key: 'freedom', labelKey: 'freedom', descKey: 'freedomDesc', locked: false },
-  { key: 'bodhisattva', labelKey: 'bodhisattva', descKey: 'bodhisattvaDesc', locked: false },
-  { key: 'tantric', labelKey: 'tantric', descKey: 'tantricDesc', locked: true },
-  { key: 'nuns', labelKey: 'nuns', descKey: 'nunsDesc', locked: true },
-  { key: 'monks', labelKey: 'monks', descKey: 'monksDesc', locked: true },
+  { key: 'tenPrinciples', labelKey: 'tenPrinciples', descKey: 'tenPrinciplesDesc', defaultLocked: false },
+  { key: 'freedom', labelKey: 'freedom', descKey: 'freedomDesc', defaultLocked: false },
+  { key: 'bodhisattva', labelKey: 'bodhisattva', descKey: 'bodhisattvaDesc', defaultLocked: false },
+  { key: 'pratimoksha', labelKey: 'pratimoksha', descKey: 'pratimokshaDesc', defaultLocked: true },
+  { key: 'tantric', labelKey: 'tantric', descKey: 'tantricDesc', defaultLocked: true },
+  { key: 'nuns', labelKey: 'nuns', descKey: 'nunsDesc', defaultLocked: true },
+  { key: 'monks', labelKey: 'monks', descKey: 'monksDesc', defaultLocked: true },
 ];
 
 export function SettingsPanel({ onSelectVow }: SettingsPanelProps) {
   const { profile, language, signOut, setLanguage, updateProfile } = useAuth();
   const t = getTranslation(language);
+  const { isVowLocked, isLoading: isLoadingUnlockedVows } = useUnlockedVows();
 
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -176,7 +179,8 @@ export function SettingsPanel({ onSelectVow }: SettingsPanelProps) {
     console.log('[SettingsPanel] Vow key:', vowKey);
     console.log('[SettingsPanel] Current selectedVowTypes:', selectedVowTypes);
     
-    const isLocked = VOW_TYPES.find(v => v.key === vowKey)?.locked;
+    const vowType = VOW_TYPES.find(v => v.key === vowKey);
+    const isLocked = vowType?.defaultLocked && isVowLocked(vowKey);
     console.log('[SettingsPanel] Is locked:', isLocked);
     
     if (isLocked) {
@@ -346,6 +350,7 @@ export function SettingsPanel({ onSelectVow }: SettingsPanelProps) {
 
         {VOW_TYPES.map((vowType) => {
           const isSelected = selectedVowTypes.includes(vowType.key);
+          const isLocked = vowType.defaultLocked && isVowLocked(vowType.key);
           const vowLabel = t.vows[vowType.labelKey as keyof typeof t.vows] || vowType.labelKey;
           const vowDesc = t.vows[vowType.descKey as keyof typeof t.vows] || vowType.descKey;
           
@@ -355,27 +360,27 @@ export function SettingsPanel({ onSelectVow }: SettingsPanelProps) {
               style={[
                 styles.vowTypeItem,
                 isSelected && styles.vowTypeItemSelected,
-                vowType.locked && styles.vowTypeItemLocked,
+                isLocked && styles.vowTypeItemLocked,
               ]}
               onPress={() => {
                 console.log('[SettingsPanel] TouchableOpacity pressed:', vowType.key);
                 toggleVowType(vowType.key);
               }}
               activeOpacity={0.7}
-              disabled={false}
+              disabled={isLoadingUnlockedVows}
               testID={`settings-vow-${vowType.key}`}
             >
               <View style={styles.vowTypeContent}>
                 <Text style={[
                   styles.vowTypeLabel,
                   isSelected && styles.vowTypeLabelSelected,
-                  vowType.locked && styles.vowTypeLabelLocked,
+                  isLocked && styles.vowTypeLabelLocked,
                 ]}>
                   {vowLabel}
                 </Text>
                 <Text style={[
                   styles.vowTypeDesc,
-                  vowType.locked && styles.vowTypeDescLocked,
+                  isLocked && styles.vowTypeDescLocked,
                 ]} numberOfLines={2}>
                   {vowDesc}
                 </Text>
@@ -383,10 +388,10 @@ export function SettingsPanel({ onSelectVow }: SettingsPanelProps) {
               <View style={[
                 styles.vowTypeCheckbox,
                 isSelected && styles.vowTypeCheckboxSelected,
-                vowType.locked && styles.vowTypeCheckboxLocked,
+                isLocked && styles.vowTypeCheckboxLocked,
               ]}>
-                {isSelected && <Check size={16} color="#FFFFFF" />}
-                {vowType.locked && !isSelected && (
+                {isSelected && !isLocked && <Check size={16} color="#FFFFFF" />}
+                {isLocked && (
                   <Text style={styles.lockIcon}>🔒</Text>
                 )}
               </View>
