@@ -194,7 +194,9 @@ export const useCreateVowEntry = () => {
           query.queryKey[0] === 'vow-entries' || 
           query.queryKey[0] === 'today-entry' || 
           query.queryKey[0] === 'today-entries' ||
-          query.queryKey[0] === 'vow-stats'
+          query.queryKey[0] === 'vow-stats' ||
+          query.queryKey[0] === 'history-entries' ||
+          query.queryKey[0] === 'uncompleted-antidotes'
       });
     },
   });
@@ -278,11 +280,11 @@ export const useHistoryEntries = () => {
         .from('vow_entries')
         .select('*')
         .eq('user_id', user.id)
-        .neq('entry_date', today)
-        .or(`and(status.eq.kept,entry_date.gte.${yesterdayStr}),and(status.eq.broken,antidote_completed.eq.false)`)
+        .or(`and(status.eq.kept,entry_date.gte.${yesterdayStr},entry_date.neq.${today}),and(status.eq.broken,antidote_completed.eq.false)`)
         .order('entry_date', { ascending: false });
 
       if (error) {
+        console.log('History entries fetch error:', error.message);
         throw error;
       }
 

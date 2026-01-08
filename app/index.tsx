@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import {
   View,
   StyleSheet,
@@ -28,7 +28,7 @@ export default function HomeScreen() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const hasShownOnboarding = useRef(false);
 
-  const selectedVows = useMemo(() => {
+  const serverSelectedVows = useMemo(() => {
     try {
       return Array.isArray(profile?.selected_vow_types) 
         ? profile.selected_vow_types 
@@ -38,6 +38,19 @@ export default function HomeScreen() {
       return [];
     }
   }, [profile?.selected_vow_types]);
+
+  const [localSelectedVows, setLocalSelectedVows] = useState<string[]>([]);
+  const pendingSaveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isInitializedRef = useRef(false);
+
+  useEffect(() => {
+    if (serverSelectedVows.length > 0 || (profile && !isInitializedRef.current)) {
+      setLocalSelectedVows(serverSelectedVows);
+      isInitializedRef.current = true;
+    }
+  }, [serverSelectedVows, profile]);
+
+  const selectedVows = localSelectedVows;
 
   useEffect(() => {
     if (selectedVows.length > 0 && !activeVow) {
@@ -67,63 +80,62 @@ export default function HomeScreen() {
     }
   };
 
-  const handleToggleVow = async (vowType: string) => {
-    console.log('[HomeScreen] handleToggleVow called for:', vowType);
-    console.log('[HomeScreen] Current selectedVows:', selectedVows);
-    
-    const newVows = selectedVows.includes(vowType)
-      ? selectedVows.filter(v => v !== vowType)
-      : [...selectedVows, vowType];
-    
-    console.log('[HomeScreen] New vows to save:', newVows);
-    
-    setIsSaving(true);
-    
+  const saveVowsToServer = useCallback(async (vows: string[]) => {
     try {
-      const result = await updateProfile({ selected_vow_types: newVows });
-      console.log('[HomeScreen] Successfully toggled vow:', vowType);
-      console.log('[HomeScreen] Update result:', result);
+      await updateProfile({ selected_vow_types: vows });
+      console.log('[HomeScreen] Successfully saved vows to server');
     } catch (error) {
-      console.error('[HomeScreen] Error toggling vow:', error);
-      console.error('[HomeScreen] Error type:', typeof error);
-      console.error('[HomeScreen] Error details:', JSON.stringify(error, null, 2));
-      
-      let errorMessage = 'Failed to update vow selection';
-      if (error && typeof error === 'object' && 'message' in error) {
-        errorMessage = (error as any).message;
-        console.error('[HomeScreen] Error message:', errorMessage);
-      }
-      
-      Alert.alert(
-        'Error',
-        `${errorMessage}\n\nPlease run the SQL migration from APPLY_THIS_MIGRATION.sql in your Supabase SQL Editor.`,
-        [{ text: 'OK' }]
-      );
-    } finally {
-      setIsSaving(false);
+      console.error('[HomeScreen] Error saving vows:', error);
+      setLocalSelectedVows(serverSelectedVows);
+      Alert.alert('Error', 'Failed to save vow selection. Please try again.');
     }
-  };
+  }, [updateProfile, serverSelectedVows]);
 
-  const handleRemoveVow = async (vowType: string) => {
-    const newVows = selectedVows.filter(v => v !== vowType);
+  const handleToggleVow = useCallback((vowType: string) => {
+    console.log('[HomeScreen] handleToggleVow called for:', vowType);
     
-    if (activeVow === vowType) {
-      setActiveVow(newVows.length > 0 ? newVows[0] : null);
-    }
-    
-    console.log('Removing vow:', vowType, 'New vows:', newVows);
-    
-    try {
-      await updateProfile({ selected_vow_types: newVows });
-      console.log('Successfully removed vow:', vowType);
-    } catch (error) {
-      console.error('Error removing vow:', error);
-      console.error('Error details:', JSON.stringify(error, null, 2));
-      if (error && typeof error === 'object' && 'message' in error) {
-        console.error('Error message:', (error as any).message);
+    setLocalSelectedVows(prev => {
+      const newVows = prev.includes(vowType)
+        ? prev.filter(v => v !== vowType)
+        : [...prev, vowType];
+      
+      console.log('[HomeScreen] New vows (optimistic):', newVows);
+      
+      if (pendingSaveRef.current) {
+        clearTimeout(pendingSaveRef.current);
       }
-    }
-  };
+      
+      pendingSaveRef.current = setTimeout(() => {
+        saveVowsToServer(newVows);
+        pendingSaveRef.current = null;
+      }, 300);
+      
+      return newVows;
+    });
+  }, [saveVowsToServer]);
+
+  const handleRemoveVow = useCallback((vowType: string) => {
+    console.log('Removing vow:', vowType);
+    
+    setLocalSelectedVows(prev => {
+      const newVows = prev.filter(v => v !== vowType);
+      
+      if (activeVow === vowType) {
+        setActiveVow(newVows.length > 0 ? newVows[0] : null);
+      }
+      
+      if (pendingSaveRef.current) {
+        clearTimeout(pendingSaveRef.current);
+      }
+      
+      pendingSaveRef.current = setTimeout(() => {
+        saveVowsToServer(newVows);
+        pendingSaveRef.current = null;
+      }, 300);
+      
+      return newVows;
+    });
+  }, [activeVow, saveVowsToServer]);
 
   const handleConfirmVows = async () => {
     console.log('Vows already saved via toggleVow');
