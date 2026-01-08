@@ -288,7 +288,20 @@ export const useHistoryEntries = () => {
         throw error;
       }
 
-      return data as VowEntry[];
+      const entries = data as VowEntry[];
+      
+      const now = new Date();
+      const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      
+      const filteredEntries = entries.filter(entry => {
+        if (entry.status === 'kept') {
+          const entryCreatedAt = new Date(entry.created_at);
+          return entryCreatedAt >= twentyFourHoursAgo;
+        }
+        return true;
+      });
+
+      return filteredEntries;
     },
     enabled: !!user,
   });
