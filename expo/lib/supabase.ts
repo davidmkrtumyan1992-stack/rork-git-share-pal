@@ -103,15 +103,15 @@ const createSupabaseClient = (): SupabaseClient => {
             }
 
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 15000);
+            const timeoutId = setTimeout(() => controller.abort(), 20000);
 
-            const combinedSignal = init.signal
-              ? init.signal
-              : controller.signal;
+            if (init.signal) {
+              init.signal.addEventListener('abort', () => controller.abort(), { once: true });
+            }
 
             const response = await fetch(input, {
               ...init,
-              signal: combinedSignal,
+              signal: controller.signal,
             });
             clearTimeout(timeoutId);
             return response;
