@@ -93,7 +93,7 @@ const createSupabaseClient = (): SupabaseClient => {
     },
     global: {
       fetch: async (input, init = {}) => {
-        const MAX_RETRIES = 1;
+        const MAX_RETRIES = 2;
         let lastError: unknown;
 
         for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
@@ -102,24 +102,36 @@ const createSupabaseClient = (): SupabaseClient => {
               throw new DOMException('Aborted', 'AbortError');
             }
 
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+            const combinedSignal = init.signal
+              ? init.signal
+              : controller.signal;
+
             const response = await fetch(input, {
               ...init,
+              signal: combinedSignal,
             });
+            clearTimeout(timeoutId);
             return response;
           } catch (error) {
             lastError = error;
 
             if (error instanceof Error && error.name === 'AbortError') {
-              throw error;
+              if (init.signal?.aborted) {
+                throw error;
+              }
             }
 
             if (attempt < MAX_RETRIES) {
-              console.warn(`[Supabase] Fetch failed (attempt ${attempt + 1}):`, (error as Error)?.message);
-              await new Promise(r => setTimeout(r, 800));
+              const delay = Math.min(1000 * Math.pow(2, attempt), 4000);
+              console.warn(`[Supabase] Fetch attempt ${attempt + 1} failed, retrying in ${delay}ms...`);
+              await new Promise(r => setTimeout(r, delay));
               continue;
             }
 
-            console.error('[Supabase] Fetch failed after retries:', (error as Error)?.message);
+            console.error('[Supabase] Fetch failed after all retries:', (error as Error)?.message);
             throw error;
           }
         }

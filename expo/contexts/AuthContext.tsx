@@ -104,6 +104,9 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       } else {
         setState((prev) => ({ ...prev, isLoading: false }));
       }
+    }).catch((error) => {
+      console.error('[AuthContext] Failed to get initial session:', error);
+      setState((prev) => ({ ...prev, isLoading: false }));
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
