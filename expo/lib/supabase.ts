@@ -93,50 +93,24 @@ const createSupabaseClient = (): SupabaseClient => {
     },
     global: {
       fetch: async (input, init = {}) => {
-        const MAX_RETRIES = 2;
-        let lastError: unknown;
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 15000);
 
-        for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-          try {
-            if (init.signal?.aborted) {
-              throw new DOMException('Aborted', 'AbortError');
-            }
-
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 20000);
-
-            if (init.signal) {
-              init.signal.addEventListener('abort', () => controller.abort(), { once: true });
-            }
-
-            const response = await fetch(input, {
-              ...init,
-              signal: controller.signal,
-            });
-            clearTimeout(timeoutId);
-            return response;
-          } catch (error) {
-            lastError = error;
-
-            if (error instanceof Error && error.name === 'AbortError') {
-              if (init.signal?.aborted) {
-                throw error;
-              }
-            }
-
-            if (attempt < MAX_RETRIES) {
-              const delay = Math.min(1000 * Math.pow(2, attempt), 4000);
-              console.warn(`[Supabase] Fetch attempt ${attempt + 1} failed, retrying in ${delay}ms...`);
-              await new Promise(r => setTimeout(r, delay));
-              continue;
-            }
-
-            console.error('[Supabase] Fetch failed after all retries:', (error as Error)?.message);
-            throw error;
+          if (init.signal) {
+            init.signal.addEventListener('abort', () => controller.abort(), { once: true });
           }
-        }
 
-        throw lastError;
+          const response = await fetch(input, {
+            ...init,
+            signal: controller.signal,
+          });
+          clearTimeout(timeoutId);
+          return response;
+        } catch (error) {
+          console.error('[Supabase] Fetch error:', (error as Error)?.message);
+          throw error;
+        }
       },
     },
   });

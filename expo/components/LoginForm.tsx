@@ -103,7 +103,18 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
     },
     onError: (err: Error) => {
       console.log('Registration error:', err.message);
-      setError(err.message.includes('already') ? t.auth.errorEmailExists : err.message);
+      const msg = err.message || '';
+      if (msg.includes('already') || msg.includes('already registered')) {
+        setError(t.auth.errorEmailExists);
+      } else if (msg.includes('Password') || msg.includes('password') || msg.includes('weak')) {
+        setError(language === 'ru' ? 'Пароль должен быть не менее 6 символов' : 'Password must be at least 6 characters');
+      } else if (msg.includes('fetch') || msg.includes('network') || msg.includes('Network')) {
+        setError(language === 'ru' ? 'Ошибка сети. Проверьте подключение к интернету и попробуйте снова.' : 'Network error. Check your internet connection and try again.');
+      } else if (msg.includes('rate') || msg.includes('limit')) {
+        setError(language === 'ru' ? 'Слишком много попыток. Подождите минуту и попробуйте снова.' : 'Too many attempts. Wait a minute and try again.');
+      } else {
+        setError(language === 'ru' ? `Ошибка регистрации: ${msg}` : `Registration error: ${msg}`);
+      }
     },
   });
 

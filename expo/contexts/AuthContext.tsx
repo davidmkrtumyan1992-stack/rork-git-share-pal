@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
+import { Platform } from 'react-native';
 import { Session, User as SupabaseUser } from '@supabase/supabase-js';
 import createContextHook from '@nkzw/create-context-hook';
 import { supabase } from '@/lib/supabase';
@@ -164,43 +165,51 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     fullName?: string
   ) => {
     console.log('Signing up:', email, 'username:', username);
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          username,
-          full_name: fullName,
-          language: 'ru',
+    
+    const redirectTo = Platform.OS === 'web'
+      ? (typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : undefined)
+      : 'rork-app://auth/callback';
+
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            username,
+            full_name: fullName,
+            language: 'ru',
+          },
+          ...(redirectTo ? { emailRedirectTo: redirectTo } : {}),
         },
-        emailRedirectTo: 'rork-app://auth/callback',
-      },
-    });
-    
-    if (error) {
-      console.log('Sign up error:', error.message);
-      throw error;
-    }
-    
-    console.log('Sign up successful, session:', data.session ? 'exists' : 'null');
-    console.log('User created:', data.user?.email);
-    console.log('Email confirmation required:', !data.session);
-    
-    if (data.session && data.user) {
-      console.log('Auto-login successful, fetching profile...');
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      const profileData = await fetchProfile(data.user.id);
-      console.log('Profile data:', profileData);
-      
-      setState({
-        session: data.session,
-        user: data.user,
-        ...profileData,
-        isLoading: false,
       });
+      
+      if (error) {
+        console.log('Sign up error:', error.message, error.status);
+        throw error;
+      }
+      
+      console.log('Sign up successful, session:', data.session ? 'exists' : 'null');
+      console.log('User created:', data.user?.email);
+      
+      if (data.session && data.user) {
+        console.log('Auto-login successful, fetching profile...');
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        const profileData = await fetchProfile(data.user.id);
+        
+        setState({
+          session: data.session,
+          user: data.user,
+          ...profileData,
+          isLoading: false,
+        });
+      }
+      
+      return data;
+    } catch (err) {
+      console.error('Sign up failed:', err);
+      throw err;
     }
-    
-    return data;
   }, [fetchProfile]);
 
   const signOut = useCallback(async () => {
