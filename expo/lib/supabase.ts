@@ -92,48 +92,30 @@ const createSupabaseClient = (): SupabaseClient => {
       detectSessionInUrl: true,
     },
     global: {
-      fetch: async (url, options = {}) => {
-        const MAX_RETRIES = 2;
+      fetch: async (input, init = {}) => {
+        const MAX_RETRIES = 1;
         let lastError: unknown;
 
-        const callerSignal = options.signal;
-
         for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 15000);
-
           try {
-            if (callerSignal?.aborted) {
-              clearTimeout(timeoutId);
+            if (init.signal?.aborted) {
               throw new DOMException('Aborted', 'AbortError');
             }
 
-            const response = await fetch(url, {
-              ...options,
-              signal: controller.signal,
+            const response = await fetch(input, {
+              ...init,
             });
-            clearTimeout(timeoutId);
             return response;
           } catch (error) {
-            clearTimeout(timeoutId);
             lastError = error;
 
             if (error instanceof Error && error.name === 'AbortError') {
-              if (callerSignal?.aborted) {
-                throw error;
-              }
-              if (attempt < MAX_RETRIES) {
-                console.warn(`[Supabase] Request timeout (attempt ${attempt + 1}), retrying...`);
-                await new Promise(r => setTimeout(r, 500 * (attempt + 1)));
-                continue;
-              }
-              console.error('[Supabase] Request timeout after retries:', typeof url === 'string' ? url.substring(0, 80) : url);
-              throw new Error('Request timeout. Check your internet connection.');
+              throw error;
             }
 
             if (attempt < MAX_RETRIES) {
               console.warn(`[Supabase] Fetch failed (attempt ${attempt + 1}):`, (error as Error)?.message);
-              await new Promise(r => setTimeout(r, 500 * (attempt + 1)));
+              await new Promise(r => setTimeout(r, 800));
               continue;
             }
 
