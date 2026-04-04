@@ -93,24 +93,56 @@ const createSupabaseClient = (): SupabaseClient => {
     },
     global: {
       fetch: async (url, options = {}) => {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 30000);
-        
-        try {
-          const response = await fetch(url, {
-            ...options,
-            signal: controller.signal,
-          });
-          clearTimeout(timeoutId);
-          return response;
-        } catch (error) {
-          clearTimeout(timeoutId);
-          if (error instanceof Error && error.name === 'AbortError') {
-            console.error('Request timeout:', url);
-            throw new Error('Превышено время ожидания. Проверьте подключение к интернету.');
+        const MAX_RETRIES = 2;
+        let lastError: unknown;
+
+        const callerSignal = options.signal;
+
+        for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+          try {
+            if (callerSignal?.aborted) {
+              clearTimeout(timeoutId);
+              throw new DOMException('Aborted', 'AbortError');
+            }
+
+            const response = await fetch(url, {
+              ...options,
+              signal: controller.signal,
+            });
+            clearTimeout(timeoutId);
+            return response;
+          } catch (error) {
+            clearTimeout(timeoutId);
+            lastError = error;
+
+            if (error instanceof Error && error.name === 'AbortError') {
+              if (callerSignal?.aborted) {
+                throw error;
+              }
+              if (attempt < MAX_RETRIES) {
+                console.warn(`[Supabase] Request timeout (attempt ${attempt + 1}), retrying...`);
+                await new Promise(r => setTimeout(r, 500 * (attempt + 1)));
+                continue;
+              }
+              console.error('[Supabase] Request timeout after retries:', typeof url === 'string' ? url.substring(0, 80) : url);
+              throw new Error('Request timeout. Check your internet connection.');
+            }
+
+            if (attempt < MAX_RETRIES) {
+              console.warn(`[Supabase] Fetch failed (attempt ${attempt + 1}):`, (error as Error)?.message);
+              await new Promise(r => setTimeout(r, 500 * (attempt + 1)));
+              continue;
+            }
+
+            console.error('[Supabase] Fetch failed after retries:', (error as Error)?.message);
+            throw error;
           }
-          throw error;
         }
+
+        throw lastError;
       },
     },
   });
