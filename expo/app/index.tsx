@@ -90,9 +90,7 @@ export default function HomeScreen() {
       setLocalSelectedVows(serverSelectedVows);
       Alert.alert('Error', 'Failed to save vow selection. Please try again.');
     } finally {
-      setTimeout(() => {
-        isSavingRef.current = false;
-      }, 500);
+      isSavingRef.current = false;
     }
   }, [updateProfile, serverSelectedVows]);
 
