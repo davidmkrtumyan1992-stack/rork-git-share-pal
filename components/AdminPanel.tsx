@@ -83,32 +83,41 @@ export function AdminPanel({ onClose }: AdminPanelProps) {
 
       if (profilesError) throw profilesError;
 
-      const usersData: AdminUser[] = [];
+      if (!profiles || profiles.length === 0) return [];
 
-      for (const profile of profiles || []) {
-        const { data: roles } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', profile.user_id);
+      const userIds = profiles.map(p => p.user_id);
 
-        const { data: lastEntry } = await supabase
-          .from('vow_entries')
-          .select('entry_date')
-          .eq('user_id', profile.user_id)
-          .order('entry_date', { ascending: false })
-          .limit(1)
-          .single();
+      const { data: allRoles } = await supabase
+        .from('user_roles')
+        .select('user_id, role')
+        .in('user_id', userIds);
 
-        usersData.push({
-          id: profile.user_id,
-          email: '',
-          profile,
-          roles: roles || [],
-          lastEntry: lastEntry?.entry_date || null,
-        });
+      const { data: allLastEntries } = await supabase
+        .from('vow_entries')
+        .select('user_id, entry_date')
+        .in('user_id', userIds)
+        .order('entry_date', { ascending: false });
+
+      const rolesMap = new Map<string, { role: string }[]>();
+      for (const r of allRoles || []) {
+        if (!rolesMap.has(r.user_id)) rolesMap.set(r.user_id, []);
+        rolesMap.get(r.user_id)!.push({ role: r.role });
       }
 
-      return usersData;
+      const lastEntryMap = new Map<string, string>();
+      for (const e of allLastEntries || []) {
+        if (!lastEntryMap.has(e.user_id)) {
+          lastEntryMap.set(e.user_id, e.entry_date);
+        }
+      }
+
+      return profiles.map(profile => ({
+        id: profile.user_id,
+        email: '',
+        profile,
+        roles: rolesMap.get(profile.user_id) || [],
+        lastEntry: lastEntryMap.get(profile.user_id) || null,
+      }));
     },
   });
 
