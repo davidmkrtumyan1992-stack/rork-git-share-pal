@@ -66,14 +66,6 @@ const vowTypes: VowType[] = [
     defaultLocked: false,
   },
   {
-    key: 'pratimoksha',
-    titleKey: 'pratimoksha' as keyof ReturnType<typeof getTranslation>['vows'],
-    descKey: 'pratimokshaDesc' as keyof ReturnType<typeof getTranslation>['vows'],
-    icon: Shield,
-    gradientColors: ['#7B6B8E', '#6B5B7E'],
-    defaultLocked: true,
-  },
-  {
     key: 'tantric',
     titleKey: 'tantric',
     descKey: 'tantricDesc',
