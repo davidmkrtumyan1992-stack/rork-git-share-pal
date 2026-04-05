@@ -225,56 +225,6 @@ export const vowsData: VowCategory[] = [
     ],
   },
   {
-    key: 'pratimoksha',
-    vows: [
-      {
-        id: 23,
-        textRu: 'Не убивать человека или человеческий плод.',
-        textEn: 'Not killing a human being or a human fetus.',
-        textIt: 'Non uccidere un essere umano o un feto umano.',
-        textEs: 'No matar a un ser humano ni a un feto humano.',
-        textZh: '不杀害人或胎儿。',
-        textHy: 'Չսպանել մարդուն կամ մարդկային սաղմը:',
-      },
-      {
-        id: 24,
-        textRu: 'Не воровать ничего ценного.',
-        textEn: 'Not stealing anything of value.',
-        textIt: 'Non rubare nulla di valore.',
-        textEs: 'No robar nada de valor.',
-        textZh: '不偷窃任何有价值的物品。',
-        textHy: 'Չգողանալ արժեքավոր որևէ բան:',
-      },
-      {
-        id: 25,
-        textRu: 'Не лгать о своих духовных достижениях.',
-        textEn: 'Not lying about one\'s spiritual attainments.',
-        textIt: 'Non mentire sulle proprie realizzazioni spirituali.',
-        textEs: 'No mentir sobre los propios logros espirituales.',
-        textZh: '不在自己的修行成就上撒谎（妄说上人法）。',
-        textHy: 'Չստել սեփական հոգևոր ձեռքբերումների մասին:',
-      },
-      {
-        id: 26,
-        textRu: 'Не совершать супружескую измену и избегать сексуальных проступков.',
-        textEn: 'Not committing adultery and avoiding sexual misconduct.',
-        textIt: 'Non commettere adulterio ed evitare condotte sessuali scorrette.',
-        textEs: 'No cometer adulterio y evitar conductas sexuales incorrectas.',
-        textZh: '不奸淫，避免邪淫行为。',
-        textHy: 'Չդրժել հավատարմությունը և խուսափել սխալ սեռական վարքագծից:',
-      },
-      {
-        id: 27,
-        textRu: 'Не употреблять алкоголь или наркотики и не предлагать их другим.',
-        textEn: 'Not consuming alcohol or drugs, and not offering them to others.',
-        textIt: 'Non consumare alcol o droghe, e non offrirli ad altri.',
-        textEs: 'No consumir alcohol ni drogas, ni ofrecerlos a otros.',
-        textZh: '不饮酒或吸食毒品，亦不以此提供给他人。',
-        textHy: 'Չօգտագործել ալկոհոլ կամ թմրանյութեր և չառաջարկել դրանք ուրիշներին:',
-      },
-    ],
-  },
-  {
     key: 'bodhisattva',
     vows: [
       {
