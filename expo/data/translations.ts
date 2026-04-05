@@ -74,7 +74,7 @@ export const translations = {
     vows: {
       title: 'Select Your Vows',
       subtitle: 'Choose one or more vows to track',
-      tenPrinciples: '10 Principles',
+      tenPrinciples: '10 Ethical Principles',
       tenPrinciplesDesc: 'Basic ethical guidelines for daily practice',
       freedom: 'Freedom Vows',
       freedomDesc: 'Vows of liberation and personal growth',
@@ -262,7 +262,7 @@ export const translations = {
     vows: {
       title: 'Выберите обеты',
       subtitle: 'Выберите один или несколько обетов для отслеживания',
-      tenPrinciples: '10 принципов',
+      tenPrinciples: '10 этических принципов',
       tenPrinciplesDesc: 'Базовые этические принципы для ежедневной практики',
       freedom: 'Обеты свободы',
       freedomDesc: 'Обеты освобождения и личностного роста',
@@ -450,7 +450,7 @@ export const translations = {
     vows: {
       title: '选择您的誓言',
       subtitle: '选择一个或多个誓言进行跟踪',
-      tenPrinciples: '10条原则',
+      tenPrinciples: '十条伦理原则',
       tenPrinciplesDesc: '日常修行的基本伦理准则',
       freedom: '解脱戒',
       freedomDesc: '解脱与个人成长的誓言',
