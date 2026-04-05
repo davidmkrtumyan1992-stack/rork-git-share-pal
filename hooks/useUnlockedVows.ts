@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { UserUnlockedVow } from '@/types/database';
 
-const LOCKED_VOW_TYPES = ['tantric', 'nuns', 'monks', 'pratimoksha'];
+const LOCKED_VOW_TYPES = ['tantric', 'nuns', 'monks'];
 
 export const useUnlockedVows = () => {
   const { user } = useAuth();

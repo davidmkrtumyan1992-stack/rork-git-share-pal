@@ -1,6 +1,6 @@
 export type AppRole = 'admin' | 'owner' | 'user';
 
-export type LockedVowType = 'tantric' | 'nuns' | 'monks' | 'pratimoksha';
+export type LockedVowType = 'tantric' | 'nuns' | 'monks';
 
 export type Language = 'en' | 'ru' | 'es' | 'zh' | 'de' | 'fr' | 'hy' | 'it';
 
