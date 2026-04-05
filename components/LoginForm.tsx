@@ -127,11 +127,8 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
         throw new Error(t.auth.invalidEmail);
       }
       const sanitizedEmail = sanitizeEmail(email);
-      const resetRedirectTo = Platform.OS === 'web'
-        ? (typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : 'rork-app://auth/callback')
-        : 'rork-app://auth/callback';
       const { error } = await supabase.auth.resetPasswordForEmail(sanitizedEmail, {
-        redirectTo: resetRedirectTo,
+        redirectTo: 'rork-app://auth/callback',
       });
       if (error) throw error;
       return true;
@@ -171,7 +168,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
   };
 
   const handleLanguageChange = (lang: Language) => {
-    void setLanguage(lang);
+    setLanguage(lang);
   };
 
   const isLoading = signInMutation.isPending || signUpMutation.isPending || resetPasswordMutation.isPending;

@@ -1,22 +1,21 @@
-# Восстановление проекта из GitHub и исправление регистрации
+# Sync project with GitHub repo (6 categories, renamed "10 Ethical Principles", bug fixes)
 
-## Шаг 1: Восстановление кода
-- Заново скачать код из вашего репозитория (коммит от 8 января с обетами, ролями и историей)
-- Скопировать все файлы и папки в рабочую директорию приложения
-- Удалить временную копию, чтобы не занимала место
+## What will happen
 
-## Шаг 2: Проверка структуры
-- Убедиться, что все папки на месте: экраны, компоненты, контексты, хуки, данные, настройки Supabase
-- Установить зависимости, чтобы приложение запустилось в Preview
+Pull all latest files from your GitHub repository `davidmkrtumyan1992-stack/rork-git-share-pal` (branch: main) and replace the current project files.
 
-## Шаг 3: Исправление ошибки регистрации
-Те же исправления, которые были сделаны ранее, но потерялись при очистке:
+### Changes from GitHub (5 commits):
+- **Removed Pratimoksha vow category** — now 6 categories total
+- **Renamed "10 Principles"** → "10 Ethical Principles"
+- **Fixed N+1 queries in AdminPanel** — improved database query performance
+- **Fixed race condition in saveVowsToServer** — prevents data conflicts when saving
 
-- **Упрощение сетевых запросов** — убрать сложную логику повторных попыток, которая вызывала зависание при регистрации
-- **Исправление перенаправления после email-подтверждения** — на веб-версии используется правильный адрес вместо мобильной ссылки
-- **Понятные сообщения об ошибках** — вместо технических ошибок показываются понятные сообщения на русском: проблемы с сетью, слабый пароль, email уже занят и т.д.
-- **Защита от повторных нажатий** — кнопка блокируется во время загрузки
+### Files to sync from GitHub repo:
+- **App screens**: Layout, home screen, auth callback, error pages
+- **Components**: AdminPanel, Dashboard, LoginForm, OnboardingCarousel
+- **Data files**: Vows data (updated categories), translations
+- **Hooks**: useVows, useVowCycle, useUnlockedVows, useVowNotifications
+- **Auth & config**: AuthContext, Supabase client, theme, types
+- **Database types**: Updated type definitions
 
-## Важно
-- Весь существующий функционал (обеты, роли, история, настройки) будет сохранён
-- Изменения затронут только 3 файла: клиент Supabase, контекст авторизации, форму входа
+All files will be pulled from the `expo/` folder in the repo and placed into the project root.

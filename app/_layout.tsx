@@ -5,9 +5,23 @@ import React, { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { AuthProvider } from "@/contexts/AuthContext";
 
-SplashScreen.preventAutoHideAsync();
+void SplashScreen.preventAutoHideAsync();
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 2,
+      retryDelay: (attemptIndex) => Math.min(1000 * (attemptIndex + 1), 5000),
+      staleTime: 30000,
+      networkMode: 'offlineFirst',
+    },
+    mutations: {
+      retry: 1,
+      retryDelay: 1000,
+      networkMode: 'offlineFirst',
+    },
+  },
+});
 
 function RootLayoutNav() {
   return (
@@ -20,7 +34,7 @@ function RootLayoutNav() {
 
 export default function RootLayout() {
   useEffect(() => {
-    SplashScreen.hideAsync();
+    void SplashScreen.hideAsync();
   }, []);
 
   return (
