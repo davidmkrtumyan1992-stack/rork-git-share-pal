@@ -59,11 +59,12 @@ const BREAKPOINTS = {
 };
 
 export function AdminPanel({ onClose }: AdminPanelProps) {
-  const { language, user: currentUser } = useAuth();
+  const { language, user: currentUser, isAdmin, isOwner } = useAuth();
   const t = getTranslation(language);
   const queryClient = useQueryClient();
   const { width: screenWidth } = useWindowDimensions();
-  
+  const isAdminOrOwner = isAdmin || isOwner;
+
   const [searchQuery, setSearchQuery] = useState('');
   const [emailSearch, setEmailSearch] = useState('');
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
@@ -74,6 +75,7 @@ export function AdminPanel({ onClose }: AdminPanelProps) {
   const { data: users, isLoading } = useQuery({
     queryKey: ['admin-users'] as const,
     queryFn: async () => {
+      if (!isAdminOrOwner) return [];
       console.log('[AdminPanel] Fetching admin users list...');
       
       const { data: profiles, error: profilesError } = await supabase
@@ -119,6 +121,7 @@ export function AdminPanel({ onClose }: AdminPanelProps) {
         lastEntry: lastEntryMap.get(profile.user_id) || null,
       }));
     },
+    enabled: isAdminOrOwner,
   });
 
   const { data: stats } = useQuery({
