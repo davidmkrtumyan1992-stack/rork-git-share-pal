@@ -77,7 +77,6 @@ const VOW_TYPES = [
   { key: 'tenPrinciples', labelKey: 'tenPrinciples', descKey: 'tenPrinciplesDesc', defaultLocked: false },
   { key: 'freedom', labelKey: 'freedom', descKey: 'freedomDesc', defaultLocked: false },
   { key: 'bodhisattva', labelKey: 'bodhisattva', descKey: 'bodhisattvaDesc', defaultLocked: false },
-  { key: 'pratimoksha', labelKey: 'pratimoksha', descKey: 'pratimokshaDesc', defaultLocked: true },
   { key: 'tantric', labelKey: 'tantric', descKey: 'tantricDesc', defaultLocked: true },
   { key: 'nuns', labelKey: 'nuns', descKey: 'nunsDesc', defaultLocked: true },
   { key: 'monks', labelKey: 'monks', descKey: 'monksDesc', defaultLocked: true },
