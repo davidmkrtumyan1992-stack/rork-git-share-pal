@@ -238,7 +238,7 @@ export const useDailyVows = (selectedVowTypes: string[]) => {
 
     if (error) {
       console.error('Error advancing cycle positions:', error);
-      throw error;
+      return;
     }
 
     queryClient.invalidateQueries({ queryKey: ['cycle-positions'] });
