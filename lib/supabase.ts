@@ -92,23 +92,23 @@ const createSupabaseClient = (): SupabaseClient => {
       detectSessionInUrl: true,
     },
     global: {
-      fetch: async (url, options = {}) => {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 30000);
-        
+      fetch: async (input, init = {}) => {
         try {
-          const response = await fetch(url, {
-            ...options,
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+          if (init.signal) {
+            init.signal.addEventListener('abort', () => controller.abort(), { once: true });
+          }
+
+          const response = await fetch(input, {
+            ...init,
             signal: controller.signal,
           });
           clearTimeout(timeoutId);
           return response;
         } catch (error) {
-          clearTimeout(timeoutId);
-          if (error instanceof Error && error.name === 'AbortError') {
-            console.error('Request timeout:', url);
-            throw new Error('Превышено время ожидания. Проверьте подключение к интернету.');
-          }
+          console.error('[Supabase] Fetch error:', (error as Error)?.message);
           throw error;
         }
       },

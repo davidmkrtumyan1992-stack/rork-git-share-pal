@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { Platform } from 'react-native';
 import { Session, User as SupabaseUser } from '@supabase/supabase-js';
 import createContextHook from '@nkzw/create-context-hook';
@@ -30,63 +30,71 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
 
   const fetchProfile = useCallback(async (userId: string) => {
     console.log('[AuthContext] Fetching profile for user:', userId);
-    
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('user_id', userId)
-      .maybeSingle();
 
-    if (profileError) {
-      console.error('[AuthContext] Profile fetch error:', profileError.message);
-      console.error('[AuthContext] Profile fetch error details:', JSON.stringify(profileError, null, 2));
-    }
+    try {
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle();
 
-    if (profile) {
-      console.log('[AuthContext] Profile fetched:', {
-        userId: profile.user_id,
-        hasSelectedVows: !!profile.selected_vow_types,
-        vowsType: typeof profile.selected_vow_types,
-        vowsIsArray: Array.isArray(profile.selected_vow_types),
-        vowsValue: profile.selected_vow_types
-      });
-
-      if (profile.selected_vow_types && !Array.isArray(profile.selected_vow_types)) {
-        console.warn('[AuthContext] selected_vow_types is not an array, normalizing:', profile.selected_vow_types);
-        profile.selected_vow_types = null;
+      if (profileError) {
+        console.error('[AuthContext] Profile fetch error:', profileError.message);
       }
+
+      if (profile) {
+        console.log('[AuthContext] Profile fetched for:', profile.user_id);
+        if (profile.selected_vow_types && !Array.isArray(profile.selected_vow_types)) {
+          console.warn('[AuthContext] selected_vow_types is not an array, normalizing');
+          profile.selected_vow_types = null;
+        }
+      }
+
+      let userRoles: UserRole[] = [];
+      try {
+        const { data: roles, error: rolesError } = await supabase
+          .from('user_roles')
+          .select('*')
+          .eq('user_id', userId);
+
+        if (rolesError) {
+          console.log('[AuthContext] Roles fetch error:', rolesError.message);
+        }
+        userRoles = (roles || []) as UserRole[];
+      } catch (rolesErr) {
+        console.warn('[AuthContext] Failed to fetch roles:', rolesErr);
+      }
+
+      const isAdmin = userRoles.some((r) => r.role === 'admin');
+      const isOwner = userRoles.some((r) => r.role === 'owner');
+
+      return {
+        profile: profile as Profile | null,
+        roles: userRoles,
+        isAdmin,
+        isOwner,
+        language: (profile?.language || 'ru') as Language,
+      };
+    } catch (error) {
+      console.error('[AuthContext] Failed to fetch profile (network error):', error);
+      return {
+        profile: null,
+        roles: [] as UserRole[],
+        isAdmin: false,
+        isOwner: false,
+        language: 'ru' as Language,
+      };
     }
-
-    const { data: roles, error: rolesError } = await supabase
-      .from('user_roles')
-      .select('*')
-      .eq('user_id', userId);
-
-    if (rolesError) {
-      console.log('Roles fetch error:', rolesError.message);
-    }
-
-    const userRoles = roles || [];
-    const isAdmin = userRoles.some((r) => r.role === 'admin');
-    const isOwner = userRoles.some((r) => r.role === 'owner');
-
-    return {
-      profile: profile as Profile | null,
-      roles: userRoles as UserRole[],
-      isAdmin,
-      isOwner,
-      language: (profile?.language || 'ru') as Language,
-    };
   }, []);
 
   useEffect(() => {
     console.log('Auth context initializing...');
     
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    void supabase.auth.getSession().then(({ data: { session } }) => {
       console.log('Initial session:', session?.user?.email || 'none');
       
       if (session?.user) {
-        fetchProfile(session.user.id).then((profileData) => {
+        void fetchProfile(session.user.id).then((profileData) => {
           setState({
             session,
             user: session.user,
@@ -97,6 +105,9 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       } else {
         setState((prev) => ({ ...prev, isLoading: false }));
       }
+    }).catch((error) => {
+      console.error('[AuthContext] Failed to get initial session:', error);
+      setState((prev) => ({ ...prev, isLoading: false }));
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -291,12 +302,12 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     }
   }, [state.user, updateProfile]);
 
-  return {
+  return useMemo(() => ({
     ...state,
     signIn,
     signUp,
     signOut,
     updateProfile,
     setLanguage,
-  };
+  }), [state, signIn, signUp, signOut, updateProfile, setLanguage]);
 });
