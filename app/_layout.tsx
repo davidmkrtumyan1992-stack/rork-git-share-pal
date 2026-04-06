@@ -10,10 +10,9 @@ void SplashScreen.preventAutoHideAsync();
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 3,
-      retryDelay: (attemptIndex: number) => Math.min(1000 * (attemptIndex + 1), 5000),
-      staleTime: 1000 * 60 * 5,
-      gcTime: 1000 * 60 * 10,
+      retry: 2,
+      retryDelay: (attemptIndex) => Math.min(1000 * (attemptIndex + 1), 5000),
+      staleTime: 30000,
       networkMode: 'offlineFirst',
     },
     mutations: {
