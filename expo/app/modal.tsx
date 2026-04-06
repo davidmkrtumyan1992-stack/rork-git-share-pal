@@ -29,7 +29,7 @@ export default function ModalScreen() {
       console.error('[ModalScreen] Error toggling vow:', error);
       Alert.alert(
         'Error',
-        'Failed to update vow selection. Please run the migration from supabase/20260107_recreate_selected_vow_types.sql',
+        'Failed to update vow selection. Please try again.',
         [{ text: 'OK' }]
       );
     }
