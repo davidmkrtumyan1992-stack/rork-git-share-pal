@@ -225,7 +225,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
   }, [selectedLanguageIndex]);
 
   const getSubtitleText = useCallback(() => {
-    const lang = LANGUAGES[selectedLanguageIndex].code;
+    const lang = GREETINGS[currentGreetingIndex].lang;
     switch (lang) {
       case 'ru': return 'Выберите язык';
       case 'es': return 'Elige un idioma';
@@ -236,7 +236,18 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
       case 'it': return 'Scegli la lingua';
       default: return 'Choose language';
     }
-  }, [selectedLanguageIndex]);
+  }, [currentGreetingIndex]);
+
+  const handleWheel = useCallback((e: any) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const direction = e.deltaY > 0 ? 1 : -1;
+    setSelectedLanguageIndex(prev => {
+      const newIndex = Math.max(0, Math.min(prev + direction, LANGUAGES.length - 1));
+      scrollViewRef.current?.scrollTo({ y: newIndex * ITEM_HEIGHT, animated: true });
+      return newIndex;
+    });
+  }, []);
 
   const renderPickerItem = useCallback((item: typeof LANGUAGES[0], index: number) => {
     const isSelected = index === selectedLanguageIndex;
@@ -356,7 +367,11 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
 
           <Text style={styles.subtitleText}>{getSubtitleText()}</Text>
 
-          <View style={styles.pickerContainer}>
+          <View
+              style={styles.pickerContainer}
+              // @ts-ignore — web-only wheel handler
+              onWheel={Platform.OS === 'web' ? handleWheel : undefined}
+            >
             <View style={styles.pickerHighlight}>
               <View style={styles.pickerHighlightLine} />
               <View style={styles.pickerHighlightLine} />

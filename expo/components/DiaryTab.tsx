@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Animated,
   Pressable,
+  Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
@@ -148,13 +149,15 @@ export const DiaryTab = memo(function DiaryTab({
           ))}
           <View style={styles.chipsSpacer} />
         </ScrollView>
-        <LinearGradient
-          colors={['rgba(245, 242, 237, 0)', 'rgba(245, 242, 237, 0.95)']}
-          style={styles.chipsFadeRight}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          pointerEvents="none"
-        />
+        {Platform.OS !== 'web' && (
+          <LinearGradient
+            colors={['rgba(245, 242, 237, 0)', 'rgba(245, 242, 237, 0.95)']}
+            style={styles.chipsFadeRight}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            pointerEvents="none"
+          />
+        )}
       </View>
     </View>
   );
