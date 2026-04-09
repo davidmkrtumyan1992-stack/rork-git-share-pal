@@ -29,6 +29,7 @@ import { getTranslation } from '@/data/translations';
 import { darkTheme } from '@/constants/theme';
 import { Language } from '@/types/database';
 import { useUnlockedVows } from '@/hooks/useUnlockedVows';
+import { LOCKED_VOW_TYPES } from '@/constants/vows';
 
 interface SettingsPanelProps {
   onSelectVow?: () => void;
@@ -74,13 +75,13 @@ const TIMEZONES = [
 ];
 
 const VOW_TYPES = [
-  { key: 'tenPrinciples', labelKey: 'tenPrinciples', descKey: 'tenPrinciplesDesc', defaultLocked: false },
-  { key: 'freedom', labelKey: 'freedom', descKey: 'freedomDesc', defaultLocked: false },
-  { key: 'bodhisattva', labelKey: 'bodhisattva', descKey: 'bodhisattvaDesc', defaultLocked: false },
-  { key: 'tantric', labelKey: 'tantric', descKey: 'tantricDesc', defaultLocked: true },
-  { key: 'nuns', labelKey: 'nuns', descKey: 'nunsDesc', defaultLocked: true },
-  { key: 'monks', labelKey: 'monks', descKey: 'monksDesc', defaultLocked: true },
-];
+  { key: 'tenPrinciples', labelKey: 'tenPrinciples', descKey: 'tenPrinciplesDesc' },
+  { key: 'freedom',       labelKey: 'freedom',       descKey: 'freedomDesc' },
+  { key: 'bodhisattva',   labelKey: 'bodhisattva',   descKey: 'bodhisattvaDesc' },
+  { key: 'tantric',       labelKey: 'tantric',        descKey: 'tantricDesc' },
+  { key: 'nuns',          labelKey: 'nuns',           descKey: 'nunsDesc' },
+  { key: 'monks',         labelKey: 'monks',          descKey: 'monksDesc' },
+].map(v => ({ ...v, defaultLocked: (LOCKED_VOW_TYPES as unknown as string[]).indexOf(v.key) !== -1 }));
 
 export function SettingsPanel({ onSelectVow }: SettingsPanelProps) {
   const { profile, language, signOut, setLanguage, updateProfile } = useAuth();
@@ -178,7 +179,7 @@ export function SettingsPanel({ onSelectVow }: SettingsPanelProps) {
     console.log('[SettingsPanel] Vow key:', vowKey);
     console.log('[SettingsPanel] Current selectedVowTypes:', selectedVowTypes);
     
-    const vowType = VOW_TYPES.find(v => v.key === vowKey);
+    const vowType = VOW_TYPES.filter(v => v.key === vowKey)[0];
     const isLocked = vowType?.defaultLocked && isVowLocked(vowKey);
     console.log('[SettingsPanel] Is locked:', isLocked);
     
