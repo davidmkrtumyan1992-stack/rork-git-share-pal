@@ -30,38 +30,38 @@ const vowCategoryNames: Record<string, Record<string, string>> = {
   tenPrinciples: {
     ru: '10 этических принципов', en: '10 Ethical Principles', fr: '10 Principes éthiques',
     de: '10 Ethische Prinzipien', es: '10 Principios éticos', zh: '10 条伦理原则',
-    hy: '10 էθիкакан сκзбунктнер', it: '10 Principi etici'
+    hy: '10 էթիկական սկզբունքներ', it: '10 Principi etici'
   },
   freedom: {
     ru: 'Обеты свободы', en: 'Freedom Vows', fr: 'Vœux de liberté',
     de: 'Freiheitsgelübde', es: 'Votos de libertad', zh: '自由誓言',
-    hy: 'Азатутян уχтер', it: 'Voti di libertà'
+    hy: 'Ազատության ուխտեր', it: 'Voti di libertà'
   },
   bodhisattva: {
     ru: 'Обеты Бодхисаттвы', en: 'Bodhisattva Vows', fr: 'Vœux de Bodhisattva',
     de: 'Bodhisattva-Gelübde', es: 'Votos de Bodhisattva', zh: '菩萨戒',
-    hy: 'Бодhисатвайи уχтер', it: 'Voti di Bodhisattva'
+    hy: 'Բոդհիսատվայի ուխտեր', it: 'Voti di Bodhisattva'
   },
   tantric: {
     ru: 'Тантрические обеты', en: 'Tantric Vows', fr: 'Vœux tantriques',
     de: 'Tantrische Gelübde', es: 'Votos tántricos', zh: '密宗誓言',
-    hy: 'Тантракан уχтер', it: 'Voti tantrici'
+    hy: 'Տանտրական ուխտեր', it: 'Voti tantrici'
   },
   nuns: {
     ru: 'Обеты монахинь', en: 'Nun Vows', fr: 'Vœux de religieuses',
     de: 'Nonnengelübde', es: 'Votos de monjas', zh: '尼众戒',
-    hy: 'Կрοнαвοр κананç ουχтер', it: 'Voti di monache'
+    hy: 'Կրոնավոր կանանց ուխտեր', it: 'Voti di monache'
   },
   monks: {
     ru: 'Обеты монахов', en: 'Monk Vows', fr: 'Vœux de moines',
     de: 'Mönchsgelübde', es: 'Votos de monjes', zh: '僧众戒',
-    hy: 'Կрοнавор тλαмαрдκανц ουχτερ', it: 'Voti di monaci'
+    hy: 'Կրոնավոր տղամارдκανц ուխτερ', it: 'Voti di monaci'
   },
 };
 
 const getLocalizedText = (lang: string): 'ru' | 'en' | 'it' | 'fr' | 'de' | 'es' | 'zh' | 'hy' => {
   const supportedLangs = ['ru', 'en', 'it', 'fr', 'de', 'es', 'zh', 'hy'];
-  return supportedLangs.indexOf(lang) !== -1 ? lang as any : 'en';
+  return supportedLangs.includes(lang) ? lang as any : 'en';
 };
 
 const BREAKPOINTS = { sm: 320, md: 768, lg: 1024 };
@@ -76,6 +76,8 @@ interface DashboardProps {
   onToggleVow?: (vowType: string) => void;
   onConfirmVows?: () => void;
   isVowSaving?: boolean;
+  notificationTimes?: Record<string, string>;
+  notificationTimezone?: string;
 }
 
 export function Dashboard({
@@ -88,6 +90,8 @@ export function Dashboard({
   onToggleVow,
   onConfirmVows,
   isVowSaving,
+  notificationTimes = {},
+  notificationTimezone = 'Europe/Moscow',
 }: DashboardProps) {
   const { profile, language, isAdmin } = useAuth();
   const t = getTranslation(language);
@@ -194,8 +198,16 @@ export function Dashboard({
 
   const formatTime = useCallback((dateString: string): string => {
     const date = new Date(dateString);
-    return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
-  }, []);
+    try {
+      return date.toLocaleTimeString('ru-RU', {
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: notificationTimezone,
+      });
+    } catch {
+      return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+    }
+  }, [notificationTimezone]);
 
   const formatDate = useCallback((dateString: string): string => {
     const date = new Date(dateString);
@@ -315,6 +327,8 @@ export function Dashboard({
             updateNoteText={updateNoteText}
             updateAntidoteText={updateAntidoteText}
             selectAntidoteTag={selectAntidoteTag}
+            notificationTimes={notificationTimes}
+            formatTime={formatTime}
           />
         )}
 

@@ -40,13 +40,13 @@ const antidoteTags: Record<string, string[]> = {
   de: ['Großzügigkeit üben', 'um Vergebung bitten', 'über Mitgefühl meditieren', 'ein Opfer darbringen', 'ein Mantra rezitieren'],
   es: ['practicar generosidad', 'pedir perdón', 'meditar sobre compasión', 'hacer una ofrenda', 'recitar un mantra'],
   zh: ['修习慷慨', '请求原谅', '慈悲冥想', '供养', '诵咒'],
-  hy: ['առատաձեռнություն прακтикел', 'ներолруттюн хндрел', 'կарекцанк медитацнел', 'ынца матуцел', 'мантра кардал'],
+  hy: ['առատաձեռնություն պրակտիկել', 'ներողություն խնդրել', 'կարեկցանք մեդիտացնել', 'ընծա մատուցել', 'մանտրա կարդալ'],
   it: ['praticare la generosità', 'chiedere perdono', 'meditare sulla compassione', 'fare un\'offerta', 'recitare un mantra'],
 };
 
 const getLocalizedText = (lang: string): 'ru' | 'en' | 'it' | 'fr' | 'de' | 'es' | 'zh' | 'hy' => {
   const supportedLangs = ['ru', 'en', 'it', 'fr', 'de', 'es', 'zh', 'hy'];
-  return supportedLangs.indexOf(lang) !== -1 ? lang as any : 'en';
+  return supportedLangs.includes(lang) ? lang as any : 'en';
 };
 
 function AntidoteTagButton({ tag, onPress }: { tag: string; onPress: () => void }) {
@@ -91,6 +91,7 @@ interface DiaryTabProps {
   updateNoteText: (key: string, text: string) => void;
   updateAntidoteText: (key: string, text: string) => void;
   selectAntidoteTag: (key: string, tag: string) => void;
+  notificationTimes?: Record<string, string>;
 }
 
 export const DiaryTab = memo(function DiaryTab({
@@ -115,6 +116,7 @@ export const DiaryTab = memo(function DiaryTab({
   updateNoteText,
   updateAntidoteText,
   selectAntidoteTag,
+  notificationTimes = {},
 }: DiaryTabProps) {
 
   const renderSelectedVowsChips = () => (
@@ -172,9 +174,18 @@ export const DiaryTab = memo(function DiaryTab({
     const isKept = todayEntry?.status === 'kept';
     const isBroken = todayEntry?.status === 'broken';
 
+    const notifTimeKey = `${vowKey}_${globalIdx}`;
+    const notifTime = notificationTimes[notifTimeKey];
+
     return (
       <View key={cardKey} style={[styles.vowCard, isSubmitted && styles.vowCardSubmitted]}>
         <View style={styles.vowCardHeader}>
+          {notifTime && (
+            <View style={styles.notifTimeBadge}>
+              <Clock size={11} color="#C5A572" />
+              <Text style={styles.notifTimeBadgeText}>{formatTime(notifTime)}</Text>
+            </View>
+          )}
           <View style={styles.vowNumberContainer}>
             {isBroken ? (
               <LinearGradient colors={['#B85C4F', '#A04A3E']} style={styles.vowNumber}>

@@ -91,6 +91,7 @@ interface DiaryTabProps {
   updateNoteText: (key: string, text: string) => void;
   updateAntidoteText: (key: string, text: string) => void;
   selectAntidoteTag: (key: string, tag: string) => void;
+  notificationTimes?: Record<string, string>;
 }
 
 export const DiaryTab = memo(function DiaryTab({
@@ -115,6 +116,7 @@ export const DiaryTab = memo(function DiaryTab({
   updateNoteText,
   updateAntidoteText,
   selectAntidoteTag,
+  notificationTimes = {},
 }: DiaryTabProps) {
 
   const renderSelectedVowsChips = () => (
@@ -172,9 +174,18 @@ export const DiaryTab = memo(function DiaryTab({
     const isKept = todayEntry?.status === 'kept';
     const isBroken = todayEntry?.status === 'broken';
 
+    const notifTimeKey = `${vowKey}_${globalIdx}`;
+    const notifTime = notificationTimes[notifTimeKey];
+
     return (
       <View key={cardKey} style={[styles.vowCard, isSubmitted && styles.vowCardSubmitted]}>
         <View style={styles.vowCardHeader}>
+          {notifTime && (
+            <View style={styles.notifTimeBadge}>
+              <Clock size={11} color="#C5A572" />
+              <Text style={styles.notifTimeBadgeText}>{formatTime(notifTime)}</Text>
+            </View>
+          )}
           <View style={styles.vowNumberContainer}>
             {isBroken ? (
               <LinearGradient colors={['#B85C4F', '#A04A3E']} style={styles.vowNumber}>

@@ -59,11 +59,13 @@ export default function HomeScreen() {
   const selectedVows = localSelectedVows;
 
   // OS-level scheduled notifications (work when app is closed)
-  useVowNotifications({
+  const { notificationTimes } = useVowNotifications({
     selectedVowTypes: selectedVows,
     notificationsEnabled: profile?.notifications_enabled || false,
     notificationInterval,
   });
+
+  const notificationTimezone = profile?.notification_timezone || 'Europe/Moscow';
 
   useEffect(() => {
     if (selectedVows.length > 0 && !activeVow) {
@@ -188,6 +190,8 @@ export default function HomeScreen() {
           onToggleVow={handleToggleVow}
           onConfirmVows={handleConfirmVows}
           isVowSaving={isSaving}
+          notificationTimes={notificationTimes}
+          notificationTimezone={notificationTimezone}
         />
       </View>
 

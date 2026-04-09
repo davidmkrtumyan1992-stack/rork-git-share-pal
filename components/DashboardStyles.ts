@@ -396,6 +396,21 @@ export const styles = StyleSheet.create({
   vowCardSubmitted: {
     opacity: 0.95,
   },
+  notifTimeBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: 'rgba(197, 165, 114, 0.12)',
+    borderRadius: 8,
+    paddingVertical: 3,
+    paddingHorizontal: 7,
+    marginRight: 4,
+  },
+  notifTimeBadgeText: {
+    fontSize: 11,
+    fontWeight: '500' as const,
+    color: '#C5A572',
+  },
   timeBadge: {
     flexDirection: 'row',
     alignItems: 'center',

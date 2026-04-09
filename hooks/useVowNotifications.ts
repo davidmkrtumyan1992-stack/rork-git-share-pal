@@ -1,9 +1,8 @@
-import { useEffect, useCallback, useRef, useState } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import { useAuth } from '@/contexts/AuthContext';
-import { getNextVowForNotification } from '@/hooks/useVowCycle';
-import { useCyclePositions } from '@/hooks/useVowCycle';
+import { getNextVowForNotification, useCyclePositions } from '@/hooks/useVowCycle';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -21,7 +20,6 @@ interface UseVowNotificationsProps {
   notificationInterval: 2 | 3;
 }
 
-// Schedule OS-level notifications (work even when app is closed)
 export const useVowNotifications = ({
   selectedVowTypes,
   notificationsEnabled,
@@ -30,7 +28,8 @@ export const useVowNotifications = ({
   const { language } = useAuth();
   const { data: cyclePositions = [] } = useCyclePositions();
   const [permissionGranted, setPermissionGranted] = useState(false);
-  const scheduledRef = useRef(false);
+  // key: `${vowType}_${vowIndex}`, value: ISO timestamp when notification arrived
+  const [notificationTimes, setNotificationTimes] = useState<Record<string, string>>({});
 
   const requestPermissions = useCallback(async (): Promise<boolean> => {
     if (Platform.OS === 'web') return false;
@@ -54,7 +53,6 @@ export const useVowNotifications = ({
     if (Platform.OS === 'web') return;
     if (!permissionGranted) return;
 
-    // Cancel all previous scheduled notifications
     await Notifications.cancelAllScheduledNotificationsAsync();
 
     if (!notificationsEnabled || selectedVowTypes.length === 0) {
@@ -63,7 +61,6 @@ export const useVowNotifications = ({
     }
 
     const intervalSeconds = notificationInterval * 60 * 60;
-    // Schedule 16 notifications ahead (~32-48h depending on interval)
     const count = 16;
 
     for (let i = 0; i < count; i++) {
@@ -79,7 +76,7 @@ export const useVowNotifications = ({
       } else {
         body = isRu
           ? 'Время проверить, как вы соблюдаете обеты'
-          : 'Time to check how you\'re keeping your vows';
+          : "Time to check how you're keeping your vows";
       }
 
       try {
@@ -103,8 +100,7 @@ export const useVowNotifications = ({
       }
     }
 
-    console.log(`[notifications] scheduled ${count} notifications every ${notificationInterval}h`);
-    scheduledRef.current = true;
+    console.log(`[notifications] scheduled ${count} × ${notificationInterval}h`);
   }, [
     permissionGranted,
     notificationsEnabled,
@@ -114,21 +110,49 @@ export const useVowNotifications = ({
     language,
   ]);
 
-  // Request permissions on mount (mobile only)
+  // Track when notifications arrive (foreground) or are tapped (background/closed)
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
+
+    const receivedSub = Notifications.addNotificationReceivedListener(
+      (notification: Notifications.Notification) => {
+        const data = notification.request.content.data as Record<string, unknown>;
+        if (data?.vowType != null && data?.vowIndex != null) {
+          const key = `${data.vowType}_${data.vowIndex}`;
+          setNotificationTimes((prev: Record<string, string>) => ({ ...prev, [key]: new Date().toISOString() }));
+        }
+      }
+    );
+
+    const responseSub = Notifications.addNotificationResponseReceivedListener(
+      (response: Notifications.NotificationResponse) => {
+        const data = response.notification.request.content.data as Record<string, unknown>;
+        if (data?.vowType != null && data?.vowIndex != null) {
+          const key = `${data.vowType}_${data.vowIndex}`;
+          setNotificationTimes((prev: Record<string, string>) => ({ ...prev, [key]: new Date().toISOString() }));
+        }
+      }
+    );
+
+    return () => {
+      receivedSub.remove();
+      responseSub.remove();
+    };
+  }, []);
+
   useEffect(() => {
     if (Platform.OS !== 'web') {
       requestPermissions();
     }
   }, [requestPermissions]);
 
-  // Re-schedule whenever settings or vows change
   useEffect(() => {
     if (permissionGranted) {
       scheduleNotifications();
     }
   }, [scheduleNotifications, permissionGranted]);
 
-  return { permissionGranted, requestPermissions, scheduleNotifications };
+  return { permissionGranted, requestPermissions, scheduleNotifications, notificationTimes };
 };
 
 export const cancelAllNotifications = async () => {

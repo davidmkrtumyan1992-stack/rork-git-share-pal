@@ -76,6 +76,8 @@ interface DashboardProps {
   onToggleVow?: (vowType: string) => void;
   onConfirmVows?: () => void;
   isVowSaving?: boolean;
+  notificationTimes?: Record<string, string>;
+  notificationTimezone?: string;
 }
 
 export function Dashboard({
@@ -88,6 +90,8 @@ export function Dashboard({
   onToggleVow,
   onConfirmVows,
   isVowSaving,
+  notificationTimes = {},
+  notificationTimezone = 'Europe/Moscow',
 }: DashboardProps) {
   const { profile, language, isAdmin } = useAuth();
   const t = getTranslation(language);
@@ -194,8 +198,16 @@ export function Dashboard({
 
   const formatTime = useCallback((dateString: string): string => {
     const date = new Date(dateString);
-    return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
-  }, []);
+    try {
+      return date.toLocaleTimeString('ru-RU', {
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: notificationTimezone,
+      });
+    } catch {
+      return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+    }
+  }, [notificationTimezone]);
 
   const formatDate = useCallback((dateString: string): string => {
     const date = new Date(dateString);
@@ -315,6 +327,8 @@ export function Dashboard({
             updateNoteText={updateNoteText}
             updateAntidoteText={updateAntidoteText}
             selectAntidoteTag={selectAntidoteTag}
+            notificationTimes={notificationTimes}
+            formatTime={formatTime}
           />
         )}
 
