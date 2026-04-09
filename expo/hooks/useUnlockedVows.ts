@@ -4,8 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { UserUnlockedVow } from '@/types/database';
-
-const LOCKED_VOW_TYPES = ['tantric', 'nuns', 'monks'];
+import { LOCKED_VOW_TYPES } from '@/constants/vows';
 
 export const useUnlockedVows = () => {
   const { user } = useAuth();
