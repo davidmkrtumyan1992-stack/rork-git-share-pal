@@ -32,6 +32,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { getTranslation, formatNumber } from '@/data/translations';
 import { darkTheme } from '@/constants/theme';
 import { Profile, AppRole, UserUnlockedVow } from '@/types/database';
+import { LOCKED_VOW_TYPE_LABELS, LOCKED_VOW_TYPES } from '@/constants/vows';
 
 interface AdminUser {
   id: string;
@@ -44,12 +45,6 @@ interface AdminUser {
 interface AdminPanelProps {
   onClose: () => void;
 }
-
-const LOCKED_VOW_TYPES = [
-  { key: 'tantric', labelRu: 'Тантрические обеты', labelEn: 'Tantric Vows' },
-  { key: 'nuns', labelRu: 'Обеты монахинь', labelEn: 'Nun Vows' },
-  { key: 'monks', labelRu: 'Обеты монахов', labelEn: 'Monk Vows' },
-];
 
 const BREAKPOINTS = {
   sm: 320,
