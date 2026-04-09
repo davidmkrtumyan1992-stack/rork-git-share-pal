@@ -6,47 +6,42 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
-void SplashScreen.preventAutoHideAsync();
+SplashScreen.preventAutoHideAsync();
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 2,
-      retryDelay: (attemptIndex) => Math.min(1000 * (attemptIndex + 1), 5000),
-      staleTime: 30000,
-      networkMode: 'offlineFirst',
-    },
-    mutations: {
-      retry: 1,
-      retryDelay: 1000,
-      networkMode: 'offlineFirst',
+      retry: 3,
+      staleTime: 5 * 60 * 1000,
+      gcTime: 10 * 60 * 1000,
     },
   },
 });
 
 function RootLayoutNav() {
   return (
-    <Stack screenOptions={{ headerBackTitle: "Back" }}>
-      <Stack.Screen name="index" options={{ headerShown: false }} />
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="index" />
       <Stack.Screen name="auth/callback" options={{ headerShown: false }} />
+      <Stack.Screen name="+not-found" options={{ headerShown: true, title: "Not Found" }} />
     </Stack>
   );
 }
 
 export default function RootLayout() {
   useEffect(() => {
-    void SplashScreen.hideAsync();
+    SplashScreen.hideAsync();
   }, []);
 
   return (
-    <ErrorBoundary fallbackMessage="Не удалось загрузить приложение. Перезапустите его.">
-      <QueryClientProvider client={queryClient}>
-        <GestureHandlerRootView style={{ flex: 1 }}>
+    <QueryClientProvider client={queryClient}>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <ErrorBoundary>
           <AuthProvider>
             <RootLayoutNav />
           </AuthProvider>
-        </GestureHandlerRootView>
-      </QueryClientProvider>
-    </ErrorBoundary>
+        </ErrorBoundary>
+      </GestureHandlerRootView>
+    </QueryClientProvider>
   );
 }
