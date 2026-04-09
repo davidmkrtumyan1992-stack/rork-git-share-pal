@@ -1,8 +1,6 @@
-// template
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import {
-  Modal,
   Platform,
   Pressable,
   StyleSheet,
@@ -10,39 +8,41 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { darkTheme } from "@/constants/theme";
+import { useAuth } from "@/contexts/AuthContext";
+import { getTranslation } from "@/data/translations";
 
 export default function ModalScreen() {
+  const { language } = useAuth();
+  const t = getTranslation(language);
+
   return (
-    <Modal
-      animationType="fade"
-      transparent={true}
-      visible={true}
-      onRequestClose={() => router.back()}
-    >
+    <View style={styles.container}>
       <Pressable style={styles.overlay} onPress={() => router.back()}>
         <View style={styles.modalContent}>
-          <Text style={styles.title}>Modal</Text>
-          <Text style={styles.description}>
-            This is an example modal with proper fade animation. You can edit it
-            in app/modal.tsx.
-          </Text>
+          <Text style={styles.title}>{t.app.title}</Text>
+          <Text style={styles.description}>{t.app.subtitle}</Text>
 
           <TouchableOpacity
             style={styles.closeButton}
             onPress={() => router.back()}
+            testID="modal-close-button"
           >
-            <Text style={styles.closeButtonText}>Close</Text>
+            <Text style={styles.closeButtonText}>{t.common.cancel}</Text>
           </TouchableOpacity>
         </View>
       </Pressable>
 
-      {/* Use a light status bar on iOS to account for the black space above the modal */}
       <StatusBar style={Platform.OS === "ios" ? "light" : "auto"} />
-    </Modal>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "transparent",
+  },
   overlay: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.5)",
@@ -50,34 +50,42 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   modalContent: {
-    backgroundColor: "white",
-    borderRadius: 20,
-    padding: 24,
+    backgroundColor: darkTheme.colors.surface,
+    borderRadius: 24,
+    padding: 28,
     margin: 20,
     alignItems: "center",
     minWidth: 300,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 24,
+    elevation: 10,
   },
   title: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 16,
+    fontSize: 22,
+    fontWeight: "700" as const,
+    marginBottom: 12,
+    color: darkTheme.colors.text,
   },
   description: {
     textAlign: "center",
     marginBottom: 24,
-    color: "#666",
-    lineHeight: 20,
+    color: darkTheme.colors.textSecondary,
+    lineHeight: 22,
+    fontSize: 15,
   },
   closeButton: {
-    backgroundColor: "#007AFF",
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 10,
-    minWidth: 100,
+    backgroundColor: darkTheme.colors.primary,
+    paddingHorizontal: 28,
+    paddingVertical: 14,
+    borderRadius: 16,
+    minWidth: 120,
   },
   closeButtonText: {
-    color: "white",
-    fontWeight: "600",
+    color: "#FFFFFF",
+    fontWeight: "600" as const,
     textAlign: "center",
+    fontSize: 16,
   },
 });

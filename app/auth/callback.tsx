@@ -10,32 +10,32 @@ export default function AuthCallback() {
 
   useEffect(() => {
     const handleCallback = async () => {
-      console.log('Auth callback params:', params);
+      console.log('[AuthCallback] Processing auth callback params');
       
       try {
         if (params.access_token && params.refresh_token) {
-          console.log('Setting session from URL params...');
+          console.log('[AuthCallback] Setting session from URL params...');
           const { data, error } = await supabase.auth.setSession({
             access_token: params.access_token as string,
             refresh_token: params.refresh_token as string,
           });
 
           if (error) {
-            console.error('Error setting session:', error);
+            console.error('[AuthCallback] Error setting session:', error);
             throw error;
           }
 
-          console.log('Session set successfully:', data.user?.email);
+          console.log('[AuthCallback] Session set successfully:', data.user?.email);
           
           setTimeout(() => {
             router.replace('/');
           }, 1000);
         } else {
-          console.log('No tokens in URL, redirecting to home...');
+          console.log('[AuthCallback] No tokens in URL, redirecting to home...');
           router.replace('/');
         }
       } catch (error) {
-        console.error('Callback error:', error);
+        console.error('[AuthCallback] Callback error:', error);
         router.replace('/');
       }
     };
@@ -44,7 +44,7 @@ export default function AuthCallback() {
   }, [params, router]);
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} testID="auth-callback-screen">
       <ActivityIndicator size="large" color={darkTheme.colors.primary} />
       <Text style={styles.text}>Подтверждение email...</Text>
     </View>

@@ -40,7 +40,7 @@ export default function HomeScreen() {
         ? profile.selected_vow_types 
         : [];
     } catch (e) {
-      console.log('Error accessing selected_vow_types:', e);
+      console.log('[HomeScreen] Error accessing selected_vow_types:', e);
       return [];
     }
   }, [profile?.selected_vow_types]);
@@ -58,7 +58,6 @@ export default function HomeScreen() {
 
   const selectedVows = localSelectedVows;
 
-  // OS-level scheduled notifications (work when app is closed)
   const { notificationTimes } = useVowNotifications({
     selectedVowTypes: selectedVows,
     notificationsEnabled: profile?.notifications_enabled || false,
@@ -76,7 +75,7 @@ export default function HomeScreen() {
   useEffect(() => {
     if (user && profile && !hasShownOnboarding.current) {
       if (selectedVows.length === 0) {
-        console.log('No vows selected, showing onboarding');
+        console.log('[HomeScreen] No vows selected, showing onboarding');
         setShowOnboarding(true);
         hasShownOnboarding.current = true;
       }
@@ -84,13 +83,13 @@ export default function HomeScreen() {
   }, [user, profile, selectedVows]);
 
   const handleOnboardingComplete = async (language: Language) => {
-    console.log('Onboarding complete, setting language:', language);
+    console.log('[HomeScreen] Onboarding complete, setting language:', language);
     try {
       await setLanguage(language);
       setShowOnboarding(false);
-      console.log('Onboarding completed successfully');
+      console.log('[HomeScreen] Onboarding completed successfully');
     } catch (error) {
-      console.log('Error completing onboarding:', error);
+      console.log('[HomeScreen] Error completing onboarding:', error);
       setShowOnboarding(false);
     }
   };
@@ -125,7 +124,7 @@ export default function HomeScreen() {
   }, [saveVowsToServer]);
 
   const handleRemoveVow = useCallback((vowType: string) => {
-    console.log('Removing vow:', vowType);
+    console.log('[HomeScreen] Removing vow:', vowType);
     
     setLocalSelectedVows(prev => {
       const newVows = prev.filter(v => v !== vowType);
@@ -141,7 +140,7 @@ export default function HomeScreen() {
   }, [activeVow, saveVowsToServer]);
 
   const handleConfirmVows = async () => {
-    console.log('Vows already saved via toggleVow');
+    console.log('[HomeScreen] Vows already saved via toggleVow');
     setIsSaving(false);
     if (selectedVows.length > 0 && !selectedVows.includes(activeVow || '')) {
       setActiveVow(selectedVows[0]);
@@ -150,8 +149,8 @@ export default function HomeScreen() {
 
   if (isLoading) {
     return (
-      <View style={styles.loadingContainer}>
-        <StatusBar style="light" />
+      <View style={styles.loadingContainer} testID="loading-screen">
+        <StatusBar style="dark" />
         <ActivityIndicator size="large" color={darkTheme.colors.primary} />
       </View>
     );
@@ -176,8 +175,8 @@ export default function HomeScreen() {
   }
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <StatusBar style="light" />
+    <View style={[styles.container, { paddingTop: insets.top }]} testID="home-screen">
+      <StatusBar style="dark" />
       
       <View style={styles.screenContainer}>
         <Dashboard

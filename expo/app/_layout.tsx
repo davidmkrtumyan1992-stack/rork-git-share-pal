@@ -21,7 +21,8 @@ const queryClient = new QueryClient({
 function RootLayoutNav() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="index" />
+      <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen name="modal" options={{ presentation: "modal", headerShown: false }} />
       <Stack.Screen name="auth/callback" options={{ headerShown: false }} />
       <Stack.Screen name="+not-found" options={{ headerShown: true, title: "Not Found" }} />
     </Stack>
@@ -30,6 +31,7 @@ function RootLayoutNav() {
 
 export default function RootLayout() {
   useEffect(() => {
+    console.log("[RootLayout] Hiding splash screen");
     SplashScreen.hideAsync();
   }, []);
 
