@@ -49,7 +49,6 @@ const LOCKED_VOW_TYPES = [
   { key: 'tantric', labelRu: 'Тантрические обеты', labelEn: 'Tantric Vows' },
   { key: 'nuns', labelRu: 'Обеты монахинь', labelEn: 'Nun Vows' },
   { key: 'monks', labelRu: 'Обеты монахов', labelEn: 'Monk Vows' },
-  { key: 'pratimoksha', labelRu: 'Пратимокша', labelEn: 'Pratimoksha' },
 ];
 
 const BREAKPOINTS = {
