@@ -1,21 +1,16 @@
-# Sync project with GitHub repo (6 categories, renamed "10 Ethical Principles", bug fixes)
+# Sync project with GitHub repo (Phase 3: Architecture Refactor)
 
-## What will happen
+**What will happen:**
 
-Pull all latest files from your GitHub repository `davidmkrtumyan1992-stack/rork-git-share-pal` (branch: main) and replace the current project files.
+1. Clone the latest code from your GitHub repository (branch: main)
+2. Copy all files into the current project, replacing existing ones
+3. Clean up the temporary clone
 
-### Changes from GitHub (5 commits):
-- **Removed Pratimoksha vow category** — now 6 categories total
-- **Renamed "10 Principles"** → "10 Ethical Principles"
-- **Fixed N+1 queries in AdminPanel** — improved database query performance
-- **Fixed race condition in saveVowsToServer** — prevents data conflicts when saving
+**Changes included in this sync:**
+- Removed pratimoksha from AdminPanel locked vow types
+- New shared constants file for locked vow types (tantric, nuns, monks)
+- All relevant screens now use the shared constants instead of duplicating lists
+- New error recovery screen that catches crashes and shows a "Try again" button
+- Error boundary wraps the entire app
 
-### Files to sync from GitHub repo:
-- **App screens**: Layout, home screen, auth callback, error pages
-- **Components**: AdminPanel, Dashboard, LoginForm, OnboardingCarousel
-- **Data files**: Vows data (updated categories), translations
-- **Hooks**: useVows, useVowCycle, useUnlockedVows, useVowNotifications
-- **Auth & config**: AuthContext, Supabase client, theme, types
-- **Database types**: Updated type definitions
-
-All files will be pulled from the `expo/` folder in the repo and placed into the project root.
+**No existing functionality will be removed** — this is a refactor and stability improvement.
