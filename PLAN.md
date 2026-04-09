@@ -1,16 +1,9 @@
-# Sync project with GitHub repo (Phase 3: Architecture Refactor)
+# Rebuild project to fix SDK version mismatch
 
-**What will happen:**
+Your project configuration and dependencies are already set to Expo SDK 54. The "SDK 52" error you're seeing is caused by a stale/cached build.
 
-1. Clone the latest code from your GitHub repository (branch: main)
-2. Copy all files into the current project, replacing existing ones
-3. Clean up the temporary clone
+**What will be done:**
+- Reinstall all project dependencies to clear any cached or outdated packages
+- Restart the development server with a fresh build
 
-**Changes included in this sync:**
-- Removed pratimoksha from AdminPanel locked vow types
-- New shared constants file for locked vow types (tantric, nuns, monks)
-- All relevant screens now use the shared constants instead of duplicating lists
-- New error recovery screen that catches crashes and shows a "Try again" button
-- Error boundary wraps the entire app
-
-**No existing functionality will be removed** — this is a refactor and stability improvement.
+This should resolve the SDK version mismatch error when scanning the QR code with Expo Go.
