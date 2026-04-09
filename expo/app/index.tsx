@@ -15,6 +15,7 @@ import { AdminPanel } from '@/components/AdminPanel';
 import { OnboardingScreen } from '@/components/OnboardingScreen';
 import { darkTheme } from '@/constants/theme';
 import { Language } from '@/types/database';
+import { useVowNotifications } from '@/hooks/useVowNotifications';
 
 type Screen = 'dashboard' | 'admin';
 
@@ -27,6 +28,11 @@ export default function HomeScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const hasShownOnboarding = useRef(false);
+
+  const notificationInterval: 2 | 3 =
+    profile?.notification_interval === 2 || profile?.notification_interval === 3
+      ? profile.notification_interval
+      : 2;
 
   const serverSelectedVows = useMemo(() => {
     try {
@@ -51,6 +57,13 @@ export default function HomeScreen() {
   }, [serverSelectedVows, profile]);
 
   const selectedVows = localSelectedVows;
+
+  // OS-level scheduled notifications (work when app is closed)
+  useVowNotifications({
+    selectedVowTypes: selectedVows,
+    notificationsEnabled: profile?.notifications_enabled || false,
+    notificationInterval,
+  });
 
   useEffect(() => {
     if (selectedVows.length > 0 && !activeVow) {

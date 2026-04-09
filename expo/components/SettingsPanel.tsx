@@ -96,7 +96,13 @@ export function SettingsPanel({ onSelectVow }: SettingsPanelProps) {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showTimezoneList, setShowTimezoneList] = useState(false);
   const [showLanguageList, setShowLanguageList] = useState(false);
-  const [notificationInterval, setNotificationInterval] = useState(2);
+  const notificationInterval: 2 | 3 = (profile?.notification_interval === 2 || profile?.notification_interval === 3)
+    ? profile.notification_interval
+    : 2;
+
+  const handleNotificationIntervalChange = (value: 2 | 3) => {
+    updateProfile({ notification_interval: value });
+  };
 
   const selectedVowTypes = (() => {
     try {
@@ -513,7 +519,7 @@ export function SettingsPanel({ onSelectVow }: SettingsPanelProps) {
                   styles.intervalButton,
                   notificationInterval === 2 && styles.intervalButtonActive
                 ]}
-                onPress={() => setNotificationInterval(2)}
+                onPress={() => handleNotificationIntervalChange(2)}
               >
                 <Text style={[
                   styles.intervalButtonText,
@@ -527,7 +533,7 @@ export function SettingsPanel({ onSelectVow }: SettingsPanelProps) {
                   styles.intervalButton,
                   notificationInterval === 3 && styles.intervalButtonActive
                 ]}
-                onPress={() => setNotificationInterval(3)}
+                onPress={() => handleNotificationIntervalChange(3)}
               >
                 <Text style={[
                   styles.intervalButtonText,
