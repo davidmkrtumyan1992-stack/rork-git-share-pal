@@ -201,12 +201,6 @@ export const DiaryTab = memo(function DiaryTab({
           <View style={styles.vowCategoryBadge}>
             <Text style={styles.vowCategoryText}>{categoryName}</Text>
           </View>
-          {isSubmitted && todayEntry && (
-            <View style={styles.timeBadge}>
-              <Clock size={12} color={darkTheme.colors.textMuted} />
-              <Text style={styles.timeBadgeText}>{formatTime(todayEntry.updated_at)}</Text>
-            </View>
-          )}
         </View>
 
         <Text style={styles.vowText}>{vowItem[getLocalizedText(language)]}</Text>
