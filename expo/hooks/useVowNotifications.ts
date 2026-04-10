@@ -3,6 +3,7 @@ import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import { useAuth } from '@/contexts/AuthContext';
 import { getNextVowForNotification, useCyclePositions } from '@/hooks/useVowCycle';
+import { supabase } from '@/lib/supabase';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -13,6 +14,84 @@ Notifications.setNotificationHandler({
     shouldShowList: true,
   }),
 });
+
+const VOW_CATEGORY_ID = 'vow_reminder';
+
+// Set up notification category with action buttons (called once on startup)
+async function setupNotificationCategory() {
+  if (Platform.OS === 'web') return;
+  try {
+    await Notifications.setNotificationCategoryAsync(VOW_CATEGORY_ID, [
+      {
+        identifier: 'kept',
+        buttonTitle: '✅ Соблюдал',
+        options: { opensAppToForeground: false },
+      },
+      {
+        identifier: 'broken',
+        buttonTitle: '❌ Нарушил',
+        options: { opensAppToForeground: false },
+      },
+      {
+        identifier: 'note',
+        buttonTitle: '💬 Заметка',
+        textInput: {
+          submitButtonTitle: 'Сохранить',
+          placeholder: 'Что произошло?',
+        },
+        options: { opensAppToForeground: false },
+      },
+    ]);
+  } catch (e) {
+    console.log('[notifications] category setup error:', e);
+  }
+}
+
+// Save vow entry to Supabase directly (works in background, no React hooks needed)
+async function saveVowEntryFromNotification(
+  vowType: string,
+  status: 'kept' | 'broken' | null,
+  noteText?: string
+) {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user?.id) return;
+    const userId = session.user.id;
+    const today = new Date().toISOString().split('T')[0];
+
+    const { data: existing } = await supabase
+      .from('vow_entries')
+      .select('id, status')
+      .eq('user_id', userId)
+      .eq('vow_type', vowType)
+      .eq('entry_date', today)
+      .maybeSingle();
+
+    if (existing) {
+      await supabase
+        .from('vow_entries')
+        .update({
+          ...(status && { status }),
+          ...(noteText !== undefined && { note_text: noteText }),
+        })
+        .eq('id', existing.id);
+    } else if (status) {
+      await supabase.from('vow_entries').insert({
+        user_id: userId,
+        vow_type: vowType,
+        entry_date: today,
+        status,
+        note_text: noteText || null,
+        antidote_text: null,
+        antidote_completed: false,
+        postponed_count: 0,
+      });
+    }
+    console.log(`[notifications] saved vow entry: ${vowType} → ${status ?? 'note'}`);
+  } catch (e) {
+    console.log('[notifications] save error:', e);
+  }
+}
 
 interface UseVowNotificationsProps {
   selectedVowTypes: string[];
@@ -30,6 +109,11 @@ export const useVowNotifications = ({
   const [permissionGranted, setPermissionGranted] = useState(false);
   // key: `${vowType}_${vowIndex}`, value: ISO timestamp when notification arrived
   const [notificationTimes, setNotificationTimes] = useState<Record<string, string>>({});
+
+  // Set up category once on mount
+  useEffect(() => {
+    setupNotificationCategory();
+  }, []);
 
   const requestPermissions = useCallback(async (): Promise<boolean> => {
     if (Platform.OS === 'web') return false;
@@ -85,6 +169,7 @@ export const useVowNotifications = ({
             title,
             body,
             sound: true,
+            categoryIdentifier: VOW_CATEGORY_ID,
             data: vow
               ? { vowType: vow.vowType, vowIndex: vow.vowIndex }
               : { type: 'reminder' },
@@ -100,7 +185,7 @@ export const useVowNotifications = ({
       }
     }
 
-    console.log(`[notifications] scheduled ${count} × ${notificationInterval}h`);
+    console.log(`[notifications] scheduled ${count} × ${notificationInterval}h with action buttons`);
   }, [
     permissionGranted,
     notificationsEnabled,
@@ -110,7 +195,7 @@ export const useVowNotifications = ({
     language,
   ]);
 
-  // Track when notifications arrive (foreground) or are tapped (background/closed)
+  // Handle notification actions (kept / broken / note)
   useEffect(() => {
     if (Platform.OS === 'web') return;
 
@@ -127,9 +212,27 @@ export const useVowNotifications = ({
     const responseSub = Notifications.addNotificationResponseReceivedListener(
       (response: Notifications.NotificationResponse) => {
         const data = response.notification.request.content.data as Record<string, unknown>;
+
+        // Track notification time on card
         if (data?.vowType != null && data?.vowIndex != null) {
           const key = `${data.vowType}_${data.vowIndex}`;
           setNotificationTimes((prev: Record<string, string>) => ({ ...prev, [key]: new Date().toISOString() }));
+        }
+
+        // Handle action buttons
+        const actionId = response.actionIdentifier;
+        const vowType = data?.vowType ? String(data.vowType) : null;
+        const userText = (response as any).userText as string | undefined;
+
+        if (!vowType) return;
+        if (actionId === Notifications.DEFAULT_ACTION_IDENTIFIER) return; // plain tap = open app
+
+        if (actionId === 'kept') {
+          saveVowEntryFromNotification(vowType, 'kept');
+        } else if (actionId === 'broken') {
+          saveVowEntryFromNotification(vowType, 'broken');
+        } else if (actionId === 'note' && userText) {
+          saveVowEntryFromNotification(vowType, null, userText);
         }
       }
     );
