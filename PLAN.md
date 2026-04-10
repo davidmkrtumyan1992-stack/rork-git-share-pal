@@ -1,9 +1,9 @@
-# Rebuild project to fix SDK version mismatch
+# Confirm PWA support is already in place
 
-Your project configuration and dependencies are already set to Expo SDK 54. The "SDK 52" error you're seeing is caused by a stale/cached build.
+Your PWA changes are already present in the project:
 
-**What will be done:**
-- Reinstall all project dependencies to clear any cached or outdated packages
-- Restart the development server with a fresh build
+- **Web app manifest** (`manifest.json`) with app name, theme colors, icons, and standalone display mode
+- **Service worker** (`sw.js`) with stale-while-revalidate caching strategy
+- **PWA meta tags** injected in the app layout for Apple and Android web app support
 
-This should resolve the SDK version mismatch error when scanning the QR code with Expo Go.
+No additional changes are needed — the app is ready to rebuild as-is.
