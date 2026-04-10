@@ -1,8 +1,8 @@
-# Rebuild the app from existing project files
+# Rebuild the app with fresh dependencies
 
-The build error (404 archive download) is an infrastructure issue — the build system couldn't fetch the project archive. All your app files are present and intact locally.
+All your app files are already in place locally. This is a simple rebuild.
 
 **What will happen:**
 - Reinstall all dependencies fresh
-- Rebuild the app from the existing local files
-- No code changes needed — everything is already in place
+- Rebuild the app from existing files
+- No code changes needed — everything is intact
