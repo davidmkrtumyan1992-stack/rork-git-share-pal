@@ -1,8 +1,10 @@
-# Fix build error with clean reinstall
+# Clean rebuild of the app
 
-The 404 archive download error is a temporary infrastructure issue, not a code problem.
+**Note:** No GitHub remote is connected to this project. Only the Rork backend remote exists.
 
 **What will happen:**
 - Remove all installed packages
 - Reinstall everything fresh
 - Verify the app builds without errors
+
+If you have a GitHub repository you'd like to connect, please share the repository URL and I can set it up for you.
