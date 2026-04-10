@@ -25,7 +25,15 @@
       "package": "app.rork.ywfta2lsth7893gaf5mzw"
     },
     "web": {
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/favicon.png",
+      "bundler": "metro",
+      "output": "static",
+      "name": "SharePal — Буддийские обеты",
+      "shortName": "SharePal",
+      "description": "Трекер буддийских обетов и духовной практики",
+      "themeColor": "#6B8E7F",
+      "backgroundColor": "#F5F2ED",
+      "lang": "ru"
     },
     "plugins": [
       [
