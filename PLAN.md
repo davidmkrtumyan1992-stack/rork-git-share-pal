@@ -1,7 +1,8 @@
-# Pull latest changes from GitHub and rebuild
+# Fix build error with clean reinstall
+
+The 404 archive download error is a temporary infrastructure issue, not a code problem.
 
 **What will happen:**
-- Fetch the latest code from your GitHub repository
-- Apply all new changes to the project
-- Reinstall dependencies to pick up any new packages
+- Remove all installed packages
+- Reinstall everything fresh
 - Verify the app builds without errors
