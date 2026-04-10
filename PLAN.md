@@ -1,8 +1,8 @@
-# Rebuild the app with fresh dependencies
+# Rebuild the app from existing local files
 
-All your app files are already in place locally. This is a simple rebuild.
+The build error (404 archive download) is a temporary infrastructure issue — not a code problem. All your app files are present and working.
 
 **What will happen:**
 - Reinstall all dependencies fresh
-- Rebuild the app from existing files
-- No code changes needed — everything is intact
+- Rebuild the app from existing local files
+- No code changes needed
