@@ -181,12 +181,6 @@ export const DiaryTab = memo(function DiaryTab({
     return (
       <View key={cardKey} style={[styles.vowCard, isSubmitted && styles.vowCardSubmitted]}>
         <View style={styles.vowCardHeader}>
-          {notifTime && (
-            <View style={styles.notifTimeBadge}>
-              <Clock size={11} color="#C5A572" />
-              <Text style={styles.notifTimeBadgeText}>{formatTime(notifTime)}</Text>
-            </View>
-          )}
           <View style={styles.vowNumberContainer}>
             {isBroken ? (
               <LinearGradient colors={['#B85C4F', '#A04A3E']} style={styles.vowNumber}>
@@ -201,6 +195,13 @@ export const DiaryTab = memo(function DiaryTab({
           <View style={styles.vowCategoryBadge}>
             <Text style={styles.vowCategoryText}>{categoryName}</Text>
           </View>
+          <View style={{ flex: 1 }} />
+          {notifTime && (
+            <View style={styles.notifTimeBadge}>
+              <Clock size={11} color="#C5A572" />
+              <Text style={styles.notifTimeBadgeText}>{formatTime(notifTime)}</Text>
+            </View>
+          )}
         </View>
 
         <Text style={styles.vowText}>{vowItem[getLocalizedText(language)]}</Text>
