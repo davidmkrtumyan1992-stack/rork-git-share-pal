@@ -17,6 +17,19 @@ Notifications.setNotificationHandler({
 
 const VOW_CATEGORY_ID = 'vow_reminder';
 
+// Compute scheduled notification times for today, starting at 9:00 AM local time
+export function computeScheduledTimes(count: number, intervalHours: 2 | 3): string[] {
+  const now = new Date();
+  const dayStart = new Date(now);
+  dayStart.setHours(9, 0, 0, 0);
+  const intervalMs = intervalHours * 60 * 60 * 1000;
+  const times: string[] = [];
+  for (let i = 0; i < count; i++) {
+    times.push(new Date(dayStart.getTime() + i * intervalMs).toISOString());
+  }
+  return times;
+}
+
 // Set up notification category with action buttons (called once on startup)
 async function setupNotificationCategory() {
   if (Platform.OS === 'web') return;

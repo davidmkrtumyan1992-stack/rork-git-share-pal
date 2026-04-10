@@ -167,9 +167,10 @@ export const styles = StyleSheet.create({
     gap: 16,
   },
   vowCardsContainerLarge: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: 20,
+    maxWidth: 720,
+    alignSelf: 'center' as const,
+    width: '100%',
   },
   vowCard: {
     backgroundColor: 'rgba(255, 255, 255, 0.95)',

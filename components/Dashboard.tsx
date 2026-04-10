@@ -22,6 +22,7 @@ import { VowSelection } from '@/components/VowSelection';
 import { DiaryTab, VowCardState } from '@/components/DiaryTab';
 import { HistoryTab } from '@/components/HistoryTab';
 import { styles } from '@/components/DashboardStyles';
+import { computeScheduledTimes } from '@/hooks/useVowNotifications';
 
 type TabType = 'diary' | 'history' | 'settings' | 'vowSelection';
 type HistorySubTab = 'antidotes' | 'history';
@@ -108,6 +109,31 @@ export function Dashboard({
   const postponeAntidote = usePostponeAntidote();
 
   const { dailyVows, isLoading: cycleLoading, initializeIfNeeded, advanceCyclePositions, needsUpdate } = useDailyVows(selectedVows);
+
+  const notificationInterval: 2 | 3 =
+    profile?.notification_interval === 2 || profile?.notification_interval === 3
+      ? profile.notification_interval : 2;
+  const notificationsEnabled = profile?.notifications_enabled || false;
+
+  // Scheduled times for each vow card (computed once per day at 9am)
+  const scheduledTimes = useMemo(() =>
+    computeScheduledTimes(dailyVows.length, notificationInterval),
+    [dailyVows.length, notificationInterval]
+  );
+
+  // Current time, refreshed every minute to unlock next card
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = setInterval(() => setNowMs(Date.now()), 60000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // How many vow cards are visible (progressive reveal every intervalHours)
+  const visibleVowsCount = useMemo(() => {
+    if (!notificationsEnabled || scheduledTimes.length === 0) return dailyVows.length;
+    const visible = scheduledTimes.filter(t => new Date(t).getTime() <= nowMs).length;
+    return Math.max(1, Math.min(visible, dailyVows.length));
+  }, [scheduledTimes, nowMs, notificationsEnabled, dailyVows.length]);
 
   const [activeTab, setActiveTab] = useState<TabType>('diary');
   const [historySubTab, setHistorySubTab] = useState<HistorySubTab>('antidotes');
@@ -327,8 +353,8 @@ export function Dashboard({
             updateNoteText={updateNoteText}
             updateAntidoteText={updateAntidoteText}
             selectAntidoteTag={selectAntidoteTag}
-            notificationTimes={notificationTimes}
-            formatTime={formatTime}
+            scheduledTimes={scheduledTimes}
+            visibleVowsCount={visibleVowsCount}
           />
         )}
 

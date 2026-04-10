@@ -91,7 +91,8 @@ interface DiaryTabProps {
   updateNoteText: (key: string, text: string) => void;
   updateAntidoteText: (key: string, text: string) => void;
   selectAntidoteTag: (key: string, tag: string) => void;
-  notificationTimes?: Record<string, string>;
+  scheduledTimes?: string[];
+  visibleVowsCount?: number;
 }
 
 export const DiaryTab = memo(function DiaryTab({
@@ -116,7 +117,8 @@ export const DiaryTab = memo(function DiaryTab({
   updateNoteText,
   updateAntidoteText,
   selectAntidoteTag,
-  notificationTimes = {},
+  scheduledTimes = [],
+  visibleVowsCount,
 }: DiaryTabProps) {
 
   const renderSelectedVowsChips = () => (
@@ -174,8 +176,7 @@ export const DiaryTab = memo(function DiaryTab({
     const isKept = todayEntry?.status === 'kept';
     const isBroken = todayEntry?.status === 'broken';
 
-    const notifTimeKey = `${vowKey}_${globalIdx}`;
-    const notifTime = notificationTimes[notifTimeKey];
+    const notifTime = scheduledTimes[globalIdx];
 
     return (
       <View key={cardKey} style={[styles.vowCard, isSubmitted && styles.vowCardSubmitted]}>
@@ -365,7 +366,8 @@ export const DiaryTab = memo(function DiaryTab({
       );
     }
     if (dailyVows.length === 0) return null;
-    return dailyVows.map((dailyVow: DailyVowItem, index: number) => {
+    const limit = visibleVowsCount ?? dailyVows.length;
+    return dailyVows.slice(0, limit).map((dailyVow: DailyVowItem, index: number) => {
       const vowItem: Record<string, string> = {
         ru: dailyVow.vowItem.textRu,
         en: dailyVow.vowItem.textEn,
@@ -377,7 +379,8 @@ export const DiaryTab = memo(function DiaryTab({
         it: dailyVow.vowItem.textIt || dailyVow.vowItem.textEn,
       };
       const categoryName = getVowCategoryName(dailyVow.vowType);
-      return renderVowCard(dailyVow.vowType, vowItem, dailyVow.vowIndex, categoryName, dailyVow.vowIndex);
+      // index = position in dailyVows (0,1,2...) — used for scheduledTimes and numbering
+      return renderVowCard(dailyVow.vowType, vowItem, dailyVow.vowIndex, categoryName, index);
     });
   };
 
