@@ -1,9 +1,8 @@
-# Confirm PWA support is already in place
+# Rebuild the app from existing project files
 
-Your PWA changes are already present in the project:
+The build error (404 archive download) is an infrastructure issue — the build system couldn't fetch the project archive. All your app files are present and intact locally.
 
-- **Web app manifest** (`manifest.json`) with app name, theme colors, icons, and standalone display mode
-- **Service worker** (`sw.js`) with stale-while-revalidate caching strategy
-- **PWA meta tags** injected in the app layout for Apple and Android web app support
-
-No additional changes are needed — the app is ready to rebuild as-is.
+**What will happen:**
+- Reinstall all dependencies fresh
+- Rebuild the app from the existing local files
+- No code changes needed — everything is already in place
