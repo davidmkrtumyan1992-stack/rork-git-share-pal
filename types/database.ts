@@ -15,6 +15,7 @@ export interface Profile {
   language: 'en' | 'ru' | 'es' | 'zh' | 'de' | 'fr' | 'hy' | 'it';
   notifications_enabled: boolean;
   notification_timezone: string;
+  notification_interval: number | null;
   selected_vow: string | null;
   selected_vow_types: string[] | null;
   created_at: string;

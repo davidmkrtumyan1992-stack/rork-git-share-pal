@@ -94,10 +94,10 @@ export function AdminPanel({ onClose }: AdminPanelProps) {
         .in('user_id', userIds)
         .order('entry_date', { ascending: false });
 
-      const rolesMap = new Map<string, { role: string }[]>();
+      const rolesMap = new Map<string, { role: AppRole }[]>();
       for (const r of allRoles || []) {
         if (!rolesMap.has(r.user_id)) rolesMap.set(r.user_id, []);
-        rolesMap.get(r.user_id)!.push({ role: r.role });
+        rolesMap.get(r.user_id)!.push({ role: r.role as AppRole });
       }
 
       const lastEntryMap = new Map<string, string>();
@@ -444,16 +444,17 @@ export function AdminPanel({ onClose }: AdminPanelProps) {
                   : 'Select vows to unlock for this user'}
               </Text>
               
-              {LOCKED_VOW_TYPES.map((vow) => {
-                const isUnlocked = isVowUnlocked(vow.key);
+              {LOCKED_VOW_TYPES.map((vowKey) => {
+                const isUnlocked = isVowUnlocked(vowKey);
+                const vowLabel = LOCKED_VOW_TYPE_LABELS[vowKey];
                 return (
                   <TouchableOpacity
-                    key={vow.key}
+                    key={vowKey}
                     style={[
                       styles.vowAccessItem,
                       isUnlocked && styles.vowAccessItemUnlocked,
                     ]}
-                    onPress={() => handleToggleVowAccess(selectedUserId, vow.key, isUnlocked)}
+                    onPress={() => handleToggleVowAccess(selectedUserId, vowKey, isUnlocked)}
                     disabled={isUnlockPending || isRevokePending}
                   >
                     <View style={styles.vowAccessItemContent}>
@@ -466,7 +467,7 @@ export function AdminPanel({ onClose }: AdminPanelProps) {
                         styles.vowAccessItemLabel,
                         isUnlocked && styles.vowAccessItemLabelUnlocked,
                       ]}>
-                        {language === 'ru' ? vow.labelRu : vow.labelEn}
+                        {language === 'ru' ? vowLabel.ru : vowLabel.en}
                       </Text>
                     </View>
                     <View style={[

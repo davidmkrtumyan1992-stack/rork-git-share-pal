@@ -1,9 +1,17 @@
-# Trigger a fresh rebuild to fix "Snapshot not found"
+# Исправление ошибок сборки проекта
 
-**Problem:** The QR code shows "Snapshot not found" — the app files are all present in the workspace, but there's no active build snapshot.
+## Обнаруженные проблемы
 
-**Fix:**
-- Make a tiny harmless update to the main layout file (update a log message version number) to trigger a fresh build
-- This will generate a new snapshot and a working QR code
+### 1. Ошибка типа: отсутствующее поле в профиле
+- Приложение обращается к полю `notification_interval` в профиле пользователя, но это поле не описано в типах данных
+- Это вызывает ошибку компиляции и может блокировать сборку
 
-**No code changes** to app logic, design, or architecture — just a rebuild trigger.
+### 2. Возможно отсутствующие файлы изображений
+- Иконка, заставка и другие изображения указаны в настройках, но файлы могут отсутствовать
+
+### Что будет сделано
+
+1. **Добавить недостающее поле** `notification_interval` в описание профиля пользователя (тип данных)
+2. **Установить зависимости** — запустить установку пакетов (`bun install`)
+3. **Проверить наличие файлов изображений** и создать заглушки при необходимости
+4. **Пересобрать проект** для получения нового QR-кода

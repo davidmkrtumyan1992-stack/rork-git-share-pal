@@ -70,7 +70,7 @@ export const useUnlockedVows = () => {
 
   const isVowUnlocked = useCallback(
     (vowType: string): boolean => {
-      if (!LOCKED_VOW_TYPES.includes(vowType)) {
+      if (!(LOCKED_VOW_TYPES as readonly string[]).includes(vowType)) {
         return true;
       }
       return unlockedVows.some((uv) => uv.vow_type === vowType);
