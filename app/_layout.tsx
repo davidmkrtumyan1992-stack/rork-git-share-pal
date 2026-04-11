@@ -69,7 +69,7 @@ function RootLayoutNav() {
 
 export default function RootLayout() {
   useEffect(() => {
-    console.log("[RootLayout] Hiding splash screen, build v3");
+    console.log("[RootLayout] Hiding splash screen, build v4");
     SplashScreen.hideAsync();
     if (Platform.OS === 'web') {
       setupPWA();

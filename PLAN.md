@@ -1,7 +1,9 @@
-# Пересборка проекта для создания snapshot
+# Trigger a fresh rebuild to fix "Snapshot not found"
 
-Проект содержит все необходимые файлы, но бандл (snapshot) отсутствует на сервере. Это причина ошибки "Snapshot not found" на телефоне.
+**Problem:** The QR code shows "Snapshot not found" — the app files are all present in the workspace, but there's no active build snapshot.
 
-**Что будет сделано:**
-- Пересборка проекта без изменения кода — все файлы уже на месте
-- После сборки появится новый snapshot, и приложение станет доступно по QR-коду на телефоне и в браузере
+**Fix:**
+- Make a tiny harmless update to the main layout file (update a log message version number) to trigger a fresh build
+- This will generate a new snapshot and a working QR code
+
+**No code changes** to app logic, design, or architecture — just a rebuild trigger.
