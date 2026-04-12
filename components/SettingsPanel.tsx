@@ -27,6 +27,7 @@ import {
   BookOpen,
   Camera,
 } from 'lucide-react-native';
+import { CommunityGlobe } from '@/components/CommunityGlobe';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { getTranslation } from '@/data/translations';
@@ -655,6 +656,19 @@ export function SettingsPanel({ onSelectVow }: SettingsPanelProps) {
           {t.auth.logout}
         </Text>
       </TouchableOpacity>
+
+      {/* Наше сообщество */}
+      <View style={styles.card}>
+        <View style={styles.cardHeader}>
+          <View style={styles.iconContainer}>
+            <Globe size={20} color="#FFFFFF" />
+          </View>
+          <Text style={styles.cardTitle}>
+            {language === 'ru' ? 'Наше сообщество' : 'Our Community'}
+          </Text>
+        </View>
+        <CommunityGlobe />
+      </View>
     </View>
   );
 }
