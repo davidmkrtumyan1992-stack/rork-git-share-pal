@@ -108,7 +108,7 @@ const createSupabaseClient = (): SupabaseClient => {
           clearTimeout(timeoutId);
           return response;
         } catch (error) {
-          console.error('[Supabase] Fetch error:', (error as Error)?.message);
+          if (__DEV__) console.error('[Supabase] Fetch error:', (error as Error)?.message);
           throw error;
         }
       },

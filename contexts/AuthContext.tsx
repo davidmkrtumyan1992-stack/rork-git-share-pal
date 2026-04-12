@@ -85,7 +85,17 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
   }, []);
 
   useEffect(() => {
-    void supabase.auth.getSession().then(({ data: { session } }) => {
+    void supabase.auth.getSession().then(({ data: { session }, error }) => {
+      // Invalid or expired refresh token — wipe stored session and show login screen
+      if (error) {
+        const msg = error.message || '';
+        if (msg.includes('Refresh Token') || msg.includes('refresh_token') || msg.includes('Invalid')) {
+          void supabase.auth.signOut();
+        }
+        setState((prev) => ({ ...prev, isLoading: false }));
+        return;
+      }
+
       if (session?.user) {
         void fetchProfile(session.user.id).then((profileData) => {
           setState({
@@ -98,8 +108,9 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       } else {
         setState((prev) => ({ ...prev, isLoading: false }));
       }
-    }).catch((error) => {
-      if (__DEV__) console.error('[AuthContext] Failed to get initial session:', error);
+    }).catch(() => {
+      // Any unexpected error during session load → treat as logged out
+      void supabase.auth.signOut().catch(() => {});
       setState((prev) => ({ ...prev, isLoading: false }));
     });
 
