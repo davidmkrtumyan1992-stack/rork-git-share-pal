@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -34,8 +34,15 @@ interface LoginFormProps {
 type AuthMode = 'login' | 'register' | 'reset';
 
 const validateEmail = (email: string): boolean => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const emailRegex = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
   return emailRegex.test(email);
+};
+
+const validatePassword = (password: string): string | null => {
+  if (password.length < 8) return null; // too short — handled by isValid
+  if (!/[A-Z]/.test(password) && !/[a-z]/.test(password)) return 'needsLetter';
+  if (!/\d/.test(password)) return 'needsDigit';
+  return 'ok';
 };
 
 const sanitizeEmail = (email: string): string => {
@@ -56,6 +63,8 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [cooldownUntil, setCooldownUntil] = useState<number>(0);
+  const failCountRef = useRef(0);
 
   const signInMutation = useMutation({
     mutationFn: async () => {
@@ -69,11 +78,13 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
       return signIn(sanitizedEmail, password);
     },
     onSuccess: () => {
-      console.log('Login successful');
+      failCountRef.current = 0;
       onSuccess?.();
     },
     onError: (err: Error) => {
-      console.log('Login error:', err.message);
+      failCountRef.current += 1;
+      const delay = failCountRef.current >= 5 ? 30_000 : 3_000;
+      setCooldownUntil(Date.now() + delay);
       setError(err.message || t.auth.errorInvalidCredentials);
     },
   });
@@ -86,12 +97,21 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
       if (!validateEmail(email.trim())) {
         throw new Error(t.auth.invalidEmail);
       }
+      if (password.length < 8) {
+        throw new Error(language === 'ru' ? 'Пароль должен быть не менее 8 символов' : 'Password must be at least 8 characters');
+      }
+      const strength = validatePassword(password);
+      if (strength === 'needsDigit') {
+        throw new Error(language === 'ru' ? 'Пароль должен содержать хотя бы одну цифру' : 'Password must contain at least one digit');
+      }
+      if (strength === 'needsLetter') {
+        throw new Error(language === 'ru' ? 'Пароль должен содержать хотя бы одну букву' : 'Password must contain at least one letter');
+      }
       const sanitizedEmail = sanitizeEmail(email);
       const generatedUsername = sanitizedEmail.split('@')[0];
       return signUp(sanitizedEmail, password, generatedUsername);
     },
     onSuccess: (data) => {
-      console.log('Registration successful');
       if (!data.session) {
         setSuccess(language === 'ru' 
           ? 'Регистрация успешна! Проверьте email для подтверждения.' 
@@ -102,7 +122,9 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
       }
     },
     onError: (err: Error) => {
-      console.log('Registration error:', err.message);
+      failCountRef.current += 1;
+      const delay = failCountRef.current >= 5 ? 30_000 : 3_000;
+      setCooldownUntil(Date.now() + delay);
       const msg = err.message || '';
       if (msg.includes('already') || msg.includes('already registered')) {
         setError(t.auth.errorEmailExists);
@@ -134,20 +156,27 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
       return true;
     },
     onSuccess: () => {
-      console.log('Reset password email sent');
       setSuccess(t.auth.resetLinkSent);
       setTimeout(() => setMode('login'), 3000);
     },
     onError: (err: Error) => {
-      console.log('Reset password error:', err.message);
       setError(err.message || t.auth.invalidEmail);
     },
   });
 
-  const handleSubmit = () => {
+  const handleSubmit = useCallback(() => {
+    const now = Date.now();
+    if (now < cooldownUntil) {
+      const secsLeft = Math.ceil((cooldownUntil - now) / 1000);
+      setError(language === 'ru'
+        ? `Подождите ${secsLeft} сек. перед следующей попыткой`
+        : `Please wait ${secsLeft}s before trying again`);
+      return;
+    }
+
     setError(null);
     setSuccess(null);
-    
+
     if (mode === 'reset') {
       resetPasswordMutation.mutate();
     } else if (mode === 'register') {
@@ -155,12 +184,14 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
     } else {
       signInMutation.mutate();
     }
-  };
+  }, [cooldownUntil, language, mode, resetPasswordMutation, signInMutation, signUpMutation]);
 
   const switchMode = (newMode: AuthMode) => {
     setMode(newMode);
     setError(null);
     setSuccess(null);
+    setCooldownUntil(0);
+    failCountRef.current = 0;
     if (newMode !== mode) {
       setEmail('');
       setPassword('');
@@ -172,10 +203,10 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
   };
 
   const isLoading = signInMutation.isPending || signUpMutation.isPending || resetPasswordMutation.isPending;
-  
-  const isValid = mode === 'reset' 
-    ? email.length > 0 
-    : email.length > 0 && password.length >= 6;
+
+  const isValid = mode === 'reset'
+    ? email.length > 0
+    : email.length > 0 && password.length >= 8;
 
   const responsiveStyles = {
     scrollContent: {
@@ -323,6 +354,13 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
                       )}
                     </TouchableOpacity>
                   </View>
+                  {mode === 'register' && (
+                    <Text style={styles.passwordHint}>
+                      {language === 'ru'
+                        ? 'Минимум 8 символов, включая букву и цифру'
+                        : 'At least 8 characters, including a letter and a digit'}
+                    </Text>
+                  )}
                 </View>
               )}
 
@@ -578,6 +616,11 @@ const styles = StyleSheet.create({
   },
   eyeButton: {
     padding: darkTheme.spacing.md,
+  },
+  passwordHint: {
+    fontSize: 12,
+    color: darkTheme.colors.textMuted,
+    marginTop: 4,
   },
   submitButton: {
     backgroundColor: darkTheme.colors.primary,

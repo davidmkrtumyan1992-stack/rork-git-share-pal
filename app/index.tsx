@@ -21,7 +21,7 @@ type Screen = 'dashboard' | 'admin';
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
-  const { user, profile, isLoading, updateProfile, setLanguage } = useAuth();
+  const { user, profile, isLoading, isAdmin, updateProfile, setLanguage } = useAuth();
   
   const [currentScreen, setCurrentScreen] = useState<Screen>('dashboard');
   const [activeVow, setActiveVow] = useState<string | null>(null);
@@ -195,7 +195,7 @@ export default function HomeScreen() {
       </View>
 
       <Modal
-        visible={currentScreen === 'admin'}
+        visible={currentScreen === 'admin' && isAdmin}
         animationType="slide"
         onRequestClose={() => setCurrentScreen('dashboard')}
       >

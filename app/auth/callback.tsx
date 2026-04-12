@@ -10,32 +10,22 @@ export default function AuthCallback() {
 
   useEffect(() => {
     const handleCallback = async () => {
-      console.log('[AuthCallback] Processing auth callback params');
-      
       try {
         if (params.access_token && params.refresh_token) {
-          console.log('[AuthCallback] Setting session from URL params...');
-          const { data, error } = await supabase.auth.setSession({
+          const { error } = await supabase.auth.setSession({
             access_token: params.access_token as string,
             refresh_token: params.refresh_token as string,
           });
 
-          if (error) {
-            console.error('[AuthCallback] Error setting session:', error);
-            throw error;
-          }
+          if (error) throw error;
 
-          console.log('[AuthCallback] Session set successfully:', data.user?.email);
-          
           setTimeout(() => {
             router.replace('/');
-          }, 1000);
+          }, 500);
         } else {
-          console.log('[AuthCallback] No tokens in URL, redirecting to home...');
           router.replace('/');
         }
-      } catch (error) {
-        console.error('[AuthCallback] Callback error:', error);
+      } catch {
         router.replace('/');
       }
     };

@@ -3,6 +3,7 @@ import { Platform } from 'react-native';
 import { Session, User as SupabaseUser } from '@supabase/supabase-js';
 import createContextHook from '@nkzw/create-context-hook';
 import { supabase } from '@/lib/supabase';
+import { queryClient } from '@/lib/queryClient';
 import { Profile, UserRole, Language } from '@/types/database';
 
 interface AuthState {
@@ -29,8 +30,6 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
   });
 
   const fetchProfile = useCallback(async (userId: string) => {
-    console.log('[AuthContext] Fetching profile for user:', userId);
-
     try {
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
@@ -39,13 +38,11 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         .maybeSingle();
 
       if (profileError) {
-        console.error('[AuthContext] Profile fetch error:', profileError.message);
+        if (__DEV__) console.error('[AuthContext] Profile fetch error:', profileError.message);
       }
 
       if (profile) {
-        console.log('[AuthContext] Profile fetched for:', profile.user_id);
         if (profile.selected_vow_types && !Array.isArray(profile.selected_vow_types)) {
-          console.warn('[AuthContext] selected_vow_types is not an array, normalizing');
           profile.selected_vow_types = null;
         }
       }
@@ -57,12 +54,12 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
           .select('*')
           .eq('user_id', userId);
 
-        if (rolesError) {
+        if (rolesError && __DEV__) {
           console.log('[AuthContext] Roles fetch error:', rolesError.message);
         }
         userRoles = (roles || []) as UserRole[];
       } catch (rolesErr) {
-        console.warn('[AuthContext] Failed to fetch roles:', rolesErr);
+        if (__DEV__) console.warn('[AuthContext] Failed to fetch roles:', rolesErr);
       }
 
       const isAdmin = userRoles.some((r) => r.role === 'admin');
@@ -76,7 +73,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         language: (profile?.language || 'ru') as Language,
       };
     } catch (error) {
-      console.error('[AuthContext] Failed to fetch profile (network error):', error);
+      if (__DEV__) console.error('[AuthContext] Failed to fetch profile (network error):', error);
       return {
         profile: null,
         roles: [] as UserRole[],
@@ -88,11 +85,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
   }, []);
 
   useEffect(() => {
-    console.log('Auth context initializing...');
-    
     void supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('Initial session:', session?.user?.email || 'none');
-      
       if (session?.user) {
         void fetchProfile(session.user.id).then((profileData) => {
           setState({
@@ -106,13 +99,12 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         setState((prev) => ({ ...prev, isLoading: false }));
       }
     }).catch((error) => {
-      console.error('[AuthContext] Failed to get initial session:', error);
+      if (__DEV__) console.error('[AuthContext] Failed to get initial session:', error);
       setState((prev) => ({ ...prev, isLoading: false }));
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.email);
         
         if (session?.user) {
           const profileData = await fetchProfile(session.user.id);
@@ -143,18 +135,12 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
   }, [fetchProfile]);
 
   const signIn = useCallback(async (email: string, password: string) => {
-    console.log('Signing in:', email);
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
-    
-    if (error) {
-      console.log('Sign in error:', error.message);
-      throw error;
-    }
-    
-    console.log('Sign in successful');
+
+    if (error) throw error;
     return data;
   }, []);
 
@@ -164,92 +150,68 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     username: string,
     fullName?: string
   ) => {
-    console.log('Signing up:', email, 'username:', username);
-    
     const redirectTo = Platform.OS === 'web'
       ? (typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : undefined)
       : 'rork-app://auth/callback';
 
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            username,
-            full_name: fullName,
-            language: 'ru',
-          },
-          ...(redirectTo ? { emailRedirectTo: redirectTo } : {}),
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          username,
+          full_name: fullName,
+          language: 'ru',
         },
+        ...(redirectTo ? { emailRedirectTo: redirectTo } : {}),
+      },
+    });
+
+    if (error) throw error;
+
+    if (data.session && data.user) {
+      // Poll for profile creation by the DB trigger (max 5s, 500ms intervals)
+      let profileData = await fetchProfile(data.user.id);
+      if (!profileData.profile) {
+        for (let attempt = 0; attempt < 9; attempt++) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+          profileData = await fetchProfile(data.user.id);
+          if (profileData.profile) break;
+        }
+      }
+
+      setState({
+        session: data.session,
+        user: data.user,
+        ...profileData,
+        isLoading: false,
       });
-      
-      if (error) {
-        console.log('Sign up error:', error.message, error.status);
-        throw error;
-      }
-      
-      console.log('Sign up successful, session:', data.session ? 'exists' : 'null');
-      console.log('User created:', data.user?.email);
-      
-      if (data.session && data.user) {
-        console.log('Auto-login successful, fetching profile...');
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        const profileData = await fetchProfile(data.user.id);
-        
-        setState({
-          session: data.session,
-          user: data.user,
-          ...profileData,
-          isLoading: false,
-        });
-      }
-      
-      return data;
-    } catch (err) {
-      console.error('Sign up failed:', err);
-      throw err;
     }
+
+    return data;
   }, [fetchProfile]);
 
   const signOut = useCallback(async () => {
-    console.log('Signing out...');
     const { error } = await supabase.auth.signOut();
-    
-    if (error) {
-      console.log('Sign out error:', error.message);
-      throw error;
-    }
-    
-    console.log('Sign out successful');
+    if (error) throw error;
+    queryClient.clear();
   }, []);
 
   const updateProfile = useCallback(async (updates: Partial<Profile>) => {
-    if (!state.user) {
-      console.log('[AuthContext] updateProfile: No user, returning');
-      return;
-    }
-    
-    console.log('[AuthContext] Updating profile for user:', state.user.id);
-    console.log('[AuthContext] Updates:', JSON.stringify(updates, null, 2));
-    
+    if (!state.user) return;
+
     const processedUpdates = { ...updates };
-    if ('selected_vow_types' in processedUpdates && processedUpdates.selected_vow_types !== null) {
-      console.log('[AuthContext] Processing selected_vow_types:', processedUpdates.selected_vow_types);
-      console.log('[AuthContext] Is array?:', Array.isArray(processedUpdates.selected_vow_types));
-    }
-    
+
     const { data: existingProfile } = await supabase
       .from('profiles')
       .select('id')
       .eq('user_id', state.user.id)
       .maybeSingle();
-    
+
     let data;
     let error;
-    
+
     if (existingProfile) {
-      console.log('Profile exists, updating...');
       const result = await supabase
         .from('profiles')
         .update(processedUpdates)
@@ -259,7 +221,6 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       data = result.data;
       error = result.error;
     } else {
-      console.log('Profile does not exist, creating...');
       const result = await supabase
         .from('profiles')
         .insert({
@@ -273,17 +234,11 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       data = result.data;
       error = result.error;
     }
-    
+
     if (error) {
-      console.error('[AuthContext] Profile update/create error:', error.message);
-      console.error('[AuthContext] Error code:', error.code);
-      console.error('[AuthContext] Error details:', JSON.stringify(error, null, 2));
-      console.error('[AuthContext] Attempted updates:', JSON.stringify(processedUpdates, null, 2));
+      if (__DEV__) console.error('[AuthContext] Profile update/create error:', error.message);
       throw error;
     }
-    
-    console.log('[AuthContext] Profile saved successfully');
-    console.log('[AuthContext] Saved data:', JSON.stringify(data, null, 2));
     
     setState((prev) => ({
       ...prev,

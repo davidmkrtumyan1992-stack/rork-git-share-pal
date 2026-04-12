@@ -1,4 +1,4 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
@@ -6,18 +6,9 @@ import { Platform } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { queryClient } from "@/lib/queryClient";
 
 SplashScreen.preventAutoHideAsync();
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 3,
-      staleTime: 5 * 60 * 1000,
-      gcTime: 10 * 60 * 1000,
-    },
-  },
-});
 
 function setupPWA() {
   if (typeof document === 'undefined') return;
@@ -69,7 +60,6 @@ function RootLayoutNav() {
 
 export default function RootLayout() {
   useEffect(() => {
-    console.log("[RootLayout] Hiding splash screen, build v4");
     SplashScreen.hideAsync();
     if (Platform.OS === 'web') {
       setupPWA();

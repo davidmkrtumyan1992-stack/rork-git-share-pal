@@ -117,9 +117,6 @@ export function SettingsPanel({ onSelectVow }: SettingsPanelProps) {
 
   const signOutMutation = useMutation({
     mutationFn: signOut,
-    onSuccess: () => {
-      console.log('Sign out successful');
-    },
   });
 
   const handleLanguageChange = (lang: Language) => {
@@ -133,12 +130,29 @@ export function SettingsPanel({ onSelectVow }: SettingsPanelProps) {
 
   const updatePasswordMutation = useMutation({
     mutationFn: async () => {
+      if (!oldPassword) {
+        throw new Error(t.settings.oldPassword + ' ' + (language === 'ru' ? 'обязателен' : 'is required'));
+      }
       if (newPassword !== confirmPassword) {
         throw new Error(t.settings.passwordMismatch);
       }
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword
+      if (newPassword.length < 8) {
+        throw new Error(language === 'ru' ? 'Новый пароль должен быть не менее 8 символов' : 'New password must be at least 8 characters');
+      }
+
+      // Verify old password by re-authenticating
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.email) throw new Error(language === 'ru' ? 'Не удалось получить данные пользователя' : 'Could not retrieve user data');
+
+      const { error: verifyError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: oldPassword,
       });
+      if (verifyError) {
+        throw new Error(language === 'ru' ? 'Неверный текущий пароль' : 'Current password is incorrect');
+      }
+
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
       if (error) throw error;
     },
     onSuccess: () => {
@@ -153,7 +167,7 @@ export function SettingsPanel({ onSelectVow }: SettingsPanelProps) {
   });
 
   const handleUpdatePassword = () => {
-    if (!newPassword || !confirmPassword) {
+    if (!oldPassword || !newPassword || !confirmPassword) {
       Alert.alert(t.common.error, t.auth.fillAllFields);
       return;
     }
@@ -181,16 +195,10 @@ export function SettingsPanel({ onSelectVow }: SettingsPanelProps) {
   };
 
   const toggleVowType = async (vowKey: string) => {
-    console.log('[SettingsPanel] toggleVowType called');
-    console.log('[SettingsPanel] Vow key:', vowKey);
-    console.log('[SettingsPanel] Current selectedVowTypes:', selectedVowTypes);
-    
     const vowType = VOW_TYPES.filter(v => v.key === vowKey)[0];
     const isLocked = vowType?.defaultLocked && isVowLocked(vowKey);
-    console.log('[SettingsPanel] Is locked:', isLocked);
-    
+
     if (isLocked) {
-      console.log('[SettingsPanel] Showing locked alert');
       Alert.alert(
         t.vows.lockedTitle,
         `${t.vows.lockedDesc}\nsupport@keepmyvow.com`
