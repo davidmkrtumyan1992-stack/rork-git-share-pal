@@ -647,16 +647,6 @@ export function SettingsPanel({ onSelectVow }: SettingsPanelProps) {
         )}
       </View>
 
-      <TouchableOpacity
-        style={styles.logoutButton}
-        onPress={handleSignOut}
-      >
-        <LogOut size={20} color={darkTheme.colors.error} />
-        <Text style={styles.logoutButtonText}>
-          {t.auth.logout}
-        </Text>
-      </TouchableOpacity>
-
       {/* Наше сообщество */}
       <View style={styles.card}>
         <View style={styles.cardHeader}>
@@ -669,6 +659,16 @@ export function SettingsPanel({ onSelectVow }: SettingsPanelProps) {
         </View>
         <CommunityGlobe />
       </View>
+
+      <TouchableOpacity
+        style={styles.logoutButton}
+        onPress={handleSignOut}
+      >
+        <LogOut size={20} color={darkTheme.colors.error} />
+        <Text style={styles.logoutButtonText}>
+          {t.auth.logout}
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 }
