@@ -223,7 +223,7 @@ export const translations = {
       errorEmailExists: 'Email уже зарегистрирован',
     },
     dashboard: {
-      title: 'Панель управления',
+      title: 'Дневник',
       welcome: 'С возвращением',
       todayStatus: 'Статус сегодня',
       streak: 'Текущая серия',

@@ -8,7 +8,10 @@ import {
   Switch,
   Alert,
   TextInput,
+  ActivityIndicator,
 } from 'react-native';
+import { Image } from 'expo-image';
+import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useMutation } from '@tanstack/react-query';
 import {
@@ -22,6 +25,7 @@ import {
   EyeOff,
   Check,
   BookOpen,
+  Camera,
 } from 'lucide-react-native';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -96,6 +100,70 @@ export function SettingsPanel({ onSelectVow }: SettingsPanelProps) {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showTimezoneList, setShowTimezoneList] = useState(false);
   const [showLanguageList, setShowLanguageList] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+
+  const handlePickAvatar = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert(
+        language === 'ru' ? 'Нет доступа' : 'Permission denied',
+        language === 'ru'
+          ? 'Разрешите доступ к галерее в настройках телефона'
+          : 'Please allow photo library access in your phone settings'
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (result.canceled || !result.assets[0]) return;
+
+    const asset = result.assets[0];
+    const userId = profile?.user_id;
+    if (!userId) return;
+
+    setIsUploadingAvatar(true);
+    try {
+      // Fetch image as blob
+      const response = await fetch(asset.uri);
+      const blob = await response.blob();
+
+      const ext = asset.uri.split('.').pop()?.toLowerCase() || 'jpg';
+      const filePath = `${userId}/avatar.${ext}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, blob, {
+          upsert: true,
+          contentType: asset.mimeType || 'image/jpeg',
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      // Append cache-buster so the new photo loads immediately
+      const publicUrl = `${urlData.publicUrl}?t=${Date.now()}`;
+
+      await updateProfile({ avatar_url: publicUrl });
+      Alert.alert(
+        language === 'ru' ? 'Готово' : 'Done',
+        t.settings.photoUpdated
+      );
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      Alert.alert(language === 'ru' ? 'Ошибка' : 'Error', msg);
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
   const notificationInterval: 2 | 3 = (profile?.notification_interval === 2 || profile?.notification_interval === 3)
     ? profile.notification_interval
     : 2;
@@ -117,9 +185,6 @@ export function SettingsPanel({ onSelectVow }: SettingsPanelProps) {
 
   const signOutMutation = useMutation({
     mutationFn: signOut,
-    onSuccess: () => {
-      console.log('Sign out successful');
-    },
   });
 
   const handleLanguageChange = (lang: Language) => {
@@ -133,12 +198,29 @@ export function SettingsPanel({ onSelectVow }: SettingsPanelProps) {
 
   const updatePasswordMutation = useMutation({
     mutationFn: async () => {
+      if (!oldPassword) {
+        throw new Error(t.settings.oldPassword + ' ' + (language === 'ru' ? 'обязателен' : 'is required'));
+      }
       if (newPassword !== confirmPassword) {
         throw new Error(t.settings.passwordMismatch);
       }
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword
+      if (newPassword.length < 8) {
+        throw new Error(language === 'ru' ? 'Новый пароль должен быть не менее 8 символов' : 'New password must be at least 8 characters');
+      }
+
+      // Verify old password by re-authenticating
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.email) throw new Error(language === 'ru' ? 'Не удалось получить данные пользователя' : 'Could not retrieve user data');
+
+      const { error: verifyError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: oldPassword,
       });
+      if (verifyError) {
+        throw new Error(language === 'ru' ? 'Неверный текущий пароль' : 'Current password is incorrect');
+      }
+
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
       if (error) throw error;
     },
     onSuccess: () => {
@@ -153,7 +235,7 @@ export function SettingsPanel({ onSelectVow }: SettingsPanelProps) {
   });
 
   const handleUpdatePassword = () => {
-    if (!newPassword || !confirmPassword) {
+    if (!oldPassword || !newPassword || !confirmPassword) {
       Alert.alert(t.common.error, t.auth.fillAllFields);
       return;
     }
@@ -181,16 +263,10 @@ export function SettingsPanel({ onSelectVow }: SettingsPanelProps) {
   };
 
   const toggleVowType = async (vowKey: string) => {
-    console.log('[SettingsPanel] toggleVowType called');
-    console.log('[SettingsPanel] Vow key:', vowKey);
-    console.log('[SettingsPanel] Current selectedVowTypes:', selectedVowTypes);
-    
     const vowType = VOW_TYPES.filter(v => v.key === vowKey)[0];
     const isLocked = vowType?.defaultLocked && isVowLocked(vowKey);
-    console.log('[SettingsPanel] Is locked:', isLocked);
-    
+
     if (isLocked) {
-      console.log('[SettingsPanel] Showing locked alert');
       Alert.alert(
         t.vows.lockedTitle,
         `${t.vows.lockedDesc}\nsupport@keepmyvow.com`
@@ -243,11 +319,31 @@ export function SettingsPanel({ onSelectVow }: SettingsPanelProps) {
         
         <View style={styles.profileInfoCard}>
           <View style={styles.profileRow}>
-            <View style={styles.avatarContainer}>
-              <View style={styles.avatarPlaceholder}>
-                <Text style={styles.avatarInitials}>{getInitials()}</Text>
+            <TouchableOpacity
+              style={styles.avatarContainer}
+              onPress={handlePickAvatar}
+              disabled={isUploadingAvatar}
+              activeOpacity={0.8}
+            >
+              {profile?.avatar_url ? (
+                <Image
+                  source={{ uri: profile.avatar_url }}
+                  style={styles.avatarImage}
+                  contentFit="cover"
+                  transition={200}
+                />
+              ) : (
+                <View style={styles.avatarPlaceholder}>
+                  <Text style={styles.avatarInitials}>{getInitials()}</Text>
+                </View>
+              )}
+              <View style={styles.avatarEditBadge}>
+                {isUploadingAvatar
+                  ? <ActivityIndicator size={12} color="#FFFFFF" />
+                  : <Camera size={14} color="#FFFFFF" />
+                }
               </View>
-            </View>
+            </TouchableOpacity>
             <View style={styles.profileTextContainer}>
               <Text style={styles.userName} numberOfLines={1}>
                 {profile?.username || 'User'}
@@ -255,6 +351,9 @@ export function SettingsPanel({ onSelectVow }: SettingsPanelProps) {
               {profile?.full_name && (
                 <Text style={styles.userFullName} numberOfLines={1}>{profile.full_name}</Text>
               )}
+              <TouchableOpacity onPress={handlePickAvatar} disabled={isUploadingAvatar}>
+                <Text style={styles.changePhotoText}>{t.settings.changePhoto}</Text>
+              </TouchableOpacity>
             </View>
           </View>
         </View>
@@ -611,18 +710,43 @@ const styles = StyleSheet.create({
   avatarContainer: {
     position: 'relative',
   },
+  avatarImage: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    borderWidth: 2,
+    borderColor: darkTheme.colors.primary,
+  },
   avatarPlaceholder: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 72,
+    height: 72,
+    borderRadius: 36,
     backgroundColor: darkTheme.colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarInitials: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: darkTheme.fontWeight.bold,
     color: '#FFFFFF',
+  },
+  avatarEditBadge: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: darkTheme.colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: darkTheme.colors.surface,
+  },
+  changePhotoText: {
+    fontSize: 12,
+    color: darkTheme.colors.primary,
+    marginTop: 4,
   },
   profileTextContainer: {
     flex: 1,
