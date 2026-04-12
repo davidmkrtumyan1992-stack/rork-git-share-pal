@@ -292,6 +292,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
                   keyboardType="email-address"
                   autoCapitalize="none"
                   autoComplete="email"
+                  textContentType="emailAddress"
                   testID="email-input"
                 />
               </View>
@@ -307,6 +308,8 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
                       value={password}
                       onChangeText={setPassword}
                       secureTextEntry={!showPassword}
+                      textContentType={mode === 'register' ? 'newPassword' : 'password'}
+                      autoComplete={mode === 'register' ? 'password-new' : 'password'}
                       testID="password-input"
                     />
                     <TouchableOpacity

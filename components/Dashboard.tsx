@@ -8,7 +8,7 @@ import {
   Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { History, ChevronRight, Settings, Bell } from 'lucide-react-native';
+import { History, ChevronRight, Settings, BookOpen } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCreateVowEntry, useTodayEntries, useHistoryEntries, useMarkAntidoteCompleted, usePostponeAntidote } from '@/hooks/useVows';
@@ -410,7 +410,7 @@ export function Dashboard({
           end={{ x: 0, y: 1 }}
         />
         <Pressable style={styles.bottomTabItem} onPress={() => setActiveTab('diary')}>
-          <Bell size={24} color={activeTab === 'diary' ? darkTheme.colors.primary : '#5A6A66'} strokeWidth={activeTab === 'diary' ? 2.5 : 2} />
+          <BookOpen size={24} color={activeTab === 'diary' ? darkTheme.colors.primary : '#5A6A66'} strokeWidth={activeTab === 'diary' ? 2.5 : 2} />
           <Text style={[styles.bottomTabLabel, activeTab === 'diary' && styles.bottomTabLabelActive]}>
             {t.dashboard.title.toLowerCase()}
           </Text>
