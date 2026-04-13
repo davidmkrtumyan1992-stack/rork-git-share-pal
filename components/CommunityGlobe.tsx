@@ -1,490 +1,174 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import Svg, {
-  Circle,
-  Path,
-  Text as SvgText,
-  Defs,
-  RadialGradient,
-  Stop,
-  ClipPath,
-  G,
-} from 'react-native-svg';
+import { WebView } from 'react-native-webview';
 
-const SIZE = 340;
-const R   = 152;
-const CX  = SIZE / 2;
-const CY  = SIZE / 2;
+const SIZE = 320;
 
-type Pt    = [number, number]; // [lat, lng]
-type Poly  = Pt[];
-type Label = { lat: number; lng: number; name: string; size: number };
+// Three.js globe rendered inside a WebView (native WebGL)
+const HTML = `<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<style>
+  html,body{margin:0;padding:0;background:transparent;overflow:hidden;width:100%;height:100%}
+  canvas{display:block}
+</style>
+</head>
+<body>
+<div id="m" style="width:100%;height:100%"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script>
+(function(){
+  var m = document.getElementById('m');
+  var W = m.clientWidth, H = m.clientHeight;
 
-// ── Country labels ────────────────────────────────────────────────────────────
-const LABELS: Label[] = [
-  { lat: 62,  lng: 90,   name: 'РОССИЯ',    size: 8 },
-  { lat: 36,  lng: 103,  name: 'КИТАЙ',     size: 7 },
-  { lat: 40,  lng:-100,  name: 'США',        size: 8 },
-  { lat: 58,  lng: -95,  name: 'КАНАДА',    size: 7 },
-  { lat:-12,  lng: -52,  name: 'БРАЗИЛИЯ',  size: 7 },
-  { lat:-24,  lng: 133,  name: 'АВСТРАЛИЯ', size: 7 },
-  { lat:  8,  lng:  20,  name: 'АФРИКА',    size: 8 },
-  { lat: 22,  lng:  79,  name: 'ИНДИЯ',     size: 6 },
-  { lat: 50,  lng:  15,  name: 'ЕВРОПА',    size: 6 },
-  { lat: 25,  lng:  43,  name: 'АРАВИЯ',    size: 6 },
-];
+  var scene    = new THREE.Scene();
+  var camera   = new THREE.PerspectiveCamera(42, W/H, 0.1, 100);
+  camera.position.z = 2.8;
 
-// ── Continent polygons ────────────────────────────────────────────────────────
-const CONTINENTS: Poly[] = [
+  var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setSize(W, H);
+  renderer.setPixelRatio(window.devicePixelRatio || 1);
+  renderer.setClearColor(0x000000, 0);
+  m.appendChild(renderer.domElement);
 
-  // ── North America ──────────────────────────────────────────────────────────
-  [
-    [65,-168],[64,-168],[61,-168],[60,-167],[58,-137],[57,-136],[55,-133],
-    [54,-132],[52,-130],[50,-128],[48,-124],[47,-124],[44,-124],[42,-124],
-    [38,-123],[37,-122],[36,-121],[35,-121],[34,-120],[33,-118],[32,-117],
-    [31,-117],[30,-116],[28,-112],[26,-110],[24,-108],[22,-107],[20,-105],
-    [18,-97],[16,-92],[15,-92],[14,-90],[13,-88],[12,-87],[10,-85],
-    [9,-83],[9,-80],[8,-77],[10,-73],[12,-71],[13,-71],[14,-73],
-    [16,-72],[18,-72],[20,-74],[22,-80],[24,-82],[25,-80],[26,-80],
-    [28,-80],[29,-81],[30,-81],[30,-84],[30,-89],[29,-89],[29,-91],
-    [29,-94],[28,-97],[25,-97],[22,-97],[22,-93],[20,-87],[18,-88],
-    [16,-90],[15,-92],[30,-96],[30,-94],[30,-90],[29,-89],[26,-80],
-    [25,-80],[28,-80],[30,-81],[32,-80],[34,-77],[35,-75],[37,-76],
-    [38,-75],[40,-74],[41,-72],[42,-70],[44,-68],[44,-67],[45,-66],
-    [47,-53],[48,-55],[50,-55],[52,-55],[53,-56],[55,-60],[57,-60],
-    [58,-63],[59,-64],[60,-65],[61,-66],[64,-68],[67,-62],[65,-76],
-    [64,-78],[62,-78],[60,-78],[59,-80],[58,-82],[56,-88],[56,-92],
-    [56,-96],[58,-94],[60,-94],[62,-96],[64,-96],[66,-96],[68,-96],
-    [70,-98],[72,-80],[73,-78],[74,-78],[76,-72],[78,-68],[80,-70],
-    [82,-64],[84,-62],[83,-73],[83,-80],[82,-92],[80,-96],[78,-106],
-    [76,-110],[74,-120],[72,-125],[70,-140],[70,-150],[70,-156],
-    [71,-156],[68,-168],[65,-168],
-  ],
+  // Lighting
+  scene.add(new THREE.AmbientLight(0xffffff, 0.85));
+  var d1 = new THREE.DirectionalLight(0xffffff, 0.7);
+  d1.position.set(3, 2, 5);
+  scene.add(d1);
+  var d2 = new THREE.DirectionalLight(0xffffff, 0.3);
+  d2.position.set(-3, -2, -5);
+  scene.add(d2);
 
-  // ── South America ──────────────────────────────────────────────────────────
-  [
-    [12,-72],[11,-74],[10,-73],[10,-63],[8,-63],[7,-61],[6,-57],
-    [5,-52],[4,-52],[3,-51],[2,-50],[1,-50],[0,-51],[-2,-44],
-    [-3,-43],[-4,-38],[-5,-35],[-6,-35],[-7,-35],[-8,-35],
-    [-9,-36],[-10,-37],[-12,-38],[-14,-39],[-15,-39],[-18,-39],
-    [-20,-40],[-22,-43],[-23,-43],[-23,-45],[-24,-47],[-26,-48],
-    [-28,-48],[-30,-51],[-32,-52],[-33,-52],[-34,-54],[-35,-57],
-    [-36,-57],[-38,-57],[-40,-62],[-42,-63],[-44,-65],[-46,-65],
-    [-48,-66],[-50,-68],[-52,-69],[-54,-68],[-55,-68],[-55,-65],
-    [-54,-65],[-52,-70],[-50,-75],[-48,-75],[-46,-75],[-42,-73],
-    [-38,-73],[-34,-72],[-30,-72],[-26,-71],[-22,-70],[-18,-70],
-    [-16,-75],[-15,-76],[-10,-79],[-5,-80],[-2,-80],[0,-80],
-    [0,-78],[1,-78],[2,-78],[4,-76],[5,-77],[7,-78],[8,-77],
-    [8,-73],[10,-73],[12,-72],
-  ],
-
-  // ── Europe mainland ────────────────────────────────────────────────────────
-  [
-    [36,-9],[37,-9],[38,-9],[40,-8],[42,-9],[43,-9],[44,-9],
-    [44,-7],[44,-2],[43,2],[43,3],[43,5],[44,7],[44,8],[44,9],
-    [44,11],[44,12],[43,13],[42,14],[40,14],[38,15],[38,16],
-    [37,15],[36,15],[36,17],[36,18],[36,20],[36,22],[37,22],
-    [38,22],[37,23],[36,23],[37,24],[37,25],[38,24],[39,24],
-    [40,24],[40,26],[41,26],[41,28],[42,27],[42,28],[43,28],
-    [44,28],[45,30],[46,30],[47,32],[47,34],[47,38],[48,40],
-    [50,40],[52,40],[54,38],[55,38],[56,36],[57,33],[58,32],
-    [60,30],[60,28],[61,28],[62,26],[63,30],[63,28],[65,26],
-    [66,26],[67,26],[68,28],[70,25],[70,22],[69,18],[68,18],
-    [68,14],[66,14],[65,14],[64,14],[63,14],[62,14],[62,16],
-    [60,18],[59,18],[58,18],[57,18],[57,16],[57,12],[56,10],
-    [57,10],[56,10],[54,10],[53,10],[52,14],[51,14],[50,14],
-    [49,14],[48,14],[47,14],[46,14],[46,13],[45,14],[45,13],
-    [44,15],[44,14],[43,16],[42,18],[40,20],[38,21],[36,22],
-    [36,20],[36,18],[36,15],[36,13],[37,12],[38,14],[36,10],
-    [37,5],[36,3],[36,2],[36,0],[36,-2],[36,-5],[36,-6],[36,-9],
-  ],
-
-  // ── Scandinavia ────────────────────────────────────────────────────────────
-  [
-    [57,8],[58,8],[58,10],[59,10],[59,8],[60,5],[61,5],[62,5],
-    [62,6],[63,8],[64,10],[64,12],[65,14],[66,14],[67,16],[68,16],
-    [68,18],[70,20],[70,22],[70,25],[68,28],[67,28],[65,26],[65,24],
-    [63,30],[61,28],[60,28],[59,25],[59,22],[60,20],[60,18],[58,18],
-    [57,18],[57,16],[57,14],[57,12],[57,10],[57,8],
-  ],
-
-  // ── Africa ─────────────────────────────────────────────────────────────────
-  [
-    [37,-6],[37,-2],[37,2],[37,5],[37,8],[37,10],[35,10],[33,12],
-    [32,12],[32,15],[32,17],[30,20],[30,22],[30,25],[30,28],[30,32],
-    [31,32],[30,34],[28,34],[26,36],[24,37],[22,37],[20,38],[18,40],
-    [16,40],[15,42],[13,43],[12,44],[11,44],[12,45],[11,51],[11,49],
-    [10,51],[8,48],[6,44],[4,42],[2,42],[0,42],[-2,42],[-3,40],
-    [-5,40],[-6,40],[-8,40],[-10,40],[-11,38],[-12,38],[-14,38],
-    [-15,37],[-17,36],[-18,36],[-20,35],[-22,35],[-23,35],
-    [-25,33],[-27,33],[-28,33],[-30,31],[-32,29],[-33,28],
-    [-34,27],[-35,25],[-35,23],[-35,22],[-35,20],[-34,20],
-    [-33,18],[-32,18],[-30,17],[-28,16],[-26,15],[-25,15],
-    [-22,14],[-20,13],[-18,12],[-16,12],[-15,12],[-12,14],
-    [-10,14],[-8,13],[-6,12],[-5,10],[-3,10],[-2,10],[0,9],
-    [2,9],[3,8],[4,8],[4,6],[4,5],[4,3],[5,3],[5,1],[5,0],
-    [5,-2],[5,-3],[5,-5],[5,-6],[5,-8],[4,-10],[5,-12],[6,-10],
-    [7,-11],[8,-12],[8,-13],[8,-14],[9,-14],[10,-15],[11,-16],
-    [12,-17],[13,-17],[14,-17],[15,-17],[16,-16],[18,-16],
-    [20,-17],[21,-17],[22,-17],[24,-15],[26,-14],[28,-13],
-    [30,-11],[31,-8],[33,-8],[34,-7],[35,-5],[37,-6],
-  ],
-
-  // ── Asia main body ─────────────────────────────────────────────────────────
-  [
-    [70,27],[70,30],[70,34],[68,34],[68,28],[65,26],[63,28],
-    [63,30],[61,28],[60,28],[60,30],[58,32],[57,33],[56,34],
-    [55,38],[54,38],[52,40],[52,42],[50,42],[48,42],[48,45],
-    [47,40],[47,38],[46,44],[44,44],[44,48],[44,51],[42,52],
-    [40,52],[38,56],[36,58],[36,59],[37,62],[37,64],[38,66],
-    [37,68],[37,70],[37,72],[36,75],[35,75],[33,75],[32,75],
-    [30,80],[28,86],[28,88],[26,90],[24,90],[22,90],[22,92],
-    [20,88],[20,86],[18,84],[16,80],[14,80],[12,80],[10,79],
-    [8,77],[8,80],[9,80],[10,80],[12,80],[14,80],[16,82],
-    [18,84],[20,87],[22,88],[22,92],[21,93],[20,93],[18,95],
-    [16,97],[15,100],[14,100],[13,100],[10,99],[9,100],[8,100],
-    [6,100],[5,100],[4,102],[3,100],[2,104],[1,104],[2,104],
-    [4,104],[5,103],[7,100],[8,100],[10,100],[10,104],[12,108],
-    [14,108],[16,107],[18,107],[18,106],[20,106],[20,107],
-    [22,112],[22,115],[24,118],[25,118],[25,121],[26,122],
-    [28,122],[30,122],[32,121],[34,121],[35,121],[36,122],
-    [37,122],[38,120],[38,122],[40,122],[40,124],[42,130],
-    [44,132],[44,135],[45,136],[46,137],[48,138],[48,140],
-    [50,140],[52,140],[54,141],[56,140],[56,138],[58,140],
-    [58,138],[60,143],[62,140],[61,138],[60,132],[58,128],
-    [56,125],[54,124],[52,120],[51,116],[50,115],[52,110],
-    [52,108],[52,107],[52,104],[52,100],[53,96],[53,94],
-    [55,90],[55,86],[55,83],[55,82],[57,70],[57,67],[57,62],
-    [57,60],[57,57],[57,56],[59,52],[60,50],[62,50],[63,48],
-    [64,46],[65,42],[65,40],[65,36],[65,33],[66,32],[67,32],
-    [68,30],[70,27],
-  ],
-
-  // ── Arabian Peninsula ──────────────────────────────────────────────────────
-  [
-    [30,32],[29,34],[28,34],[26,36],[24,37],[22,37],[20,38],
-    [18,40],[16,42],[14,44],[13,44],[12,44],[12,45],[14,48],
-    [15,50],[16,52],[18,54],[20,56],[20,58],[22,60],[24,60],
-    [24,58],[22,60],[20,58],[18,54],[16,52],[18,54],[20,58],
-    [22,60],[24,58],[24,56],[22,60],[20,58],[16,54],[14,50],
-    [12,44],[15,42],[18,40],[20,38],[22,37],[24,37],[28,34],
-    [30,32],
-  ],
-
-  // ── Indian subcontinent ────────────────────────────────────────────────────
-  [
-    [28,68],[26,68],[24,68],[22,70],[21,72],[20,73],[18,73],
-    [16,73],[14,75],[13,76],[10,77],[8,77],[7,78],[8,80],
-    [9,80],[10,80],[11,80],[12,80],[13,80],[14,80],[15,80],
-    [16,82],[17,83],[18,84],[19,85],[20,87],[21,88],[22,88],
-    [22,90],[24,90],[25,90],[26,90],[27,90],[28,88],[29,86],
-    [30,80],[30,78],[32,78],[32,75],[30,70],[29,70],[28,68],
-  ],
-
-  // ── SE Asia mainland ───────────────────────────────────────────────────────
-  [
-    [22,100],[21,100],[20,100],[18,100],[16,98],[14,98],[13,100],
-    [12,100],[10,99],[9,100],[8,100],[6,100],[5,100],[5,101],
-    [4,102],[3,102],[2,103],[2,104],[1,104],[2,104],[4,104],
-    [5,103],[6,102],[8,100],[10,100],[10,102],[10,104],[12,107],
-    [13,107],[14,105],[15,105],[16,107],[17,107],[18,106],
-    [20,106],[20,107],[21,104],[22,104],[22,102],[22,100],
-  ],
-
-  // ── Australia ──────────────────────────────────────────────────────────────
-  [
-    [-20,114],[-19,118],[-18,122],[-17,124],[-16,124],
-    [-15,126],[-14,126],[-14,128],[-13,130],[-12,130],
-    [-12,132],[-12,136],[-13,136],[-14,136],[-13,136],
-    [-14,142],[-15,144],[-16,145],[-17,146],[-18,147],
-    [-19,148],[-20,148],[-21,149],[-22,150],[-23,151],
-    [-24,152],[-25,152],[-26,153],[-27,153],[-28,154],
-    [-29,153],[-30,153],[-31,153],[-32,152],[-33,152],
-    [-34,151],[-35,150],[-36,150],[-37,149],[-38,148],
-    [-38,147],[-38,146],[-38,145],[-37,142],[-36,140],
-    [-35,138],[-36,140],[-37,140],[-36,138],[-35,136],
-    [-34,136],[-33,135],[-32,133],[-32,130],[-31,130],
-    [-30,128],[-28,128],[-27,126],[-26,122],[-25,114],
-    [-24,114],[-22,114],[-21,114],[-20,114],
-  ],
-
-  // ── Greenland ──────────────────────────────────────────────────────────────
-  [
-    [84,-42],[84,-46],[83,-55],[82,-60],[82,-64],[82,-68],
-    [80,-70],[78,-72],[77,-72],[75,-70],[73,-66],[72,-56],
-    [70,-53],[68,-53],[66,-48],[65,-38],[66,-32],[67,-30],
-    [68,-25],[69,-24],[70,-23],[71,-22],[72,-22],[73,-20],
-    [74,-20],[75,-19],[76,-18],[77,-18],[78,-18],[79,-20],
-    [80,-22],[81,-28],[82,-30],[83,-33],[84,-36],[84,-42],
-  ],
-
-  // ── UK (Great Britain) ─────────────────────────────────────────────────────
-  [
-    [50,-5],[50,-4],[51,-3],[51,-1],[51,1],[52,2],[53,2],
-    [54,0],[54,-1],[55,-2],[55,-3],[56,-3],[56,-4],[57,-5],
-    [57,-6],[58,-5],[58,-4],[57,-2],[56,-2],[55,-2],[55,0],
-    [54,0],[53,0],[52,2],[51,1],[51,-1],[50,-5],
-  ],
-
-  // ── Ireland ────────────────────────────────────────────────────────────────
-  [
-    [51,-10],[52,-10],[53,-10],[54,-8],[54,-7],[54,-6],
-    [53,-6],[52,-6],[51,-8],[51,-10],
-  ],
-
-  // ── Japan (Honshu + Kyushu simplified) ────────────────────────────────────
-  [
-    [31,131],[32,131],[33,131],[33,132],[34,132],[34,134],
-    [35,134],[35,135],[36,136],[37,137],[37,138],[38,139],
-    [39,140],[40,141],[41,141],[42,140],[41,141],[40,141],
-    [39,140],[38,139],[37,138],[36,136],[35,135],[34,132],
-    [33,131],[31,131],
-  ],
-
-  // ── Japan (Hokkaido simplified) ───────────────────────────────────────────
-  [
-    [43,141],[44,142],[44,143],[44,144],[44,145],[43,145],
-    [42,144],[42,143],[43,141],
-  ],
-
-  // ── New Zealand (simplified) ──────────────────────────────────────────────
-  [
-    [-34,172],[-36,174],[-37,175],[-38,176],[-39,177],
-    [-40,176],[-40,175],[-38,174],[-36,174],[-34,172],
-  ],
-
-  // ── Iceland ────────────────────────────────────────────────────────────────
-  [
-    [64,-24],[64,-22],[65,-20],[65,-18],[66,-16],[66,-14],
-    [65,-14],[65,-16],[64,-18],[63,-20],[63,-22],[63,-24],[64,-24],
-  ],
-
-  // ── Madagascar ─────────────────────────────────────────────────────────────
-  [
-    [-12,49],[-14,50],[-16,50],[-18,44],[-20,44],[-22,44],
-    [-23,44],[-24,46],[-25,47],[-25,48],[-23,48],[-20,48],
-    [-16,50],[-14,50],[-12,49],
-  ],
-
-  // ── Borneo (simplified) ────────────────────────────────────────────────────
-  [
-    [7,117],[5,118],[3,118],[1,118],[0,117],[-1,116],[-2,116],
-    [-4,115],[-4,114],[-2,112],[0,110],[1,109],[2,110],
-    [4,114],[6,116],[7,117],
-  ],
-
-  // ── Sumatra (simplified) ──────────────────────────────────────────────────
-  [
-    [5,95],[4,96],[3,98],[2,100],[1,102],[0,104],[-1,104],
-    [-2,106],[-4,106],[-5,106],[-6,106],[-5,104],[-4,102],
-    [-2,100],[0,98],[2,96],[4,96],[5,95],
-  ],
-
-  // ── Philippines (simplified) ──────────────────────────────────────────────
-  [
-    [18,122],[16,122],[14,120],[12,122],[10,124],[8,126],
-    [8,124],[10,122],[12,120],[14,120],[16,120],[18,122],
-  ],
-
-  // ── Sri Lanka ──────────────────────────────────────────────────────────────
-  [
-    [10,80],[8,80],[6,80],[7,82],[8,82],[10,80],
-  ],
-];
-
-// ── Projection ───────────────────────────────────────────────────────────────
-function project(lat: number, lng: number, rotDeg: number) {
-  const phi   = (90 - lat) * (Math.PI / 180);
-  const theta = (lng + rotDeg) * (Math.PI / 180);
-  return {
-    x: CX + R * Math.sin(phi) * Math.cos(theta),
-    y: CY - R * Math.cos(phi),
-    z: Math.sin(phi) * Math.sin(theta),
-  };
-}
-
-/** Binary search for exact horizon crossing — eliminates edge flickering */
-function horizonPoint(a: Pt, b: Pt, rotDeg: number): { x: number; y: number } {
-  let lo = 0, hi = 1;
-  for (let k = 0; k < 12; k++) {
-    const t   = (lo + hi) * 0.5;
-    const lat = a[0] + t * (b[0] - a[0]);
-    const lng = a[1] + t * (b[1] - a[1]);
-    if (project(lat, lng, rotDeg).z > 0) lo = t; else hi = t;
-  }
-  const t   = (lo + hi) * 0.5;
-  return project(a[0] + t * (b[0] - a[0]), a[1] + t * (b[1] - a[1]), rotDeg);
-}
-
-function buildContinentPath(poly: Poly, rotDeg: number): string {
-  const n    = poly.length;
-  if (n < 2) return '';
-  const pts  = poly.map(([lat, lng]) => project(lat, lng, rotDeg));
-  let d      = '';
-  let open   = false;
-
-  for (let i = 0; i < n; i++) {
-    const cur      = pts[i];
-    const prev     = pts[(i - 1 + n) % n];
-    const vis      =  cur.z  > 0;
-    const prevVis  = prev.z  > 0;
-
-    if (vis && !prevVis) {
-      // entering — clip to horizon
-      const hp = horizonPoint(poly[(i - 1 + n) % n], poly[i], rotDeg);
-      if (open) d += `L${hp.x.toFixed(1)},${hp.y.toFixed(1)}Z`;
-      d    += `M${hp.x.toFixed(1)},${hp.y.toFixed(1)}L${cur.x.toFixed(1)},${cur.y.toFixed(1)}`;
-      open  = true;
-    } else if (!vis && prevVis) {
-      // leaving — clip to horizon and close
-      const hp = horizonPoint(poly[(i - 1 + n) % n], poly[i], rotDeg);
-      d   += `L${hp.x.toFixed(1)},${hp.y.toFixed(1)}Z`;
-      open = false;
-    } else if (vis) {
-      d   += open
-        ? `L${cur.x.toFixed(1)},${cur.y.toFixed(1)}`
-        : `M${cur.x.toFixed(1)},${cur.y.toFixed(1)}`;
-      open = true;
+  // Globe mesh
+  var geo = new THREE.SphereGeometry(1, 64, 64);
+  var tex = new THREE.TextureLoader().load(
+    'https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world_map.png',
+    function(t){
+      t.generateMipmaps = false;
+      t.minFilter = THREE.LinearFilter;
+      t.magFilter = THREE.LinearFilter;
+      t.anisotropy = renderer.capabilities.getMaxAnisotropy();
     }
-  }
-  if (open) d += 'Z';
-  return d;
-}
+  );
+  var mat = new THREE.MeshStandardMaterial({
+    map: tex,
+    color: 0xf0eeeb,
+    roughness: 1.0,
+    metalness: 0.0
+  });
+  var globe = new THREE.Mesh(geo, mat);
+  scene.add(globe);
 
-function buildGrid(rotDeg: number): string {
-  let d = '';
-  for (const lat of [-60, -30, 0, 30, 60]) {
-    let mv = true;
-    for (let lng = -180; lng <= 180; lng += 4) {
-      const p = project(lat, lng, rotDeg);
-      if (p.z > 0) { d += mv ? `M${p.x.toFixed(1)},${p.y.toFixed(1)}` : `L${p.x.toFixed(1)},${p.y.toFixed(1)}`; mv = false; }
-      else mv = true;
-    }
-  }
-  for (let lng = -150; lng < 180; lng += 30) {
-    let mv = true;
-    for (let lat = -85; lat <= 85; lat += 3) {
-      const p = project(lat, lng, rotDeg);
-      if (p.z > 0) { d += mv ? `M${p.x.toFixed(1)},${p.y.toFixed(1)}` : `L${p.x.toFixed(1)},${p.y.toFixed(1)}`; mv = false; }
-      else mv = true;
-    }
-  }
-  return d;
-}
+  // Soft shadow disc
+  var shadow = new THREE.Mesh(
+    new THREE.CircleGeometry(1.4, 48),
+    new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.07 })
+  );
+  shadow.rotation.x = -Math.PI / 2;
+  shadow.position.y = -1.25;
+  scene.add(shadow);
 
-// ── Component ─────────────────────────────────────────────────────────────────
+  // Glow shell
+  scene.add(new THREE.Mesh(
+    new THREE.SphereGeometry(1.07, 32, 32),
+    new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.05 })
+  ));
+
+  // Community dots — countries using the app
+  var LOCS = [
+    [55.75,  37.62],   // Россия
+    [40.18,  44.50],   // Армения
+    [48.21,  16.37],   // Вена
+    [40.42,  -3.70],   // Испания
+    [56.13,-106.35],   // Канада
+    [35.86, 104.20],   // Китай
+    [37.09, -95.71],   // США
+    [38.96,  35.24]    // Турция
+  ];
+
+  function toVec3(lat, lng, r) {
+    var phi   = (90 - lat) * Math.PI / 180;
+    var theta = (lng + 180) * Math.PI / 180;
+    return new THREE.Vector3(
+      -r * Math.sin(phi) * Math.cos(theta),
+       r * Math.cos(phi),
+       r * Math.sin(phi) * Math.sin(theta)
+    );
+  }
+
+  var dotGroup = new THREE.Group();
+  LOCS.forEach(function(loc) {
+    var p = toVec3(loc[0], loc[1], 1.015);
+
+    // Core dot
+    var core = new THREE.Mesh(
+      new THREE.SphereGeometry(0.018, 12, 12),
+      new THREE.MeshBasicMaterial({ color: 0x2A6B50 })
+    );
+    core.position.copy(p);
+    dotGroup.add(core);
+
+    // Glow halo
+    var halo = new THREE.Mesh(
+      new THREE.SphereGeometry(0.036, 12, 12),
+      new THREE.MeshBasicMaterial({ color: 0x4AA870, transparent: true, opacity: 0.35 })
+    );
+    halo.position.copy(p);
+    dotGroup.add(halo);
+  });
+  scene.add(dotGroup);
+
+  // Animation loop
+  var SPEED = 0.0022;
+  function animate() {
+    requestAnimationFrame(animate);
+    globe.rotation.y    += SPEED;
+    dotGroup.rotation.y += SPEED;
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  // Resize
+  window.addEventListener('resize', function() {
+    var w = m.clientWidth, h = m.clientHeight;
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w, h);
+  });
+})();
+</script>
+</body>
+</html>`;
+
 export function CommunityGlobe() {
-  const [rot, setRot] = useState(0);
-  const rafRef        = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastRef       = useRef<number>(0);
-
-  useEffect(() => {
-    const tick = (now: number) => {
-      const dt  = Math.min(now - lastRef.current, 100); // cap at 100 ms
-      lastRef.current = now;
-      setRot(r => r + dt * 0.006); // ~0.3 deg per 50 ms
-      rafRef.current = setTimeout(() => tick(Date.now()), 50);
-    };
-    lastRef.current = Date.now();
-    rafRef.current  = setTimeout(() => tick(Date.now()), 50);
-    return () => { if (rafRef.current) clearTimeout(rafRef.current); };
-  }, []);
-
-  const continentPaths = CONTINENTS.map(p => buildContinentPath(p, rot));
-  const grid           = buildGrid(rot);
-  const labels         = LABELS
-    .map(l => ({ ...l, ...project(l.lat, l.lng, rot) }))
-    .filter(l => l.z > 0.18);
-
   return (
-    <View style={styles.wrapper}>
-      <Svg width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`}>
-        <Defs>
-          <RadialGradient id="gBase" cx="36%" cy="30%" r="72%">
-            <Stop offset="0%"   stopColor="#FFFFFF" />
-            <Stop offset="50%"  stopColor="#F2F1ED" />
-            <Stop offset="100%" stopColor="#BEBCB6" />
-          </RadialGradient>
-          <RadialGradient id="gAtm" cx="50%" cy="50%" r="50%">
-            <Stop offset="72%"  stopColor="#A8B4BC" stopOpacity="0"    />
-            <Stop offset="86%"  stopColor="#A8B4BC" stopOpacity="0.14" />
-            <Stop offset="100%" stopColor="#A8B4BC" stopOpacity="0"    />
-          </RadialGradient>
-          <RadialGradient id="gSpec" cx="30%" cy="26%" r="38%">
-            <Stop offset="0%"   stopColor="#FFFFFF" stopOpacity="0.72" />
-            <Stop offset="100%" stopColor="#FFFFFF" stopOpacity="0"    />
-          </RadialGradient>
-          <RadialGradient id="gEdge" cx="50%" cy="50%" r="50%">
-            <Stop offset="66%"  stopColor="#000000" stopOpacity="0"    />
-            <Stop offset="100%" stopColor="#000000" stopOpacity="0.28" />
-          </RadialGradient>
-          <ClipPath id="gClip">
-            <Circle cx={CX} cy={CY} r={R} />
-          </ClipPath>
-        </Defs>
-
-        {/* Atmosphere halo */}
-        <Circle cx={CX} cy={CY} r={R + 16} fill="url(#gAtm)" />
-
-        {/* Globe surface */}
-        <Circle cx={CX} cy={CY} r={R} fill="url(#gBase)" />
-
-        <G clipPath="url(#gClip)">
-          {/* Grid */}
-          <Path d={grid} stroke="#CCCBC5" strokeWidth="0.3" strokeOpacity="0.4" fill="none" />
-
-          {/* Continents */}
-          {continentPaths.map((d, i) =>
-            d ? (
-              <Path
-                key={i}
-                d={d}
-                fill="#ABABAB"
-                fillOpacity="0.95"
-                stroke="#9A9894"
-                strokeWidth="0.5"
-                strokeOpacity="1"
-              />
-            ) : null
-          )}
-
-          {/* Country labels */}
-          {labels.map((l, i) => {
-            const op = Math.min(1, (l.z - 0.18) * 5);
-            return (
-              <SvgText
-                key={i}
-                x={l.x}
-                y={l.y}
-                fontSize={l.size}
-                fill="#3E3C38"
-                fillOpacity={op}
-                fontWeight="700"
-                textAnchor="middle"
-                letterSpacing="0.8"
-              >
-                {l.name}
-              </SvgText>
-            );
-          })}
-        </G>
-
-        {/* Edge depth shadow */}
-        <Circle cx={CX} cy={CY} r={R} fill="url(#gEdge)" clipPath="url(#gClip)" />
-
-        {/* Specular highlight */}
-        <Circle cx={CX} cy={CY} r={R} fill="url(#gSpec)" clipPath="url(#gClip)" />
-
-        {/* Outer border */}
-        <Circle cx={CX} cy={CY} r={R} fill="none" stroke="#BCBAB4" strokeWidth="1" />
-      </Svg>
+    <View style={styles.wrap}>
+      <WebView
+        source={{ html: HTML }}
+        style={styles.wv}
+        scrollEnabled={false}
+        javaScriptEnabled
+        originWhitelist={['*']}
+        androidLayerType="hardware"
+        allowsInlineMediaPlayback
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  wrapper: {
-    alignItems: 'center',
-    paddingVertical: 8,
+  wrap: {
+    width: SIZE,
+    height: SIZE,
+    alignSelf: 'center',
+    overflow: 'hidden',
+    borderRadius: 8,
+  },
+  wv: {
+    flex: 1,
+    backgroundColor: 'transparent',
+    opacity: 0.99,
   },
 });
